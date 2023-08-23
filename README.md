@@ -1,5 +1,6 @@
 # julia_app
 
-'''
-	julia carros.jl
-'''
+### **Executar o arquivo**
+```
+	$ julia carros.jl
+```
