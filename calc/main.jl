@@ -1,8 +1,7 @@
 using Printf
 include("fisica/formula.jl");
 
-@printf("%s", "olá");
-
+@printf("\n%s", "olá");
 
 m = parse(Float64, "100");
 a = parse(Float64, "9.81");
@@ -14,12 +13,16 @@ formatted_forca = @sprintf("%.2f", n);
 formatted_massa = @sprintf("%.2f", m);
 formatted_aceleracao = @sprintf("%.2f", a);
 
-println("A força aplicada é de $(formatted_forca)N para uma massa de $(formatted_massa)kg e uma aceleração de $(formatted_aceleracao)m/s²\n");
+println("A força aplicada é de $(formatted_forca)N para uma massa de $(formatted_massa)kg e uma aceleração de $(formatted_aceleracao)m/s²");
 
 
 Peso = pesoN("100.0","Marte");
 # (peso,massa,get_aceleracao_gravitacional(espaco));
-gravidade = Peso[3][1]
-lugar = Peso[3][2]
-
+gravidade = Peso[3][1];
+lugar = Peso[3][2];
 println(@sprintf("\nO peso é %.2fN, para a massa de %.2f kg,  a aceleração da gravidade é de  %.8f m/s² %s \n", Peso[1],Peso[2],Peso[3][1],Peso[3][2]));
+
+println("$gravidade $lugar");
+
+# executar
+# julia main.jl
