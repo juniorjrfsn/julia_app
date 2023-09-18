@@ -22,9 +22,9 @@ function pesoN(massa, espaco)
     # Converte as massas para números de ponto flutuante
     massa = parse(Float64, massa);
     aceleracao_gravitacional = Dict(
-        "Sol" => 274.13,
+        "Sol"   => 274.13,
         "Terra" => 9.819649737724951,
-        "Lua" => 1.625,
+        "Lua"   => 1.625,
         "Marte" => 3.72076,
     );
     # Calcula o peso
