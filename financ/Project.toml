@@ -2,3 +2,8 @@ name = "financ"
 uuid = "b399d39a-2fa2-4edd-b342-93297a4438db"
 authors = ["juniorjrfsn <junior.jrfsn@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
