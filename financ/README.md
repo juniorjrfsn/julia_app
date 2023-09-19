@@ -2,6 +2,8 @@
 
 ## adicionar dependencias
 ```
+pkg> generate financ
+
 julia> ]
 
 pkg> activate ./financ
