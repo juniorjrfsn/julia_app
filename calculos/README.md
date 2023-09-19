@@ -11,6 +11,7 @@ julia > import calculos;
 julia > calculos.geraCarros();
 julia > calculos.calcular();
 julia > calculos.greet();
+julia > import calculos; calculos.calcular();
 julia > ]
 pkg> add JSON
 pkg> add Pkg
