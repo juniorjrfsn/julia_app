@@ -27,6 +27,6 @@ julia > calculos.greet();
 
 # executar
 ```
-	$ cd calculos/
-	$ julia main.jl
+	$ cd calculos/src/
+	$ julia calculos.jl
 ```
