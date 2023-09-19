@@ -1,12 +1,9 @@
-module financ 
+module financ
 
     include("persist/conedatabase.jl");
     include("persist/migration.jl");
     include("persist/mvc.jl");
 
-    #Pkg.add("SQLite")
-    #Pkg.add("DataFrames")
-
-    greet() = print("Hello Worldesssj!")
+    greet() = print("Bora galera!")
 
 end # module financ
