@@ -1,0 +1,7 @@
+name = "calculos"
+uuid = "8d6bc5cd-c9f5-416b-80a2-d54da3bd4b48"
+authors = ["juniorjrfsn <junior.jrfsn@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
