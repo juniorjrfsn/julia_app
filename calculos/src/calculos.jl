@@ -25,8 +25,7 @@ module calculos
         formatted_massa = @sprintf("%.2f", m);
         formatted_aceleracao = @sprintf("%.2f", a);
 
-        println("\e[1;44;33mA força\e[m \e[1;45;34maplicada é de\e[m \e[1;31m$(formatted_forca)N\e[m \e[1;43;32mpara uma massa de\e[m
-        \e[1;31m$(formatted_massa)kg\e[m e uma aceleração de \e[0;31m$(formatted_aceleracao)m/s²\e[m");
+        println("\e[1;44;33mA força\e[m \e[1;45;34maplicada é de\e[m \e[1;31m$(formatted_forca)N\e[m \e[1;43;32mpara uma massa de\e[m \e[1;31m$(formatted_massa)kg\e[m e uma aceleração de \e[0;31m$(formatted_aceleracao)m/s²\e[m");
 
         Peso = pesoN("100.0","Marte");
         # (peso,massa,get_aceleracao_gravitacional(espaco));
