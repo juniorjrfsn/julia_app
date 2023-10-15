@@ -44,3 +44,10 @@ end # module calculos
 
 # executar
 # julia calculos.jl
+# cd calculos/src/
+
+# julia>  include("calculos.jl"); calculos.calcular();
+
+
+############ julia> import calculos  import Pkg; Pkg.add("calculos"); calculos.calcular();
+############ julia> import Pkg; Pkg.add("calculos"); calculos.calcular();
