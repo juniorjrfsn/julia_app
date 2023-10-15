@@ -43,8 +43,19 @@ end # module calculos
 # calculos.calcular();
 
 # executar
-# julia calculos.jl
+
 # cd calculos/src/
+
+# julia calculos.jl
+#/julia_app/calculos/src$ julia
+#               _
+#   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+#  (_)     | (_) (_)    |
+#   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+#  | | | | | | |/ _` |  |
+#  | | |_| | | | (_| |  |  Version 1.9.3 (2023-08-24)
+# _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
+#|__/                   |
 
 # julia>  include("calculos.jl"); calculos.calcular();
 
