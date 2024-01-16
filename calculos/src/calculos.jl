@@ -25,8 +25,7 @@ module calculos
         formatted_massa = @sprintf("%.2f", m);
         formatted_aceleracao = @sprintf("%.2f", a);
 
-        println("\e[1;44;33mA força\e[m \e[1;45;34maplicada é de\e[m \e[1;31m$(formatted_forca)N\e[m \e[1;43;32mpara uma massa de\e[m
-        \e[1;31m$(formatted_massa)kg\e[m e uma aceleração de \e[0;31m$(formatted_aceleracao)m/s²\e[m");
+        println("\e[1;44;33mA força\e[m \e[1;45;34maplicada é de\e[m \e[1;31m$(formatted_forca)N\e[m \e[1;43;32mpara uma massa de\e[m \e[1;31m$(formatted_massa)kg\e[m e uma aceleração de \e[0;31m$(formatted_aceleracao)m/s²\e[m");
 
         Peso = pesoN("100.0","Marte");
         # (peso,massa,get_aceleracao_gravitacional(espaco));
@@ -44,4 +43,22 @@ end # module calculos
 # calculos.calcular();
 
 # executar
+
+# cd calculos/src/
+
 # julia calculos.jl
+#/julia_app/calculos/src$ julia
+#               _
+#   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+#  (_)     | (_) (_)    |
+#   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+#  | | | | | | |/ _` |  |
+#  | | |_| | | | (_| |  |  Version 1.9.3 (2023-08-24)
+# _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
+#|__/                   |
+
+# julia>  include("calculos.jl"); calculos.calcular();
+
+
+############ julia> import calculos  import Pkg; Pkg.add("calculos"); calculos.calcular();
+############ julia> import Pkg; Pkg.add("calculos"); calculos.calcular();
