@@ -40,7 +40,7 @@ module calculos
     end
 end # module calculos
 
-# calculos.calcular();
+calculos.calcular();
 
 # executar
 
