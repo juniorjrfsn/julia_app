@@ -21,6 +21,7 @@ try
       println("Qtde de arquivos = $num_arq")
       println("numero de linhas por arquivo = $num_lin_por_arq")
       println("Total de linhas = $lin")
+      println("Processando ...")
       try
          open(arquivo, "r") do f
             cnt = 0
@@ -77,6 +78,7 @@ try
 catch e
    println("Erro ao abrir o arquivo: $(e.message)")
 end
+println("Processo executado com sucesso!")
 
 
 
