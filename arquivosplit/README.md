@@ -14,7 +14,7 @@ pkg> add JSON
 pkg> add Pkg
 pkg> add SQLite
 pkg> add DataFrames
-
+pkg> add FileIO
 
 ```
 ## **Executar o arquivo**

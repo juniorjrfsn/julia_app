@@ -1,0 +1,1 @@
+julia arquivosplit.jl
