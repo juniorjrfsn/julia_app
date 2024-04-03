@@ -1,6 +1,5 @@
-module arquivosplit
-   using FileIO 
-    arquivo = "ARQUIVO 2 PESSOAS  2024-03 - v.1.0.csv"
+module loopfile
+    arquivo = "deps.csv"
     num_arq = 4
     num_lin_por_arq = 0
     try
