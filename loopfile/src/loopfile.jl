@@ -82,11 +82,11 @@ module loopfile
     println("\033[1;33mProcesso executado com sucesso!\e[1;30m\n")
 
 
-    # julia arquivosplit.jl
-    #trunc(2.25) = 2
-    #floor(2.25) = 2
-    #round(2.25) = 2
-    #Int(2.25) = 2
+    # julia loopfile.jl
+    # trunc(2.25) = 2
+    # floor(2.25) = 2
+    # round(2.25) = 2
+    # Int(2.25) = 2
 
 
 end # module loopfile
