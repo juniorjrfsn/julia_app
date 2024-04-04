@@ -9,7 +9,7 @@ module arquivosplit
 			lin = 0
 			# read till end of file
 			while ! eof(f)
-				# read a new / next line for every iteration          
+				# read a new / next line for every iteration
 				s = readline(f)
 				lin += 1
 				#println("$line . $s")
@@ -27,7 +27,7 @@ module arquivosplit
 					n_arqs = 1
 					linha = ""
 					#seekstart(f)
-					for line in eachline(f) 
+					for line in eachline(f)
 						#println(line)
 						cnt += 1
 						lnhs += 1
@@ -36,14 +36,13 @@ module arquivosplit
 							println("\033[1;34marquivo: \033[1;32m$n_arqs")
 						end
 						if lnhs == num_lin_por_arq
-                        
 							if n_arqs == num_arq
 								# code to execute if the condition is true
 								if cnt == lin
 									linha = "$linha$line"
 								else
 									linha = "$linha$line\n"
-								end 
+								end
 							else
 								println("\n")
 								linha = "$linha$line"
@@ -59,7 +58,7 @@ module arquivosplit
 								linha = "$linha$line"
 							else
 								linha = "$linha$line\n"
-							end 
+							end
 						end
 						if lnhs == 0
 						else
@@ -87,5 +86,4 @@ module arquivosplit
 	#  floor(2.25)   = 2
 	#  round(2.25)   = 2
 	#  Int(2.25)     = 2
-
 end # module arquivosplit
