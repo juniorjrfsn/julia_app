@@ -1,0 +1,5 @@
+[dados]
+    [[dados.arquivo]]
+        arquivo_nomeorigem = "ARQUIVO_2_PESSOAS_2024-03_-_v.1.0.csv"
+        arquivo_qtde_parte = 4
+        arquivo_nome_parte = "arquivo_"

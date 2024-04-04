@@ -15,7 +15,7 @@ pkg> add Pkg
 pkg> add SQLite
 pkg> add DataFrames
 pkg> add FileIO
-
+pkg> add TOML
 ```
 ## **Executar o arquivo**
 ```
