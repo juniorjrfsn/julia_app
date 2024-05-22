@@ -20,6 +20,7 @@ julia > ]
 (@v1.8) pkg> generate financ
 (@v1.8) pkg> generate objetos
 (@v1.8) pkg> generate servidor
+(@v1.8) pkg> generate neural1
 
 ```
 
