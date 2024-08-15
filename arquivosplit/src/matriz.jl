@@ -8,7 +8,7 @@ display(A)
 println("\nMatriz B:")
 display(B)
 
-# Somando as matrizes
+# Multiplica as matrizes
 C = A * B
 
 # Imprimindo o resultado
