@@ -33,6 +33,9 @@ julia> ]
 (@v1.8) pkg> add DataFrames
 (@v1.8) pkg> add Flux
 (@v1.8) pkg> add StatsBase
+(@v1.8) pkg> add CSV
+(@v1.8) pkg> add SQLite
+(@v1.8) pkg> add DataFrames
 ```
 
 ## **Executar o arquivo**

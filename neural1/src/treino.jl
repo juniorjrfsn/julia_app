@@ -1,32 +1,28 @@
-import Pkg; Pkg.add("Flux")
-using Flux
-using Flux.Optimise: Adam
-using MLDatasets
+using CSV, SQLite
 
-# Carregar o conjunto de dados MNIST
-train_x, train_y = MNIST.traindata()
-test_x, test_y = MNIST.testdata()
+function store_training_data(data, filename::String; db_name::String="")
+    """
+    Stores training data in either a CSV file or an SQLite database.
 
-# Definir a arquitetura da rede neural
-model = Chain(
-    Dense(28*28, 128, relu),
-    Dense(128, 10, softmax)
-)
+    Args:
+        data: A DataFrame containing the training data.
+        filename: The name of the CSV file to save.
+        db_name: The name of the SQLite database to create.
+    """
 
-# Definir a função de perda
-loss(x, y) = Flux.Losses.crossentropy(model(x), y)
-
-# Definir o otimizador
-opt = Adam()
-
-# Treinar o modelo
-for epoch in 1:10
-    for (x,y) in zip(train_x, train_y)
-        gs = gradient(() -> loss(x, y), params(model))
-        Flux.Optimise.update!(opt, params(model), gs)
+    if db_name == ""
+        # Save to CSV
+        CSV.write(filename, data)
+        println("Data saved to CSV file: ", filename)
+    else
+        # Save to SQLite
+        DB = SQLite.DB(db_name)
+        SQLite.load!(DB, data, "training_data")
+        println("Data saved to SQLite database: ", db_name)
+        close(DB)
     end
 end
 
-# Avaliar o modelo
-accuracy(x, y) = mean(argmax(model(x), dim=1) .== y)
-println("Accuracy on test set: ", accuracy(test_x, test_y))
+# Example usage:
+data = DataFrame(x=[1,2,3], y=[4,5,6])
+store_training_data(data, "training_data.csv", "my_database.db")
