@@ -1,0 +1,4 @@
+name = "perceptronxor"
+uuid = "c4b5f231-9378-4c19-ba3a-e3d024470a58"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"

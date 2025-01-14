@@ -21,6 +21,7 @@ julia > ]
 (@v1.8) pkg> generate objetos
 (@v1.8) pkg> generate servidor
 (@v1.8) pkg> generate neural1
+(@v1.8) pkg> generate perceptronxor
 
 ```
 
@@ -33,9 +34,7 @@ julia> ]
 (@v1.8) pkg> add DataFrames
 (@v1.8) pkg> add Flux
 (@v1.8) pkg> add StatsBase
-(@v1.8) pkg> add CSV
-(@v1.8) pkg> add SQLite
-(@v1.8) pkg> add DataFrames
+(@v1.8) pkg> add CSV  
 ```
 
 ## **Executar o arquivo**
