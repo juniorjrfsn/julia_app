@@ -1,5 +1,6 @@
 using Random
 using Printf
+
 mutable struct MLP
     input_size::Int
     hidden_size::Int
@@ -56,7 +57,7 @@ end
 function main()
     mlp = MLP(2, 2, 1, 0.5)
     training_data = [
-        ([0.0, 0.0], 0.0),  
+        ([0.0, 0.0], 0.0),
         ([0.0, 1.0], 1.0),
         ([1.0, 0.0], 1.0),
         ([1.0, 1.0], 0.0),
@@ -71,14 +72,13 @@ function main()
     threshold = 0.5
     for (inputs, target) in training_data
         output = forward(mlp, inputs)
-        classification = output >= threshold ? 1.0 : 0.0
+        classification = output >= threshold ? 1  : 0
         println("Inputs: $inputs, Target: $target, Output: $(@sprintf("%.4f", output)) (Output XOR: $classification)")
     end
 end
 
-using Printf # Importe para usar @sprintf
-
 main()
 
 ## Execute ##
-## julia perceptronxor.jl
+# $ cd .\perceptronxor\src\
+# $ julia perceptronxor.jl
