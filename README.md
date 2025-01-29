@@ -35,7 +35,10 @@ julia> ]
 (@v1.8) pkg> add Flux
 (@v1.8) pkg> add StatsBase
 (@v1.8) pkg> add CSV
+(@v1.8) pkg> add MLJ
+(@v1.8) pkg> add MLJFlux
 ```
+
 
 ## **Executar o arquivo**
 ```
