@@ -13,11 +13,11 @@ mutable struct MLP
 end
 
 function MLP(input_size::Int, hidden_size::Int, output_size::Int, learning_rate::Float64)
-    # Initialize weights and biases with random numbers.
-    weights_input_hidden = rand(-0.5:0.5, input_size, hidden_size)
-    weights_hidden_output = rand(-0.5:0.5, hidden_size, output_size)
-    bias_hidden = rand(-0.5:0.5, hidden_size)
-    bias_output = rand(-0.5:0.5)
+    # Initialize weights and biases with continuous values between -0.5 and 0.5
+    weights_input_hidden = rand(input_size, hidden_size) .- 0.5
+    weights_hidden_output = rand(hidden_size, output_size) .- 0.5
+    bias_hidden = rand(hidden_size) .- 0.5
+    bias_output = rand() - 0.5
 
     MLP(input_size, hidden_size, output_size, weights_input_hidden, weights_hidden_output, bias_hidden, bias_output, learning_rate)
 end
@@ -27,18 +27,17 @@ sigmoid_derivative(x) = x * (1.0 - x)
 
 function forward(mlp::MLP, inputs::Vector{Float64})
     hidden_outputs = [sigmoid(sum(inputs .* mlp.weights_input_hidden[:, j]) + mlp.bias_hidden[j]) for j in 1:mlp.hidden_size]
-    output = sigmoid(sum(hidden_outputs .* mlp.weights_hidden_output) + mlp.bias_output)
+    output = sigmoid(sum(hidden_outputs .* vec(mlp.weights_hidden_output)) + mlp.bias_output)
     return output
 end
 
 function train!(mlp::MLP, inputs::Vector{Float64}, target::Float64)
     # Forward pass
     hidden_outputs = [sigmoid(sum(inputs .* mlp.weights_input_hidden[:, j]) + mlp.bias_hidden[j]) for j in 1:mlp.hidden_size]
-    output = sigmoid(sum(hidden_outputs .* mlp.weights_hidden_output) + mlp.bias_output)
+    output = sigmoid(sum(hidden_outputs .* vec(mlp.weights_hidden_output)) + mlp.bias_output)
 
     # Backpropagation
     output_error = (target - output) * sigmoid_derivative(output)
-
     hidden_errors = [output_error * mlp.weights_hidden_output[j] * sigmoid_derivative(hidden_outputs[j]) for j in 1:mlp.hidden_size]
 
     # Update weights and biases
@@ -56,8 +55,8 @@ function train!(mlp::MLP, inputs::Vector{Float64}, target::Float64)
 end
 
 function main()
-    Random.seed!(123) # Seed the random number generator for reproducibility.
-    mlp = MLP(2, 10, 1, 0.1) # Adjust hyperparameters: larger hidden size, smaller learning rate
+    Random.seed!(123)
+    mlp = MLP(2, 10, 1, 0.1)
     training_data = [
         ([0.0, 0.0], 0.0),
         ([0.0, 1.0], 1.0),
@@ -65,8 +64,7 @@ function main()
         ([1.0, 1.0], 0.0),
     ]
 
-    #Increase the number of epochs
-    for _ in 1:500000 # increase epochs
+    for _ in 1:10000
         for (inputs, target) in training_data
             train!(mlp, inputs, target)
         end
@@ -75,8 +73,8 @@ function main()
     threshold = 0.5
     for (inputs, target) in training_data
         output = forward(mlp, inputs)
-        classification = output >= threshold ? 1 : 0 #Correct symbol.
-        println("Inputs: $inputs, Target: $target, Output: $(@sprintf("%.4f", output)) (Output XOR: $classification)")
+        classification = output >= threshold ? 1 : 0
+        println("Inputs: $inputs, Target: $target, Output: $(@sprintf("%.4f", output)) (XOR: $classification)")
     end
 end
 
