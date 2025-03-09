@@ -75,7 +75,7 @@ function main()
     threshold = 0.5
     for (inputs, target) in training_data
         output = forward(mlp, inputs)
-        classification = output >= threshold ? 1 : 0
+        classification = output >= threshold ? 1 : 0 #Correct symbol.
         println("Inputs: $inputs, Target: $target, Output: $(@sprintf("%.4f", output)) (Output XOR: $classification)")
     end
 end
@@ -84,7 +84,7 @@ main()
 
 ## Execute ##
 # $ cd .\perceptronxor\src\
-# $ julia perceptronxor.jl
+# $ julia perceptronxor_2.jl
 
 
 ### => o código agora está fazendo um aprendizado profundo
