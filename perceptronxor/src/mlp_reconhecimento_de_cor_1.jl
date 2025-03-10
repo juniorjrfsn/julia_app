@@ -134,7 +134,4 @@ main()
 
 ## Execute ##
 # $ cd .\perceptronxor\src\
-# $ julia perceptronxor_4.jl
-# $ mlp_reconhecimento_de_cor.jl
-
-# Fiz algumas modificaçõe e funcionou perfeitamente meu DeepLearning, ficou parecendo um LSTM . Obrigado por sua ajuda. Abraços. \\
+# $ mlp_reconhecimento_de_cor_1.jl
