@@ -52,6 +52,7 @@ function train!(mlp::MLP, inputs::Vector{Float64}, target::Float64)
         mlp.weights_hidden_output[j] += mlp.learning_rate * output_error * hidden_outputs[j]
     end
     mlp.bias_output += mlp.learning_rate * output_error
+
 end
 
 function main()
@@ -70,19 +71,29 @@ function main()
         end
     end
 
+    # Teste
+    @printf("\n\n================ TESTE ===============\n")
     threshold = 0.5
+    resposta = ""
+
     for (inputs, target) in training_data
-        output = forward(mlp, inputs)
+        output = forward(mlp, inputs )
         classification = output >= threshold ? 1 : 0
-        println("Inputs: $inputs, Target: $target, Output: $(@sprintf("%.4f", output)) (XOR: $classification)")
+        linha = @sprintf("Entradas: %-10s | Alvo: %-2d | Saída: %-6.4f | XOR: Classificação: %d",
+                         inputs, target, output, classification)
+        resposta *= linha * "\n"
+        println("\n----------------------------------------")
+        println(linha)
     end
+
+    println("\n\n======= RESULTADO FINAL =======")
+    println(resposta)
 end
 
 main()
 
+
+
 ## Execute ##
 # $ cd .\perceptronxor\src\
 # $ julia perceptronxor_2.jl
-
-
-### => o código agora está fazendo um aprendizado profundo
