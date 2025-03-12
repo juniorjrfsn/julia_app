@@ -116,7 +116,7 @@ function main()
     # Teste final
     teste_data_input = [
         ([200, 0, 70]),
-        ([165, 156, 159]),
+        ([20, 156, 159]),
     ]
 
     @printf("\n\n================ TESTE ===============\n")
@@ -134,4 +134,4 @@ main()
 
 ## Execute ##
 # $ cd .\perceptronxor\src\
-# $ mlp_reconhecimento_de_cor_1.jl
+# $ julia mlp_reconhecimento_de_cor_1.jl
