@@ -78,30 +78,38 @@ end
 
 # Training Data
 training_data = [
-    ([255, 0, 0], "Vermelho"),
-    ([200, 0, 70], "Vermelho"),  # Additional example for Vermelho
-    ([220, 0, 50], "Vermelho"),  # Another example for Vermelho
-    ([255, 0, 127], "Rose"),
-    ([200, 0, 100], "Rose"),     # Additional example for Rose
-    ([30, 10, 240], "Azul"),
-    ([0, 0, 255], "Azul"),
+    ([63, 0, 0], "Vermelho"),
     ([127, 0, 0], "Vermelho"),
+    ([255, 0, 0], "Vermelho"),  # Another example for Vermelho
+    ([127, 0, 63], "Rose"),     # Another example for Vermelho
+    ([255, 0, 127], "Rose"),
+    ([127, 63, 0], "Laranja"),
     ([255, 127, 0], "Laranja"),
+    ([63, 63, 0], "Amarelo"),
     ([127, 127, 0], "Amarelo"),
     ([255, 255, 0], "Amarelo"),
+    ([63, 127, 0], "Primavera"),
     ([127, 255, 0], "Primavera"),
+    ([0, 63, 0], "Verde"),
     ([0, 127, 0], "Verde"),
     ([0, 255, 0], "Verde"),
+    ([0, 127, 63], "Turquesa"),
     ([0, 255, 127], "Turquesa"),
+    ([0, 63, 63], "Ciano"),
     ([0, 127, 127], "Ciano"),
     ([0, 255, 255], "Ciano"),
+    ([0, 63, 127], "Cobalto"),
     ([0, 127, 255], "Cobalto"),
+    ([0, 0, 63], "Azul"),
     ([0, 0, 127], "Azul"),
     ([0, 0, 255], "Azul"),
+    ([63, 0, 127], "Violeta"),
     ([127, 0, 255], "Violeta"),
+    ([63, 0, 63], "Magenta"),
     ([127, 0, 127], "Magenta"),
     ([255, 0, 255], "Magenta"),
     ([0, 0, 0], "Preto"),
+    ([63, 63, 63], "Cinza"),
     ([127, 127, 127], "Cinza"),
     ([255, 255, 255], "Branco"),
 ]
@@ -168,7 +176,7 @@ function test_model()
 
     test_data = [
         [200, 0, 70],
-        [130, 10, 80],
+        [130, 10, 129],
     ]
 
     println("\n================ TESTE ===============")
