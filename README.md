@@ -37,6 +37,9 @@ julia> ]
 (@v1.8) pkg> add CSV
 (@v1.8) pkg> add MLJ
 (@v1.8) pkg> add MLJFlux
+(@v1.8) pkg> add Images
+(@v1.8) pkg> add FileIO
+(@v1.8) pkg> add Serialization
 ```
 
 
