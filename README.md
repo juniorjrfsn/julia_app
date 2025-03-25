@@ -40,6 +40,11 @@ julia> ]
 (@v1.8) pkg> add Images
 (@v1.8) pkg> add FileIO
 (@v1.8) pkg> add Serialization
+(@v1.8) pkg> add Distributions
+(@v1.8) pkg> add ImageDraw
+(@v1.8) pkg> add ImageCore
+(@v1.8) pkg> add JSON3
+(@v1.8) pkg> add Luxor
 ```
 
 

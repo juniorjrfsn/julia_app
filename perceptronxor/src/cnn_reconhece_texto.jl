@@ -2,8 +2,9 @@ using LinearAlgebra
 using Random
 using Statistics
 using Serialization
+using Luxor
 using Images
-using FileIO
+using Distributions
 
 # Activation functions
 relu(x) = max(0.0, x)
@@ -15,26 +16,46 @@ cross_entropy_loss(output, target) = -sum(target .* log.(output .+ 1e-8))
 
 # CNN Structure
 mutable struct CNN
-    input_channels::Int
     conv_filters::Int
     filter_size::Int
-    hidden_size::Int
     output_size::Int
     conv_weights::Array{Float64, 3}  # Filters for convolution
     conv_bias::Vector{Float64}
     fc_weights::Matrix{Float64}      # Fully connected layer weights
     fc_bias::Vector{Float64}
     learning_rate::Float64
+    momentum::Float64
+    conv_weight_vel::Array{Float64, 3}
+    conv_bias_vel::Vector{Float64}
+    fc_weight_vel::Matrix{Float64}
+    fc_bias_vel::Vector{Float64}
 end
 
-function CNN(input_channels::Int, conv_filters::Int, filter_size::Int, hidden_size::Int, output_size::Int, learning_rate::Float64)
+function CNN(conv_filters::Int, filter_size::Int, output_size::Int; learning_rate=0.005, momentum=0.9)
     rng = MersenneTwister(42)
-    conv_weights = randn(rng, filter_size, filter_size, conv_filters) * sqrt(1 / (filter_size * filter_size))
-    conv_bias = zeros(conv_filters)
-    fc_input_size = conv_filters * (14 * 14)  # After pooling (28x28 -> 14x14)
-    fc_weights = randn(rng, hidden_size, fc_input_size) * sqrt(1 / fc_input_size)
-    fc_bias = zeros(hidden_size)
-    return CNN(input_channels, conv_filters, filter_size, hidden_size, output_size, conv_weights, conv_bias, fc_weights, fc_bias, learning_rate)
+    normal = Normal(0.0, sqrt(2.0 / (filter_size * filter_size)))  # Distribuição normal
+    conv_weights = rand(rng, normal, (conv_filters, filter_size, filter_size))  # Pesos iniciais
+    conv_bias = zeros(Float64, conv_filters)
+    fc_input_size = conv_filters * 12 * 12  # Após pooling (28x28 -> 12x12)
+    fc_normal = Normal(0.0, sqrt(2.0 / fc_input_size))  # Distribuição normal para camada fully connected
+    fc_weights = rand(rng, fc_normal, (output_size, fc_input_size))  # Pesos iniciais
+    fc_bias = zeros(Float64, output_size)
+
+    CNN(
+        conv_filters,
+        filter_size,
+        output_size,
+        conv_weights,
+        conv_bias,
+        fc_weights,
+        fc_bias,
+        learning_rate,
+        momentum,
+        zeros(Float64, size(conv_weights)),
+        zeros(Float64, conv_filters),
+        zeros(Float64, size(fc_weights)),
+        zeros(Float64, output_size)
+    )
 end
 
 # Convolution operation
@@ -46,20 +67,20 @@ function convolve2d(image::Matrix{Float64}, filter::Matrix{Float64}, bias::Float
     for i in 1:out_h
         for j in 1:out_w
             region = image[i:i+fh-1, j:j+fw-1]
-            output[i, j] = sum(region .* filter) + bias
+            output[i, j] = relu(sum(region .* filter) + bias)
         end
     end
-    return relu.(output)
+    return output
 end
 
 # Max pooling (2x2)
 function maxpool2d(input::Matrix{Float64})
     h, w = size(input)
-    out_h, out_w = h ÷ 2, w ÷ 2
+    out_h, out_w = div(h, 2), div(w, 2)
     output = zeros(out_h, out_w)
     for i in 1:out_h
         for j in 1:out_w
-            region = input[2*i-1:2*i, 2*j-1:2*j]
+            region = input[2i-1:2i, 2j-1:2j]
             output[i, j] = maximum(region)
         end
     end
@@ -69,38 +90,37 @@ end
 # Forward pass
 function forward(cnn::CNN, image::Matrix{Float64})
     # Convolution
-    conv_outputs = [convolve2d(image, cnn.conv_weights[:, :, k], cnn.conv_bias[k]) for k in 1:cnn.conv_filters]
+    conv_outputs = [convolve2d(image, cnn.conv_weights[k, :, :], cnn.conv_bias[k]) for k in 1:cnn.conv_filters]
     # Pooling
     pooled_outputs = [maxpool2d(conv_out) for conv_out in conv_outputs]
     # Flatten
     flattened = vcat([vec(pooled) for pooled in pooled_outputs]...)
     # Fully connected layer
-    hidden_inputs = cnn.fc_weights * flattened .+ cnn.fc_bias
-    hidden_outputs = relu.(hidden_inputs)
-    # Output layer
-    output = softmax(hidden_outputs)
-    return conv_outputs, pooled_outputs, flattened, hidden_outputs, output
+    output = cnn.fc_weights * flattened + cnn.fc_bias
+    output = softmax(output)
+    return output, conv_outputs, pooled_outputs, flattened
 end
 
 # Backward pass and parameter updates
-function train(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
+function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
     # Forward pass
-    conv_outputs, pooled_outputs, flattened, hidden_outputs, output = forward(cnn, image)
+    output, conv_outputs, pooled_outputs, flattened = forward(cnn, image)
 
     # Compute output errors (cross-entropy loss gradient)
-    output_errors = output .- target
+    output_error = output - target
 
     # Backpropagate through fully connected layer
-    fc_weight_grad = output_errors * hidden_outputs'
-    fc_bias_grad = output_errors
-    hidden_errors = cnn.fc_weights' * output_errors .* relu_derivative.(hidden_outputs)
+    fc_weight_grad = reshape(output_error, :, 1) * reshape(flattened, 1, :)
+    fc_bias_grad = output_error
+    fc_error = cnn.fc_weights' * output_error
 
     # Reshape hidden errors to match pooled outputs
-    pooled_errors = reshape(hidden_errors, (14, 14, cnn.conv_filters))
+    pool_size = length(pooled_outputs[1])
+    fc_error_reshaped = reshape(fc_error, cnn.conv_filters, pool_size)
 
     # Backpropagate through pooling and convolution layers
     for k in 1:cnn.conv_filters
-        pooled_error = pooled_errors[:, :, k]
+        pooled_error = reshape(fc_error_reshaped[k, :], size(pooled_outputs[k]))
         pool_h, pool_w = size(pooled_outputs[k])
         conv_output = conv_outputs[k]
 
@@ -108,35 +128,46 @@ function train(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
         unpool_error = zeros(size(conv_output))
         for i in 1:pool_h
             for j in 1:pool_w
-                region = conv_output[2*i-1:2*i, 2*j-1:2*j]
-                max_idx = argmax(region)
-                unpool_error[2*i-1:2*i, 2*j-1:2*j][max_idx] = pooled_error[i, j]
+                region = conv_output[2i-1:2i, 2j-1:2j]
+                max_idx = argmax(vec(region))
+                unpool_error[2i-1+div(max_idx-1, 2), 2j-1+mod(max_idx-1, 2)] = pooled_error[i, j]
             end
         end
 
         # Convolution gradient
-        conv_filter_grad = zeros(size(cnn.conv_weights[:, :, k]))
-        for i in 1:size(conv_filter_grad, 1)
-            for j in 1:size(conv_filter_grad, 2)
-                region = image[i:i+size(conv_filter_grad, 1)-1, j:j+size(conv_filter_grad, 2)-1]
-                conv_filter_grad[i, j] = sum(region .* unpool_error)
+        conv_filter_grad = zeros(size(cnn.conv_weights[k, :, :]))
+        filter_size = size(conv_filter_grad, 1)  # Tamanho do filtro (5x5)
+        for i in 1:(size(image, 1) - filter_size + 1)
+            for j in 1:(size(image, 2) - filter_size + 1)
+                # Extraia a região correspondente à posição do filtro
+                region = image[i:i+filter_size-1, j:j+filter_size-1]
+                # Certifique-se de que `region` e `unpool_error` tenham as mesmas dimensões
+                if size(region) == size(unpool_error[i:i+filter_size-1, j:j+filter_size-1])
+                    conv_filter_grad .+= region .* unpool_error[i:i+filter_size-1, j:j+filter_size-1]
+                else
+                    println("Mismatched dimensions: region $(size(region)), unpool_error $(size(unpool_error))")
+                end
             end
         end
 
         # Update convolutional parameters
-        cnn.conv_weights[:, :, k] .-= cnn.learning_rate * conv_filter_grad
-        cnn.conv_bias[k] -= cnn.learning_rate * sum(unpool_error)
+        cnn.conv_weight_vel[k, :, :] = cnn.momentum * cnn.conv_weight_vel[k, :, :] - cnn.learning_rate * conv_filter_grad
+        cnn.conv_weights[k, :, :] += cnn.conv_weight_vel[k, :, :]
+        cnn.conv_bias_vel[k] = cnn.momentum * cnn.conv_bias_vel[k] - cnn.learning_rate * sum(unpool_error)
+        cnn.conv_bias[k] += cnn.conv_bias_vel[k]
     end
 
     # Update fully connected parameters
-    cnn.fc_weights .-= cnn.learning_rate * fc_weight_grad
-    cnn.fc_bias .-= cnn.learning_rate * fc_bias_grad
+    cnn.fc_weight_vel = cnn.momentum * cnn.fc_weight_vel - cnn.learning_rate * fc_weight_grad
+    cnn.fc_weights += cnn.fc_weight_vel
+    cnn.fc_bias_vel = cnn.momentum * cnn.fc_bias_vel - cnn.learning_rate * fc_bias_grad
+    cnn.fc_bias += cnn.fc_bias_vel
 end
 
 # Character Classifier
 mutable struct CharacterClassifier
     cnn::CNN
-    char_classes::Vector{String}
+    char_classes::Vector{Char}
 end
 
 function save(classifier::CharacterClassifier, path::String)
@@ -148,76 +179,92 @@ function load(path::String)
 end
 
 function predict(classifier::CharacterClassifier, image::Matrix{Float64})
-    _, _, _, _, output = forward(classifier.cnn, image)
-    max_idx = argmax(output)
-    predicted = classifier.char_classes[max_idx]
-    confidence = output[max_idx] * 100.0
+    output, _, _, _ = forward(classifier.cnn, image)
+    idx = argmax(output)
+    predicted = classifier.char_classes[idx]
+    confidence = output[idx] * 100.0
     return predicted, confidence
 end
 
-# Generate character images
-function generate_char_image(char::Char, font::String, size::Int=28)
-    img = rand(Float64, size, size) * 0.1  # Noise background
-    img[10:18, 10:18] .= 1.0  # Simplified "character" square
-    return img
+# Generate character images using Luxor.jl
+function generate_char_image(ch::Char, font_path::String, size::Int=28)
+    img = @imagematrix begin
+        background("white")  # Fundo branco
+        fontsize(size * 0.7)  # Tamanho da fonte
+        fontface(font_path)   # Caminho para a fonte
+        sethue("black")       # Cor do texto
+        text(string(ch), Point(0, 0), halign=:center, valign=:middle)  # Centralize o texto
+    end size size
+
+    # Converta a imagem para uma matriz de pixels
+    return Float64.(Gray.(img))
 end
 
-function generate_training_data()
-    chars = ['A':'Z'; 'a':'z'; '0':'9'; ['!', '@', '#', '$', '%', '&', '*', '(', ')', '-', '+', '=', '[', ']', '{', '}', '|', ';', ':', ',', '.', '/', '?']]
-    fonts = ["Verdana", "Serif", "Times New Roman", "Courier New"]
-    data_dir = "dados/imagens"
-    mkpath(data_dir)
+# Normalize the image
+function normalize_image(img::Array{Float64, 2})
+    return 1.0 .- img  # Inverta as cores (preto -> branco e vice-versa)
+end
 
+# List fonts in a directory
+function list_fonts(font_dir::String)
+    fonts = []
+    for file in readdir(font_dir; join=true)
+        if endswith(file, ".ttf")
+            push!(fonts, file)
+        end
+    end
+    return fonts
+end
+
+# Prepare training data
+function prepare_data(char_classes::Vector{Char}, font_dir::String)
+    fonts = list_fonts(font_dir)
     training_data = []
-    for char in chars
-        for font in fonts
-            img = generate_char_image(char, font)
-            path = joinpath(data_dir, "$(char)_$(font).png")
-
-            # Convert the image to a Gray image and save it
-            gray_img = reinterpret(Gray{Float64}, img)  # Convert to a compatible format
-            save(path, gray_img)  # Save the image
-
-            push!(training_data, (img, string(char)))
+    for ch in char_classes
+        for font_path in fonts
+            img = generate_char_image(ch, font_path)
+            input = normalize_image(img)
+            target = zeros(length(char_classes))
+            target[findfirst(==(ch), char_classes)] = 1.0
+            push!(training_data, (input, target))
         end
     end
     return training_data
-end
-
-# Training Data Preparation
-function prepare_data()
-    training_data = generate_training_data()
-    chars = sort(unique(last.(training_data)))
-    char_idx = Dict(char => idx for (idx, char) in enumerate(chars))
-    normalized_data = [(img, zeros(length(chars)) |> (t -> (t[char_idx[char]] = 1.0; t))) 
-                      for (img, char) in training_data]
-    return normalized_data, chars
 end
 
 # Train Model
 function train_model()
     model_path = "dados/char_classifier.jls"
     mkpath(dirname(model_path))
-    
+
     println("Generating and training new model...")
-    normalized_data, chars = prepare_data()
-    cnn = CNN(1, 8, 5, 128, length(chars), 0.001)  # 1 input channel (grayscale), 8 filters, 5x5 filter
-    epochs = 1000
-    
-    for epoch in 0:epochs-1
+    char_classes = collect("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.:,;'\"(!?)+-*/=")
+    font_dir = "dados/FontsTrain"
+    training_data = prepare_data(char_classes, font_dir)
+    cnn = CNN(16, 5, length(char_classes))
+    epochs = 100
+
+    for epoch in 1:epochs
         total_loss = 0.0
-        for (img, target) in normalized_data
-            train(cnn, img, target)
-            _, _, _, _, output = forward(cnn, img)
+        correct = 0
+        total = 0
+
+        for (image, target) in training_data
+            train!(cnn, image, target)
+            output, _, _, _ = forward(cnn, image)
             total_loss += cross_entropy_loss(output, target)
+            predicted = argmax(output)
+            if predicted == findfirst(==(argmax(target)), char_classes)
+                correct += 1
+            end
+            total += 1
         end
-        if epoch % 100 == 0
-            avg_loss = total_loss / length(normalized_data)
-            println("Epoch $(lpad(epoch, 4)) | Average Loss: $(round(avg_loss, digits=4))")
-        end
+
+        accuracy = correct / total
+        println("Epoch $(lpad(epoch, 4)) | Loss: $(round(total_loss / total, digits=4)) | Accuracy: $(round(accuracy * 100, digits=2))%")
     end
-    
-    classifier = CharacterClassifier(cnn, chars)
+
+    classifier = CharacterClassifier(cnn, char_classes)
     save(classifier, model_path)
     println("Model saved to $model_path")
 end
@@ -228,16 +275,28 @@ function test_model()
     classifier = load(model_path)
     println("Loaded model from $model_path")
 
-    test_chars = ['A', '1', '#', 'z']
-    test_fonts = ["Verdana", "Courier New"]
-    println("\n================ TESTE ===============")
-    for char in test_chars
-        for font in test_fonts
-            img = generate_char_image(char, font)
-            predicted, confidence = predict(classifier, img)
-            println("Char: $char (Font: $font) | Previsão: $(lpad(predicted, 2)) | Confiança: $(round(confidence, digits=1))%")
+    test_chars = ['A', 'B', 'C', 'J', 'K', 'L', 'X', 'Y', 'Z']
+    font_dir = "dados/FontsTest"
+    fonts = list_fonts(font_dir)
+
+    correct = 0
+    total = 0
+
+    for ch in test_chars
+        for font_path in fonts
+            img = generate_char_image(ch, font_path)
+            input = normalize_image(img)
+            predicted, confidence = predict(classifier, input)
+            println("Char: $ch (Font: $font_path) | Predicted: $(predicted) | Confidence: $(round(confidence, digits=1))%")
+            if ch == predicted
+                correct += 1
+            end
+            total += 1
         end
     end
+
+    accuracy = (correct / total) * 100
+    println("Test Accuracy: $(round(accuracy, digits=2))% ($correct out of $total)")
 end
 
 # Main Function
@@ -256,6 +315,7 @@ function main(args)
 end
 
 main(ARGS)
+
 
 
 # julia cnn_reconhece_texto.jl treino
