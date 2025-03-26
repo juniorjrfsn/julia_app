@@ -5,12 +5,11 @@ using Serialization
 using Luxor
 using Images
 using Distributions
-using FileIO
 
 # Activation functions
 relu(x) = max(0.0, x)
 relu_derivative(x) = x > 0.0 ? 1.0 : 0.0
-softmax(x) = exp.(x ./ 2.0 .- maximum(x ./ 2.0)) ./ sum(exp.(x ./ 2.0 .- maximum(x ./ 2.0)))  # Temperature scaling (T=2.0)
+softmax(x) = exp.(x .- maximum(x)) ./ sum(exp.(x .- maximum(x)))  # Numerically stable softmax
 
 # Loss function (cross-entropy)
 cross_entropy_loss(output, target) = -sum(target .* log.(output .+ 1e-8))
@@ -20,9 +19,9 @@ mutable struct CNN
     conv_filters::Int
     filter_size::Int
     output_size::Int
-    conv_weights::Array{Float64, 3}
+    conv_weights::Array{Float64, 3}  # Filters for convolution
     conv_bias::Vector{Float64}
-    fc_weights::Matrix{Float64}
+    fc_weights::Matrix{Float64}      # Fully connected layer weights
     fc_bias::Vector{Float64}
     learning_rate::Float64
     momentum::Float64
@@ -32,14 +31,14 @@ mutable struct CNN
     fc_bias_vel::Vector{Float64}
 end
 
-function CNN(conv_filters::Int, filter_size::Int, output_size::Int; learning_rate=0.001, momentum=0.9)
+function CNN(conv_filters::Int, filter_size::Int, output_size::Int; learning_rate=0.005, momentum=0.9)
     rng = MersenneTwister(42)
-    normal = Normal(0.0, sqrt(2.0 / (filter_size * filter_size)))
-    conv_weights = rand(rng, normal, (conv_filters, filter_size, filter_size))
+    normal = Normal(0.0, sqrt(2.0 / (filter_size * filter_size)))  # Distribuição normal
+    conv_weights = rand(rng, normal, (conv_filters, filter_size, filter_size))  # Pesos iniciais
     conv_bias = zeros(Float64, conv_filters)
-    fc_input_size = conv_filters * 12 * 12
-    fc_normal = Normal(0.0, sqrt(2.0 / fc_input_size))
-    fc_weights = rand(rng, fc_normal, (output_size, fc_input_size))
+    fc_input_size = conv_filters * 12 * 12  # Após pooling (28x28 -> 12x12)
+    fc_normal = Normal(0.0, sqrt(2.0 / fc_input_size))  # Distribuição normal para camada fully connected
+    fc_weights = rand(rng, fc_normal, (output_size, fc_input_size))  # Pesos iniciais
     fc_bias = zeros(Float64, output_size)
 
     CNN(
@@ -59,6 +58,7 @@ function CNN(conv_filters::Int, filter_size::Int, output_size::Int; learning_rat
     )
 end
 
+# Convolution operation
 function convolve2d(image::Matrix{Float64}, filter::Matrix{Float64}, bias::Float64)
     h, w = size(image)
     fh, fw = size(filter)
@@ -73,6 +73,7 @@ function convolve2d(image::Matrix{Float64}, filter::Matrix{Float64}, bias::Float
     return output
 end
 
+# Max pooling (2x2)
 function maxpool2d(input::Matrix{Float64})
     h, w = size(input)
     out_h, out_w = div(h, 2), div(w, 2)
@@ -86,28 +87,44 @@ function maxpool2d(input::Matrix{Float64})
     return output
 end
 
+# Forward pass
 function forward(cnn::CNN, image::Matrix{Float64})
+    # Convolution
     conv_outputs = [convolve2d(image, cnn.conv_weights[k, :, :], cnn.conv_bias[k]) for k in 1:cnn.conv_filters]
+    # Pooling
     pooled_outputs = [maxpool2d(conv_out) for conv_out in conv_outputs]
+    # Flatten
     flattened = vcat([vec(pooled) for pooled in pooled_outputs]...)
+    # Fully connected layer
     output = cnn.fc_weights * flattened + cnn.fc_bias
     output = softmax(output)
     return output, conv_outputs, pooled_outputs, flattened
 end
 
+# Backward pass and parameter updates
 function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
+    # Forward pass
     output, conv_outputs, pooled_outputs, flattened = forward(cnn, image)
+
+    # Compute output errors (cross-entropy loss gradient)
     output_error = output - target
+
+    # Backpropagate through fully connected layer
     fc_weight_grad = reshape(output_error, :, 1) * reshape(flattened, 1, :)
     fc_bias_grad = output_error
     fc_error = cnn.fc_weights' * output_error
+
+    # Reshape hidden errors to match pooled outputs
     pool_size = length(pooled_outputs[1])
     fc_error_reshaped = reshape(fc_error, cnn.conv_filters, pool_size)
 
+    # Backpropagate through pooling and convolution layers
     for k in 1:cnn.conv_filters
         pooled_error = reshape(fc_error_reshaped[k, :], size(pooled_outputs[k]))
         pool_h, pool_w = size(pooled_outputs[k])
         conv_output = conv_outputs[k]
+
+        # Unpooling
         unpool_error = zeros(size(conv_output))
         for i in 1:pool_h
             for j in 1:pool_w
@@ -116,27 +133,33 @@ function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
                 unpool_error[2i-1+div(max_idx-1, 2), 2j-1+mod(max_idx-1, 2)] = pooled_error[i, j]
             end
         end
+
+        # Convolution gradient - Use conv_output size instead of image size
         conv_filter_grad = zeros(size(cnn.conv_weights[k, :, :]))
-        filter_size = size(conv_filter_grad, 1)
-        conv_h, conv_w = size(conv_output)
-        for i in 1:conv_h - filter_size + 1
-            for j in 1:conv_w - filter_size + 1
+        filter_size = size(conv_filter_grad, 1)  # Tamanho do filtro (5x5)
+        conv_h, conv_w = size(conv_output)  # 24×24
+        for i in 1:conv_h - filter_size + 1  # 1:20
+            for j in 1:conv_w - filter_size + 1  # 1:20
                 region = image[i:i+filter_size-1, j:j+filter_size-1]
                 conv_filter_grad .+= region .* unpool_error[i:i+filter_size-1, j:j+filter_size-1]
             end
         end
+
+        # Update convolutional parameters
         cnn.conv_weight_vel[k, :, :] = cnn.momentum * cnn.conv_weight_vel[k, :, :] - cnn.learning_rate * conv_filter_grad
         cnn.conv_weights[k, :, :] += cnn.conv_weight_vel[k, :, :]
         cnn.conv_bias_vel[k] = cnn.momentum * cnn.conv_bias_vel[k] - cnn.learning_rate * sum(unpool_error)
         cnn.conv_bias[k] += cnn.conv_bias_vel[k]
     end
 
-    cnn.fc_weight_vel = cnn.momentum * cnn.fc_weight_vel - cnn.learning_rate * fc_weight_grad - 0.0001 * cnn.fc_weights
+    # Update fully connected parameters
+    cnn.fc_weight_vel = cnn.momentum * cnn.fc_weight_vel - cnn.learning_rate * fc_weight_grad
     cnn.fc_weights += cnn.fc_weight_vel
     cnn.fc_bias_vel = cnn.momentum * cnn.fc_bias_vel - cnn.learning_rate * fc_bias_grad
     cnn.fc_bias += cnn.fc_bias_vel
 end
 
+# Character Classifier
 mutable struct CharacterClassifier
     cnn::CNN
     char_classes::Vector{Char}
@@ -152,28 +175,32 @@ end
 
 function predict(classifier::CharacterClassifier, image::Matrix{Float64})
     output, _, _, _ = forward(classifier.cnn, image)
-    println("Raw output: ", round.(output, digits=4))
     idx = argmax(output)
     predicted = classifier.char_classes[idx]
     confidence = output[idx] * 100.0
     return predicted, confidence
 end
 
+# Generate character images using Luxor.jl
 function generate_char_image(ch::Char, font_path::String, size::Int=28)
     img = @imagematrix begin
-        background("white")
-        fontsize(size * 0.7)
-        fontface(font_path)
-        sethue("black")
-        text(string(ch), Point(0, 0), halign=:center, valign=:middle)
+        background("white")  # Fundo branco
+        fontsize(size * 0.7)  # Tamanho da fonte
+        fontface(font_path)   # Caminho para a fonte
+        sethue("black")       # Cor do texto
+        text(string(ch), Point(0, 0), halign=:center, valign=:middle)  # Centralize o texto
     end size size
+
+    # Converta a imagem para uma matriz de pixels
     return Float64.(Gray.(img))
 end
 
+# Normalize the image
 function normalize_image(img::Array{Float64, 2})
-    return 1.0 .- img
+    return 1.0 .- img  # Inverta as cores (preto -> branco e vice-versa)
 end
 
+# List fonts in a directory
 function list_fonts(font_dir::String)
     fonts = []
     for file in readdir(font_dir; join=true)
@@ -184,15 +211,14 @@ function list_fonts(font_dir::String)
     return fonts
 end
 
+# Prepare training data
 function prepare_data(char_classes::Vector{Char}, font_dir::String)
     fonts = list_fonts(font_dir)
     training_data = []
-    rng = MersenneTwister(42)
     for ch in char_classes
         for font_path in fonts
             img = generate_char_image(ch, font_path)
-            input = normalize_image(img) .+ randn(rng, 28, 28) * 0.1
-            input = clamp.(input, 0.0, 1.0)
+            input = normalize_image(img)
             target = zeros(length(char_classes))
             target[findfirst(==(ch), char_classes)] = 1.0
             push!(training_data, (input, target))
@@ -201,6 +227,7 @@ function prepare_data(char_classes::Vector{Char}, font_dir::String)
     return training_data
 end
 
+# Train Model
 function train_model()
     model_path = "dados/char_classifier.jls"
     mkpath(dirname(model_path))
@@ -208,11 +235,9 @@ function train_model()
     println("Generating and training new model...")
     char_classes = collect("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.:,;'\"(!?)+-*/=")
     font_dir = "dados/FontsTrain"
-    fonts = list_fonts(font_dir)
-    println("Number of training fonts: ", length(fonts))
     training_data = prepare_data(char_classes, font_dir)
-    cnn = CNN(16, 5, length(char_classes); learning_rate=0.001)
-    epochs = 200
+    cnn = CNN(16, 5, length(char_classes))
+    epochs = 100
 
     for epoch in 1:epochs
         total_loss = 0.0
@@ -223,9 +248,8 @@ function train_model()
             train!(cnn, image, target)
             output, _, _, _ = forward(cnn, image)
             total_loss += cross_entropy_loss(output, target)
-            predicted_idx = argmax(output)
-            true_idx = argmax(target)
-            if predicted_idx == true_idx
+            predicted = argmax(output)
+            if predicted == findfirst(==(argmax(target)), char_classes)
                 correct += 1
             end
             total += 1
@@ -240,6 +264,7 @@ function train_model()
     println("Model saved to $model_path")
 end
 
+# Test Model
 function test_model()
     model_path = "dados/char_classifier.jls"
     classifier = load(model_path)
@@ -269,64 +294,24 @@ function test_model()
     println("Test Accuracy: $(round(accuracy, digits=2))% ($correct out of $total)")
 end
 
-function reconhecercaracter(image_path::String)
-    model_path = "dados/char_classifier.jls"
-    if !isfile(model_path)
-        println("Error: Trained model not found at $model_path. Run 'treino' first.")
-        return
-    end
-
-    if !isfile(image_path)
-        println("Error: Image file not found at $image_path.")
-        return
-    end
-
-    classifier = load(model_path)
-    println("Loaded model from $model_path")
-    println("Attempting to load image from: ", abspath(image_path))
-
-    try
-        img = FileIO.load(image_path)
-        println("Loaded image type: ", typeof(img))
-        println("Loaded image size: ", size(img))
-        img_gray = Gray.(img)
-        img_resized = imresize(img_gray, (28, 28))
-        img_matrix = Float64.(img_resized)
-        input = normalize_image(img_matrix)
-        Images.save("preprocessed_image.png", Gray.(input))  # Explicitly use Images.save
-
-        predicted, confidence = predict(classifier, input)
-        println("Predicted character: $predicted | Confidence: $(round(confidence, digits=1))%")
-        println("Preprocessed image saved as 'preprocessed_image.png'")
-    catch e
-        println("Error processing image: ", e)
-    end
-end
-
+# Main Function
 function main(args)
     if length(args) > 0
         if args[1] == "treino"
             train_model()
         elseif args[1] == "reconhecer"
             test_model()
-        elseif args[1] == "reconhecercaracter"
-            if length(args) < 2
-                println("Usage: julia cnn_reconhece_texto.jl reconhecercaracter <image_path>")
-            else
-                reconhecercaracter(args[2])
-            end
         else
-            println("Usage: julia cnn_reconhece_texto.jl [treino|reconhecer|reconhecercaracter <image_path>]")
+            println("Usage: julia cnn_reconhece_texto.jl [treino|reconhecer]")
         end
     else
-        println("Usage: julia cnn_reconhece_texto.jl [treino|reconhecer|reconhecercaracter <image_path>]")
+        println("Usage: julia cnn_reconhece_texto.jl [treino|reconhecer]")
     end
 end
 
 main(ARGS)
 
 
+
 # julia cnn_reconhece_texto.jl treino
 # julia cnn_reconhece_texto.jl reconhecer
-# julia cnn_reconhece_texto.jl reconhecercaracter
-# julia cnn_reconhece_texto.jl reconhecercaracter images.png
