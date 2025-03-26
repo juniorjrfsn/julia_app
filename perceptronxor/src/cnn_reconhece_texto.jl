@@ -4,6 +4,7 @@ using Statistics
 using Serialization
 using Luxor
 using Images
+using FileIO
 using Distributions
 
 # === Funções de Ativação e Perda ===
@@ -193,10 +194,11 @@ function generate_images_from_fonts(char_classes::Vector{Char}, font_dir::String
         for font_path in fonts
             img = generate_char_image(ch, font_path, size)
             img_normalized = normalize_image(img)
-            img_to_save = colorview(Gray, N0f8.(clamp.(img_normalized, 0, 1)))
+            # Ensure the image is in a format FileIO can save (e.g., Gray{N0f8})
+            img_to_save = Gray{N0f8}.(clamp.(img_normalized, 0, 1))  # Convert to Gray{N0f8} directly
             font_name = splitext(basename(font_path))[1]
             save_path = joinpath(output_dir, "$(ch)_$(font_name).png")
-            save(save_path, img_to_save)
+            save(save_path, img_to_save)  # Save the image
         end
     end
     println("Images generated and saved in $output_dir")
