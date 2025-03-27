@@ -98,22 +98,22 @@ end
 function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
     output, conv_outputs, pooled_outputs, flattened = forward(cnn, image)
     output_error = output - target
-    
+
     # Fully connected layer gradients
     fc_weight_grad = output_error * flattened'
     fc_bias_grad = output_error
-    
+
     # Backpropagate error
     fc_error = cnn.fc_weights' * output_error
     pool_size = length(pooled_outputs[1])
     fc_error_reshaped = reshape(fc_error, cnn.conv_filters, pool_size)
-    
+
     # Convolutional layer gradients
     for k in 1:cnn.conv_filters
         pooled_error = reshape(fc_error_reshaped[k, :], size(pooled_outputs[k]))
         conv_output = conv_outputs[k]
         unpool_error = zeros(size(conv_output))
-        
+
         # Unpooling
         pool_h, pool_w = size(pooled_outputs[k])
         for i in 1:pool_h
@@ -123,7 +123,7 @@ function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
                 unpool_error[2i-1+div(max_idx-1, 2), 2j-1+mod(max_idx-1, 2)] = pooled_error[i, j]
             end
         end
-        
+
         # Compute gradients for conv filters
         filter_size = cnn.filter_size
         conv_filter_grad = zeros(size(cnn.conv_weights[k, :, :]))
@@ -134,14 +134,14 @@ function train!(cnn::CNN, image::Matrix{Float64}, target::Vector{Float64})
                 conv_filter_grad .+= region .* unpool_error[i, j]
             end
         end
-        
+
         # Update parameters with momentum
         cnn.conv_weight_vel[k, :, :] = cnn.momentum * cnn.conv_weight_vel[k, :, :] - cnn.learning_rate * conv_filter_grad
         cnn.conv_weights[k, :, :] += cnn.conv_weight_vel[k, :, :]
         cnn.conv_bias_vel[k] = cnn.momentum * cnn.conv_bias_vel[k] - cnn.learning_rate * sum(unpool_error)
         cnn.conv_bias[k] += cnn.conv_bias_vel[k]
     end
-    
+
     # Update fully connected layer
     cnn.fc_weight_vel = cnn.momentum * cnn.fc_weight_vel - cnn.learning_rate * fc_weight_grad
     cnn.fc_weights += cnn.fc_weight_vel
@@ -242,31 +242,31 @@ function train_model()
     model_path = "dados/char_classifier.jls"
     mkpath(dirname(model_path))
     println("Training new model...")
-    
+
     char_classes = collect("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.:,;'\"(!?)+-*/=")
     image_train_dir = "dados/FontsImgTrain"
-    
+
     # Generate images if directory is empty
     if !isdir(image_train_dir) || isempty(readdir(image_train_dir))
         generate_images_from_fonts(char_classes, "dados/FontsTrain", image_train_dir)
     end
-    
+
     training_data = prepare_data_from_images(char_classes, image_train_dir)
     if isempty(training_data)
         error("No training data available. Please check image generation.")
     end
-    
+
     cnn = CNN(16, 5, length(char_classes); learning_rate=0.001)
     epochs = 100
-    
+
     for epoch in 1:epochs
         total_loss = 0.0
         correct = 0
         total = 0
-        
+
         # Shuffle data each epoch
         shuffle!(training_data)
-        
+
         for (image, target) in training_data
             train!(cnn, image, target)
             output, _, _, _ = forward(cnn, image)
@@ -278,12 +278,12 @@ function train_model()
             end
             total += 1
         end
-        
+
         accuracy = correct / total
         avg_loss = total_loss / total
         println("Epoch $(lpad(epoch, 4)) | Loss: $(round(avg_loss, digits=4)) | Accuracy: $(round(accuracy * 100, digits=2))%")
     end
-    
+
     classifier = CharacterClassifier(cnn, char_classes)
     save(classifier, model_path)
     println("Model saved to $model_path")
@@ -349,11 +349,19 @@ end
 
 main(ARGS)
 
-
-
-
+# === Usage ===
+# To generate images, train the model, or test the model, run the following commands in the terminal:
 # julia cnn_reconhece_texto.jl gerarimagens
 # julia cnn_reconhece_texto.jl treino
 # julia cnn_reconhece_texto.jl reconhecer
+# Make sure to have the necessary directories and font files in place before running the commands.
+# The model will be saved in "dados/char_classifier.jls" and can be loaded for testing.
 
-# julia cnn_reconhece_texto.jl reconhecer "dados/FontsImgTest/0.png"
+# The generated images will be saved in "dados/FontsImgTrain" and can be used for training.
+# The test images should be placed in "dados/FontsImgTest" for testing the model.
+
+# Ensure you have the required packages installed: Luxor, Images, ImageMagick, Distributions, Statistics
+# You can install them using Julia's package manager:
+
+# Finalmente uma IA que reconhece texto em imagens de forma simples e eficiente.
+# A implementação é feita em Julia, uma linguagem de programação de alto desempenho e fácil de usar.
