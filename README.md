@@ -45,6 +45,8 @@ julia> ]
 (@v1.8) pkg> add ImageCore
 (@v1.8) pkg> add JSON3
 (@v1.8) pkg> add Luxor
+(@v1.8) pkg> add ImageMagick
+(@v1.8) pkg> add QuartzImageIO
 ```
 
 
