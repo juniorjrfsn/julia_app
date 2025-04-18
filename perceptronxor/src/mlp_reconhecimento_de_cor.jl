@@ -138,7 +138,7 @@ function main()
     # Dados de teste
     teste_data_input = [
         ([200, 0, 70]),
-        ([165, 156, 159]),
+        ([165, 156, 255]),
     ]
     # Teste final
     @printf("\n\n================ TESTE ===============\n")
@@ -159,3 +159,6 @@ main()
 # $ mlp_reconhecimento_de_cor.jl
 
 # Fiz algumas modificaçõe e funcionou perfeitamente meu DeepLearning, ficou parecendo um LSTM . Obrigado por sua ajuda. Abraços. \\
+
+# $  julia mlp_reconhecimento_de_cor.jl treino
+# $  julia mlp_reconhecimento_de_cor.jl reconhecer
