@@ -274,7 +274,7 @@ function test_model()
     classifier = load(model_path)
     println("Loaded model from $model_path")
 
-    test_chars = ['A', 'B', 'C', 'J', 'K', 'L', 'X', 'Y', 'Z']
+    test_chars = ['A', 'B', 'C', 'F','J', 'K', 'L', 'X', 'Y', 'Z']
     font_dir = "dados/FontsTest"
     fonts = list_fonts(font_dir)
 
@@ -317,6 +317,5 @@ main(ARGS)
 
 
 
-# julia cnn_reconhece_texto.jl treino
-# julia cnn_reconhece_texto.jl reconhecer
-# julia cnn_reconhece_texto.jl reconhecercaracter
+# julia cnn_reconhece_texto_otimo.jl treino
+# julia cnn_reconhece_texto_otimo.jl reconhecer
