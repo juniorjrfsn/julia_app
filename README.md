@@ -47,6 +47,7 @@ julia> ]
 (@v1.8) pkg> add Luxor
 (@v1.8) pkg> add ImageMagick
 (@v1.8) pkg> add QuartzImageIO
+(@v1.8) pkg> add JLD2
 ```
 
 
