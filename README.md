@@ -22,6 +22,7 @@ julia > ]
 (@v1.8) pkg> generate servidor
 (@v1.8) pkg> generate neural1
 (@v1.8) pkg> generate perceptronxor
+(@v1.8) pkg> generate mercadoRNA
 
 ```
 
