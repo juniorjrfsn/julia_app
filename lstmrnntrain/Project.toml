@@ -1,0 +1,7 @@
+# projeto : lstmrnntrain
+# file : lstmrnntrain/Project.toml
+
+name = "lstmrnntrain"
+uuid = "e7cb56fe-834d-4021-8eee-6d68dc4c0231"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"
