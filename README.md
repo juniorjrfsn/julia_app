@@ -24,6 +24,7 @@ julia > ]
 (@v1.8) pkg> generate perceptronxor
 (@v1.8) pkg> generate mercadoRNA
 (@v1.8) pkg> generate lstmrnntrain
+(@v1.8) pkg> generate lstmcnntrain
 
 ```
 

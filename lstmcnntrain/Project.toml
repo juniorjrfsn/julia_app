@@ -1,0 +1,4 @@
+name = "lstmcnntrain"
+uuid = "5c6be4ba-7275-47bb-bc65-30eb59fd0e3a"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"
