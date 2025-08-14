@@ -2,281 +2,437 @@
 #greet() = print("Hello World!")
 #end # module lstmrnntrain
 
-# projeto : lstmrnntrain
-# file : lstmrnntrain/src/lstmrnntrain.jl
-
+ 
+ 
+# projeto: lstmrnntrain - Versão Otimizada para Datasets Pequenos
+# file: lstmrnntrain/src/lstmrnntrain.jl
+# Sistema de treinamento LSTM/RNN para predição de preços de ações
 
 using Flux, TOML, Statistics, Dates, Random, JSON, StatsBase
+using Flux: train!, ADAM, logitcrossentropy, mse
 
 # Configurar seed para reprodutibilidade
 Random.seed!(42)
 
 # Função para carregar dados TOML
 function load_stock_data(filepath::String)
-    data = TOML.parsefile(filepath)
-    records = data["records"]
-    
-    # Extrair dados relevantes
-    dates = [record["date"] for record in records]
-    closing = [record["closing"] for record in records]
-    volume = [record["volume"] for record in records]
-    variation = [record["variation"] for record in records]
-    opening = [record["opening"] for record in records]
-    high = [record["high"] for record in records]
-    low = [record["low"] for record in records]
-    
-    return (
-        dates = dates,
-        closing = closing,
-        opening = opening,
-        high = high,
-        low = low,
-        volume = volume,
-        variation = variation,
-        asset_name = data["asset"]
-    )
+    try
+        data = TOML.parsefile(filepath)
+        records = data["records"]
+        
+        if isempty(records)
+            return nothing
+        end
+        
+        # Extrair dados relevantes e converter para Float64
+        dates = [record["date"] for record in records]
+        closing = Float64.([record["closing"] for record in records])
+        volume = Float64.([record["volume"] for record in records])
+        variation = Float64.([record["variation"] for record in records])
+        opening = Float64.([record["opening"] for record in records])
+        high = Float64.([record["high"] for record in records])
+        low = Float64.([record["low"] for record in records])
+        
+        return (
+            dates = dates,
+            closing = closing,
+            opening = opening,
+            high = high,
+            low = low,
+            volume = volume,
+            variation = variation,
+            asset_name = data["asset"]
+        )
+    catch e
+        println("Erro ao carregar $filepath: $e")
+        return nothing
+    end
 end
 
-# Função para normalizar dados
-function normalize_data(data::Vector{Float64})
-    μ = mean(data)
-    σ = std(data)
-    return (data .- μ) ./ σ, μ, σ
-end
-
-# Função para criar sequências para treinamento
-function create_sequences(data::Vector{Float64}, seq_length::Int)
-    X = []
-    y = []
+# Função para normalizar dados usando Min-Max normalization
+function normalize_minmax(data::Vector{Float64})
+    min_val = minimum(data)
+    max_val = maximum(data)
+    range_val = max_val - min_val
     
-    for i in 1:(length(data) - seq_length)
-        push!(X, data[i:(i + seq_length - 1)])
-        push!(y, data[i + seq_length])
+    if range_val == 0
+        return data, min_val, max_val
     end
     
-    return hcat(X...), y
+    normalized = (data .- min_val) ./ range_val
+    return normalized, min_val, max_val
 end
 
-# Função para preparar dados multivariados
-function prepare_multivariate_data(stock_data, seq_length::Int = 5)
-    # Combinar features relevantes
-    features = hcat(
-        stock_data.closing,
-        stock_data.opening,
-        stock_data.high,
-        stock_data.low,
-        log.(stock_data.volume .+ 1),  # Log do volume para reduzir escala
-        stock_data.variation
+# Função para desnormalizar
+function denormalize_minmax(normalized_data, min_val::Float64, max_val::Float64)
+    return normalized_data * (max_val - min_val) + min_val
+end
+
+# Função para criar features técnicas otimizada para datasets pequenos
+function create_technical_features(stock_data, window::Int = 3)  # Reduzido de 5 para 3
+    n = length(stock_data.closing)
+    
+    # Verificar se temos dados suficientes
+    if n < window + 1
+        println("Aviso: Dados insuficientes para calcular features técnicas (n=$n, window=$window)")
+        return nothing
+    end
+    
+    # Features básicas
+    closing = stock_data.closing
+    opening = stock_data.opening
+    high = stock_data.high
+    low = stock_data.low
+    volume = stock_data.volume
+    
+    # Médias móveis com janela menor
+    sma_short = zeros(n)
+    sma_long = zeros(n)
+    
+    for i in window:n
+        sma_short[i] = mean(closing[(i-window+1):i])
+        long_window = min(2*window, i)  # Janela adaptativa
+        if i >= long_window
+            sma_long[i] = mean(closing[(i-long_window+1):i])
+        end
+    end
+    
+    # RSI simplificado - versão corrigida
+    rsi = zeros(n)
+    for i in (window+1):n
+        if i > window
+            start_idx = max(1, i-window)
+            end_idx = i-1
+            if end_idx > start_idx
+                changes = diff(closing[start_idx:end_idx])
+                gains = [max(0, change) for change in changes]
+                losses = [abs(min(0, change)) for change in changes]
+                
+                avg_gain = mean(gains)
+                avg_loss = mean(losses)
+                
+                if avg_loss == 0
+                    rsi[i] = 100
+                else
+                    rs = avg_gain / avg_loss
+                    rsi[i] = 100 - (100 / (1 + rs))
+                end
+            end
+        end
+    end
+    
+    # Volatilidade
+    volatility = zeros(n)
+    if n > 1
+        returns = diff(log.(max.(closing, 1e-10)))
+        for i in window:n-1
+            start_idx = max(1, i-window+1)
+            end_idx = min(i, length(returns))
+            if end_idx > start_idx
+                volatility[i+1] = std(returns[start_idx:end_idx])
+            end
+        end
+    end
+    
+    # Retornos percentuais
+    price_change = zeros(n)
+    if n > 1
+        for i in 2:n
+            if closing[i-1] != 0
+                price_change[i] = (closing[i] - closing[i-1]) / closing[i-1]
+            end
+        end
+    end
+    
+    # Range High-Low normalizado
+    hl_range = zeros(n)
+    for i in 1:n
+        if low[i] != 0
+            hl_range[i] = (high[i] - low[i]) / low[i]
+        end
+    end
+    
+    return hcat(
+        closing,                   # 1
+        opening,                   # 2  
+        high,                      # 3
+        low,                       # 4
+        volume,                    # 5
+        sma_short,                 # 6
+        sma_long,                  # 7
+        rsi,                       # 8
+        volatility,                # 9
+        price_change,              # 10
+        hl_range                   # 11
     )
+end
+
+# Função para preparar dados para treinamento - otimizada para datasets pequenos
+function prepare_training_data(stock_data, seq_length::Int = 5, prediction_horizon::Int = 1)  # Reduzido de 10 para 5
+    # Criar features técnicas
+    features = create_technical_features(stock_data, 3)
+    
+    if features === nothing
+        return nothing, nothing, nothing
+    end
+    
+    # Remover NaN e Inf
+    features = replace(features, NaN => 0.0, Inf => 0.0, -Inf => 0.0)
+    
+    n_samples, n_features = size(features)
+    
+    # Verificar se temos dados suficientes - critério mais flexível
+    min_required = seq_length + prediction_horizon + 5  # Reduzido de 10 para 5
+    if n_samples < min_required
+        println("Aviso: $(stock_data.asset_name) - Dados insuficientes: $n_samples < $min_required")
+        return nothing, nothing, nothing
+    end
     
     # Normalizar cada feature
     normalized_features = similar(features)
     normalization_params = []
     
-    for i in 1:size(features, 2)
-        normalized_features[:, i], μ, σ = normalize_data(features[:, i])
-        push!(normalization_params, (μ = μ, σ = σ))
+    for i in 1:n_features
+        normalized_features[:, i], min_val, max_val = normalize_minmax(features[:, i])
+        push!(normalization_params, (min_val = min_val, max_val = max_val))
     end
     
     # Criar sequências
     X = []
     y = []
     
-    for i in 1:(size(normalized_features, 1) - seq_length)
-        push!(X, normalized_features[i:(i + seq_length - 1), :])
-        push!(y, normalized_features[i + seq_length, 1])  # Prever preço de fechamento
+    start_idx = max(5, seq_length + 1)  # Reduzido de 11 para 5
+    
+    for i in start_idx:(n_samples - prediction_horizon)
+        # Input: sequência de features
+        input_seq = normalized_features[(i-seq_length+1):i, :]
+        
+        # Target: preço de fechamento futuro (normalizado)
+        target = normalized_features[i + prediction_horizon, 1]  # closing price
+        
+        push!(X, input_seq')  # Transpor para (features, timesteps)
+        push!(y, target)
     end
     
-    # Converter para arrays 3D (samples, timesteps, features)
-    X_tensor = cat(X..., dims = 3)
-    X_tensor = permutedims(X_tensor, (3, 1, 2))  # (samples, timesteps, features)
+    if isempty(X)
+        return nothing, nothing, nothing
+    end
     
-    return X_tensor, y, normalization_params
+    return X, y, normalization_params
 end
 
-# Definir modelo LSTM
-function create_lstm_model(input_size::Int, hidden_size::Int = 32, output_size::Int = 1)
+# Modelo LSTM compacto para datasets pequenos
+function create_compact_lstm_model(input_size::Int)
     return Chain(
-        LSTM(input_size => hidden_size),
-        Dense(hidden_size => hidden_size, relu),
-        Dropout(0.2),
-        Dense(hidden_size => output_size)
+        LSTM(input_size => 32),      # Reduzido de 64 para 32
+        Dropout(0.2),                # Reduzido dropout
+        LSTM(32 => 16),              # Reduzido de 32 para 16
+        Dropout(0.1),
+        Dense(16 => 8, relu),        # Camada intermediária menor
+        Dense(8 => 1)                # Output
     )
 end
 
-# Definir modelo RNN simples
-function create_rnn_model(input_size::Int, hidden_size::Int = 32, output_size::Int = 1)
+# Modelo RNN compacto
+function create_compact_rnn_model(input_size::Int)
     return Chain(
-        RNN(input_size => hidden_size, tanh),
-        Dense(hidden_size => hidden_size, relu),
+        RNN(input_size => 32, tanh),
         Dropout(0.2),
-        Dense(hidden_size => output_size)
+        RNN(32 => 16, tanh), 
+        Dropout(0.1),
+        Dense(16 => 8, relu),
+        Dense(8 => 1)
     )
 end
 
-# Função de treinamento
-function train_model(model, X, y, epochs::Int = 100, lr::Float64 = 0.001)
-    # Preparar dados para treinamento
-    X_train = [Float32.(X[i, :, :]) for i in 1:size(X, 1)]  # Converter para Float32
-    y_train = Float32.(collect(y))  # Garantir que y seja um vetor de Float32
+# Função de treinamento otimizada
+function train_model_compact(model, X_data, y_data, epochs::Int = 100, batch_size::Int = 8, lr::Float64 = 0.01)
+    # Preparar dados
+    n_samples = length(X_data)
+    X_train = [Float32.(x) for x in X_data]
+    y_train = Float32.(y_data)
     
     # Configurar otimizador
-    opt_state = Flux.setup(Adam(lr), model)
+    opt_state = Flux.setup(ADAM(lr), model)
     
-    # Histórico de perdas
-    losses = Float64[]
+    # Histórico
+    train_losses = Float64[]
     
-    println("Iniciando treinamento...")
+    println("Iniciando treinamento com $n_samples amostras...")
+    
+    best_loss = Inf
+    patience = 15  # Reduzido
+    no_improve = 0
     
     for epoch in 1:epochs
-        total_loss = 0.0
+        # Embaralhar dados
+        indices = randperm(n_samples)
+        epoch_loss = 0.0
         
-        for i in 1:length(X_train)
-            # Reset estado para cada sequência
-            Flux.reset!(model)
+        # Processar em batches menores
+        for start_idx in 1:batch_size:n_samples
+            end_idx = min(start_idx + batch_size - 1, n_samples)
+            batch_indices = indices[start_idx:end_idx]
             
-            # Calcular gradientes e atualizar parâmetros
-            loss_val, grads = Flux.withgradient(model) do m
-                pred = m(X_train[i]')
-                prediction = pred[:, end][1]  # Primeiro elemento da última coluna
-                return Flux.mse(prediction, y_train[i])
+            batch_loss = 0.0
+            
+            for idx in batch_indices
+                # Reset estado do modelo
+                Flux.reset!(model)
+                
+                # Calcular loss e gradientes
+                loss_val, grads = Flux.withgradient(model) do m
+                    pred = m(X_train[idx])
+                    # Pegar última saída da sequência
+                    if pred isa Vector
+                        output = pred[end]
+                    else
+                        output = pred[1, end]
+                    end
+                    return mse(output, y_train[idx])
+                end
+                
+                # Atualizar gradientes
+                if !isnothing(grads[1])
+                    Flux.update!(opt_state, model, grads[1])
+                end
+                
+                batch_loss += loss_val
             end
             
-            # Verificar se o gradiente é válido
-            if !isnothing(grads[1])
-                Flux.update!(opt_state, model, grads[1])
-            end
-            
-            total_loss += loss_val
+            epoch_loss += batch_loss
         end
         
-        avg_loss = total_loss / length(X_train)
-        push!(losses, avg_loss)
+        avg_loss = epoch_loss / n_samples
+        push!(train_losses, avg_loss)
         
-        if epoch % 20 == 0
+        # Early stopping
+        if avg_loss < best_loss
+            best_loss = avg_loss
+            no_improve = 0
+        else
+            no_improve += 1
+        end
+        
+        if epoch % 20 == 0 || no_improve >= patience
             println("Epoch $epoch: Loss = $(round(avg_loss, digits=6))")
+        end
+        
+        if no_improve >= patience
+            println("Early stopping na epoch $epoch")
+            break
+        end
+        
+        # Learning rate decay
+        if epoch % 30 == 0
+            for param in opt_state
+                if hasfield(typeof(param), :eta)
+                    param.eta *= 0.9
+                end
+            end
         end
     end
     
-    return model, losses
+    return model, train_losses
 end
 
 # Função para fazer predições
-function predict_sequence(model, X_input)
+function predict_next_day(model, last_sequence, normalization_params)
     Flux.reset!(model)
-    pred = model(X_input')
-    return pred[:, end][1]  # Retornar a predição final
+    
+    # Fazer predição
+    pred = model(Float32.(last_sequence))
+    
+    if pred isa Vector
+        prediction = pred[end]
+    else
+        prediction = pred[1, end]
+    end
+    
+    # Desnormalizar (usando parâmetros do preço de fechamento - índice 1)
+    closing_params = normalization_params[1]
+    prediction_denorm = denormalize_minmax(
+        prediction, 
+        closing_params.min_val, 
+        closing_params.max_val
+    )
+    
+    return Float64(prediction_denorm)
 end
 
-# Função para extrair parâmetros do modelo para serialização (CORRIGIDA)
-function extract_model_params(model)
-    params = []
+# Função para salvar modelo em formato JSON
+function save_model_json(model, normalization_params, training_info, model_type, save_path)
+    # Extrair parâmetros do modelo
+    model_params = []
+    
     for layer in model.layers
         if layer isa Dense
-            push!(params, Dict(
+            push!(model_params, Dict(
                 "type" => "Dense",
+                "input_size" => size(layer.weight, 2),
+                "output_size" => size(layer.weight, 1),
                 "weight" => Array(layer.weight),
                 "bias" => Array(layer.bias),
                 "activation" => string(layer.σ)
             ))
         elseif layer isa LSTM
-            # Corrigir acesso aos parâmetros do LSTM
             cell = layer.cell
-            Wi = cell.Wi  # Matriz de pesos de entrada
-            Wh = cell.Wh  # Matriz de pesos ocultos
-            input_size = size(Wi, 2)  # Segunda dimensão de Wi é input_size
-            hidden_size = size(Wh, 2)  # Segunda dimensão de Wh é hidden_size
-            
-            # Verificar se existe bias - alguns LSTMs podem não ter
-            bias_data = nothing
-            try
-                if hasfield(typeof(cell), :bias)
-                    bias_data = Array(cell.bias)
-                elseif hasfield(typeof(cell), :b)
-                    bias_data = Array(cell.b)
-                else
-                    # Procurar por outros possíveis nomes de bias
-                    for fieldname in fieldnames(typeof(cell))
-                        if String(fieldname) in ["bias", "b", "bi", "bh"]
-                            bias_data = Array(getfield(cell, fieldname))
-                            break
-                        end
-                    end
-                end
-            catch e
-                println("Aviso: Não foi possível extrair bias do LSTM: $e")
-                bias_data = nothing
-            end
-            
-            lstm_dict = Dict(
+            push!(model_params, Dict(
                 "type" => "LSTM",
-                "input_size" => input_size,
-                "hidden_size" => hidden_size,
-                "Wi" => Array(Wi),
-                "Wh" => Array(Wh)
-            )
-            
-            if bias_data !== nothing
-                lstm_dict["bias"] = bias_data
-            end
-            
-            push!(params, lstm_dict)
-            
+                "input_size" => size(cell.Wi, 2),
+                "hidden_size" => size(cell.Wh, 2),
+                "Wi" => Array(cell.Wi),
+                "Wh" => Array(cell.Wh),
+                "bias" => hasfield(typeof(cell), :b) ? Array(cell.b) : nothing
+            ))
         elseif layer isa RNN
-            # Corrigir acesso aos parâmetros do RNN
             cell = layer.cell
-            Wi = cell.Wi
-            Wh = cell.Wh
-            input_size = size(Wi, 2)
-            hidden_size = size(Wh, 2)
-            
-            # Verificar se existe bias
-            bias_data = nothing
-            try
-                if hasfield(typeof(cell), :bias)
-                    bias_data = Array(cell.bias)
-                elseif hasfield(typeof(cell), :b)
-                    bias_data = Array(cell.b)
-                else
-                    # Procurar por outros possíveis nomes de bias
-                    for fieldname in fieldnames(typeof(cell))
-                        if String(fieldname) in ["bias", "b", "bi", "bh"]
-                            bias_data = Array(getfield(cell, fieldname))
-                            break
-                        end
-                    end
-                end
-            catch e
-                println("Aviso: Não foi possível extrair bias do RNN: $e")
-                bias_data = nothing
-            end
-            
-            rnn_dict = Dict(
-                "type" => "RNN",
-                "input_size" => input_size,
-                "hidden_size" => hidden_size,
-                "Wi" => Array(Wi),
-                "Wh" => Array(Wh),
+            push!(model_params, Dict(
+                "type" => "RNN", 
+                "input_size" => size(cell.Wi, 2),
+                "hidden_size" => size(cell.Wh, 2),
+                "Wi" => Array(cell.Wi),
+                "Wh" => Array(cell.Wh),
+                "bias" => hasfield(typeof(cell), :b) ? Array(cell.b) : nothing,
                 "activation" => string(cell.σ)
-            )
-            
-            if bias_data !== nothing
-                rnn_dict["bias"] = bias_data
-            end
-            
-            push!(params, rnn_dict)
-            
+            ))
         elseif layer isa Dropout
-            push!(params, Dict(
+            push!(model_params, Dict(
                 "type" => "Dropout",
                 "p" => layer.p
             ))
         end
     end
-    return params
+    
+    # Preparar dados para salvar
+    model_data = Dict(
+        "model_type" => model_type,
+        "architecture" => model_params,
+        "normalization_params" => [
+            Dict("min_val" => p.min_val, "max_val" => p.max_val) 
+            for p in normalization_params
+        ],
+        "training_info" => training_info,
+        "feature_names" => [
+            "closing", "opening", "high", "low", "volume",
+            "sma_short", "sma_long", "rsi", "volatility", "price_change", "hl_range"
+        ],
+        "metadata" => Dict(
+            "created_at" => string(now()),
+            "julia_version" => string(VERSION),
+            "flux_version" => "0.14+"
+        )
+    )
+    
+    # Salvar arquivo
+    open(save_path, "w") do file
+        JSON.print(file, model_data, 2)
+    end
+    
+    return model_data
 end
 
-# Função para descobrir todos os arquivos TOML na pasta
+# Função para descobrir arquivos TOML
 function find_toml_files(data_dir::String)
     toml_files = []
     
@@ -290,248 +446,198 @@ function find_toml_files(data_dir::String)
         println("Diretório não encontrado: $data_dir")
     end
     
-    return sort(toml_files)  # Ordenar alfabeticamente
+    return sort(toml_files)
 end
 
-# Função principal
+# Função principal otimizada
 function main()
-    println("=== Treinamento de Modelos LSTM e RNN para Dados de Ações ===\n")
+    println("=== Sistema de Treinamento LSTM/RNN Otimizado para Datasets Pequenos ===\n")
     
-    # Definir caminho do diretório de dados
+    # Configurações otimizadas
     data_dir = "../../../dados/ativos"
+    save_dir = "../../../dados/modelos_treinados"
+    mkpath(save_dir)
     
-    # Descobrir todos os arquivos TOML na pasta
-    println("Procurando arquivos TOML em: $data_dir")
+    seq_length = 5         # Reduzido de 15 para 5
+    prediction_horizon = 1  # Predizer 1 dia à frente
+    
+    # Encontrar arquivos TOML
     files = find_toml_files(data_dir)
     
     if isempty(files)
-        println("Nenhum arquivo TOML encontrado em: $data_dir")
+        println("❌ Nenhum arquivo TOML encontrado em: $data_dir")
         return
     end
     
-    println("Arquivos TOML encontrados:")
-    for (i, file) in enumerate(files)
-        println("  $i. $file")
-    end
-    println()
+    println("📂 Encontrados $(length(files)) arquivos TOML")
     
-    # Carregar e processar dados de todas as ações
-    all_data = []
+    # Carregar e processar dados
+    all_X = []
+    all_y = []
+    asset_normalization = Dict()
     successful_loads = 0
-    failed_loads = 0
     
     for file in files
         filepath = joinpath(data_dir, file)
-        try
-            println("Carregando dados de: $file")
-            stock_data = load_stock_data(filepath)
-            push!(all_data, stock_data)
+        stock_data = load_stock_data(filepath)
+        
+        if stock_data === nothing
+            continue
+        end
+        
+        X, y, norm_params = prepare_training_data(stock_data, seq_length, prediction_horizon)
+        
+        if X !== nothing && length(X) > 3  # Critério mais flexível: pelo menos 3 amostras
+            append!(all_X, X)
+            append!(all_y, y)
+            
+            # Salvar parâmetros de normalização por ativo
+            asset_normalization[stock_data.asset_name] = norm_params
+            
             successful_loads += 1
-        catch e
-            println("  ❌ Erro ao carregar $file: $e")
-            failed_loads += 1
+            println("✅ $(stock_data.asset_name): $(length(X)) sequências criadas")
+        else
+            println("⚠️  $(stock_data.asset_name): Dados insuficientes")
         end
     end
     
-    println("\nResumo do carregamento:")
-    println("  ✅ Arquivos carregados com sucesso: $successful_loads")
-    println("  ❌ Arquivos com erro: $failed_loads")
-    println("  📁 Total de arquivos processados: $(length(files))")
-    
-    if isempty(all_data)
-        println("\nNenhum dado foi carregado. Verifique os arquivos TOML.")
+    if isempty(all_X)
+        println("❌ Nenhum dado válido para treinamento")
         return
     end
     
-    # Combinar dados de todas as ações para treinamento conjunto
-    println("\nPreparando dados para treinamento...")
+    println("\n📊 Dados preparados:")
+    println("  • Total de sequências: $(length(all_X))")
+    println("  • Ativos processados: $successful_loads")
+    println("  • Comprimento da sequência: $seq_length")
+    println("  • Features por timestep: $(size(all_X[1], 1))")
     
-    all_X = []
-    all_y = []
-    all_params = []
+    # Dividir em treino/validação
+    n_samples = length(all_X)
+    n_train = max(1, Int(floor(0.8 * n_samples)))  # Garantir pelo menos 1 amostra
     
-    seq_length = 5  # Usar últimos 5 dias para prever o próximo
+    train_indices = randperm(n_samples)[1:n_train]
     
-    for (i, stock_data) in enumerate(all_data)
-        try
-            X, y, norm_params = prepare_multivariate_data(stock_data, seq_length)
-            
-            if size(X, 1) > 0  # Verificar se há dados suficientes
-                push!(all_X, X)
-                push!(all_y, y)
-                push!(all_params, Dict(
-                    "asset" => stock_data.asset_name,
-                    "params" => [Dict("mu" => p.μ, "sigma" => p.σ) for p in norm_params]
-                ))
-                
-                println("  ✅ $(stock_data.asset_name): $(size(X, 1)) sequências criadas")
-            else
-                println("  ⚠️  $(stock_data.asset_name): Dados insuficientes para criar sequências")
-            end
-        catch e
-            println("  ❌ Erro ao processar $(stock_data.asset_name): $e")
-        end
+    X_train = all_X[train_indices]
+    y_train = all_y[train_indices]
+    
+    # Treinar LSTM
+    println("\n=== Treinando Modelo LSTM Compacto ===")
+    lstm_model = create_compact_lstm_model(size(all_X[1], 1))
+    lstm_trained, lstm_losses = train_model_compact(
+        lstm_model, X_train, y_train, 80, 4, 0.01
+    )
+    
+    # Treinar RNN
+    println("\n=== Treinando Modelo RNN Compacto ===")
+    rnn_model = create_compact_rnn_model(size(all_X[1], 1))
+    rnn_trained, rnn_losses = train_model_compact(
+        rnn_model, X_train, y_train, 80, 4, 0.01
+    )
+    
+    # Informações de treinamento
+    training_info = Dict(
+        "timestamp" => string(now()),
+        "total_sequences" => length(all_X),
+        "training_sequences" => length(X_train),
+        "sequence_length" => seq_length,
+        "prediction_horizon" => prediction_horizon,
+        "features_count" => size(all_X[1], 1),
+        "epochs_completed" => min(length(lstm_losses), length(rnn_losses)),
+        "assets_trained" => collect(keys(asset_normalization)),
+        "lstm_final_loss" => lstm_losses[end],
+        "rnn_final_loss" => rnn_losses[end]
+    )
+    
+    # Salvar modelos
+    println("\n=== Salvando Modelos ===")
+    
+    # Salvar LSTM
+    lstm_path = joinpath(save_dir, "lstm_model_compact.json")
+    lstm_data = save_model_json(
+        lstm_trained, 
+        first(values(asset_normalization)),
+        training_info, 
+        "LSTM_Compact", 
+        lstm_path
+    )
+    println("✅ LSTM salvo em: $lstm_path")
+    
+    # Salvar RNN
+    rnn_path = joinpath(save_dir, "rnn_model_compact.json") 
+    rnn_data = save_model_json(
+        rnn_trained, 
+        first(values(asset_normalization)),
+        training_info, 
+        "RNN_Compact", 
+        rnn_path
+    )
+    println("✅ RNN salvo em: $rnn_path")
+    
+    # Salvar parâmetros de normalização por ativo
+    normalization_path = joinpath(save_dir, "asset_normalization_compact.json")
+    norm_data = Dict(
+        "assets" => Dict(
+            asset => [
+                Dict("min_val" => p.min_val, "max_val" => p.max_val) 
+                for p in params
+            ]
+            for (asset, params) in asset_normalization
+        ),
+        "feature_names" => [
+            "closing", "opening", "high", "low", "volume",
+            "sma_short", "sma_long", "rsi", "volatility", "price_change", "hl_range"
+        ]
+    )
+    
+    open(normalization_path, "w") do file
+        JSON.print(file, norm_data, 2)
+    end
+    println("✅ Parâmetros de normalização salvos em: $normalization_path")
+    
+    # Relatório final
+    println("\n=== Relatório de Treinamento ===")
+    println("📈 Performance:")
+    println("  • LSTM - Perda final: $(round(lstm_losses[end], digits=6))")
+    println("  • RNN - Perda final: $(round(rnn_losses[end], digits=6))")
+    if length(lstm_losses) > 1
+        println("  • LSTM - Melhoria: $(round((1 - lstm_losses[end]/lstm_losses[1])*100, digits=2))%")
+        println("  • RNN - Melhoria: $(round((1 - rnn_losses[end]/rnn_losses[1])*100, digits=2))%")
     end
     
-    # Combinar todos os dados
-    if !isempty(all_X)
-        X_combined = vcat(all_X...)
-        y_combined = vcat(all_y...)
+    println("\n📊 Dados:")
+    println("  • Ativos processados: $successful_loads")
+    println("  • Sequências de treinamento: $(length(X_train))")
+    println("  • Sequência temporal: $seq_length dias")
+    println("  • Horizonte de predição: $prediction_horizon dia(s)")
+    
+    println("\n✅ Treinamento concluído com sucesso!")
+    println("💡 Os modelos estão prontos para fazer predições do próximo dia de negociação.")
+    
+    # Fazer predições de exemplo
+    if successful_loads > 0
+        println("\n=== Exemplo de Predições ===")
+        sample_asset = first(keys(asset_normalization))
+        sample_params = asset_normalization[sample_asset]
         
-        println("\n📊 Dados combinados:")
-        println("  • Sequências de treinamento: $(size(X_combined, 1))")
-        println("  • Features por sequência: $(size(X_combined, 3))")
-        println("  • Comprimento da sequência: $seq_length")
-        
-        # Treinar modelo LSTM
-        println("\n=== Treinando Modelo LSTM ===")
-        lstm_model = create_lstm_model(size(X_combined, 3), 32, 1)
-        lstm_trained, lstm_losses = train_model(lstm_model, X_combined, y_combined, 100, 0.001)
-        
-        # Treinar modelo RNN
-        println("\n=== Treinando Modelo RNN ===")
-        rnn_model = create_rnn_model(size(X_combined, 3), 32, 1)
-        rnn_trained, rnn_losses = train_model(rnn_model, X_combined, y_combined, 100, 0.001)
-        
-        # Salvar modelos e parâmetros em JSON
-        println("\n=== Salvando Modelos Treinados em JSON ===")
-        
-        # Criar diretório para salvar modelos
-        save_dir = "../../../dados/modelos_treinados"
-        mkpath(save_dir)
-        
-        # Extrair parâmetros dos modelos
-        try
-            println("Extraindo parâmetros do modelo LSTM...")
-            lstm_params = extract_model_params(lstm_trained)
+        if !isempty(all_X)
+            sample_seq = all_X[end]
             
-            println("Extraindo parâmetros do modelo RNN...")
-            rnn_params = extract_model_params(rnn_trained)
+            lstm_pred = predict_next_day(lstm_trained, sample_seq, sample_params)
+            rnn_pred = predict_next_day(rnn_trained, sample_seq, sample_params)
             
-            # Preparar dados para salvar
-            training_data = Dict(
-                "training_info" => Dict(
-                    "timestamp" => string(now()),
-                    "total_sequences" => length(y_combined),
-                    "sequence_length" => seq_length,
-                    "features_count" => size(X_combined, 3),
-                    "epochs" => 100,
-                    "learning_rate" => 0.001,
-                    "assets_trained" => [p["asset"] for p in all_params]
-                ),
-                "lstm_model" => Dict(
-                    "architecture" => lstm_params,
-                    "final_loss" => lstm_losses[end],
-                    "training_losses" => lstm_losses
-                ),
-                "rnn_model" => Dict(
-                    "architecture" => rnn_params,
-                    "final_loss" => rnn_losses[end],
-                    "training_losses" => rnn_losses
-                ),
-                "normalization_params" => all_params,
-                "feature_names" => [
-                    "closing", "opening", "high", "low", "log_volume", "variation"
-                ]
-            )
-            
-            # Salvar em JSON
-            json_save_path = joinpath(save_dir, "trained_models.json")
-            open(json_save_path, "w") do file
-                JSON.print(file, training_data, 2)  # Indentação de 2 espaços
-            end
-            println("  ✅ Modelos salvos em JSON: $json_save_path")
-            
-        catch e
-            println("  ❌ Erro ao extrair/salvar parâmetros: $e")
-            println("  ℹ️  Continuando sem salvar os modelos...")
+            println("  • Predição LSTM: R\$ $(round(lstm_pred, digits=2))")
+            println("  • Predição RNN: R\$ $(round(rnn_pred, digits=2))")
         end
-        
-        # Salvar também um arquivo de configuração separado
-        config_data = Dict(
-            "model_config" => Dict(
-                "sequence_length" => seq_length,
-                "features_count" => size(X_combined, 3),
-                "hidden_size" => 32,
-                "feature_names" => [
-                    "closing", "opening", "high", "low", "log_volume", "variation"
-                ]
-            ),
-            "usage_instructions" => Dict(
-                "input_format" => "Array of shape [sequence_length, features_count]",
-                "output_format" => "Single predicted closing price (normalized)",
-                "preprocessing" => "Apply normalization using provided parameters",
-                "postprocessing" => "Denormalize using closing price parameters"
-            )
-        )
-        
-        config_save_path = joinpath(save_dir, "model_config.json")
-        open(config_save_path, "w") do file
-            JSON.print(file, config_data, 2)
-        end
-        println("  ✅ Configuração salva em: $config_save_path")
-        
-        # Teste rápido dos modelos
-        println("\n=== Teste Rápido dos Modelos ===")
-        test_sample = Float32.(X_combined[1, :, :])
-        
-        try
-            lstm_pred = predict_sequence(lstm_trained, test_sample)
-            rnn_pred = predict_sequence(rnn_trained, test_sample)
-            
-            println("  • Predição LSTM: $(round(lstm_pred, digits=4))")
-            println("  • Predição RNN: $(round(rnn_pred, digits=4))")
-            println("  • Valor real: $(round(y_combined[1], digits=4))")
-        catch e
-            println("  ❌ Erro no teste: $e")
-        end
-        
-        # Relatório final
-        println("\n=== Relatório Final de Treinamento ===")
-        println("📈 Desempenho dos Modelos:")
-        println("  • Perda final LSTM: $(round(lstm_losses[end], digits=6))")
-        println("  • Perda final RNN: $(round(rnn_losses[end], digits=6))")
-        println("  • Melhoria LSTM: $(round((lstm_losses[1] - lstm_losses[end])/lstm_losses[1]*100, digits=2))%")
-        println("  • Melhoria RNN: $(round((rnn_losses[1] - rnn_losses[end])/rnn_losses[1]*100, digits=2))%")
-        
-        println("\n📊 Dados de Treinamento:")
-        println("  • Arquivos TOML processados: $(length(files))")
-        println("  • Ativos com dados válidos: $(length(all_params))")
-        println("  • Sequências de treinamento: $(length(y_combined))")
-        println("  • Features por sequência: $(size(X_combined, 3))")
-        println("  • Comprimento da sequência: $seq_length")
-        
-        println("\n📝 Arquivos Gerados:")
-        for file in readdir(save_dir, join=true)
-            if endswith(file, ".json")
-                println("  • $file")
-            end
-        end
-        
-        println("\n✅ Treinamento concluído com sucesso!")
-        
-        # Exemplo de uso em outras linguagens
-        println("\n=== Exemplo de Uso em Outras Linguagens ===")
-        println("Os modelos foram salvos em formato JSON e podem ser carregados em qualquer linguagem:")
-        println("  • Python: json.load()")
-        println("  • JavaScript: JSON.parse()")
-        println("  • Java: Jackson ou Gson")
-        println("  • C#: JsonSerializer")
-        println("  • R: jsonlite::fromJSON()")
-        
-        println("\nPara usar os modelos, carregue o arquivo 'trained_models.json' e")
-        println("implemente as camadas LSTM/RNN usando os parâmetros salvos.")
-        
-    else
-        println("\n❌ Não foi possível criar sequências de treinamento.")
-        println("Verifique se os arquivos TOML contêm dados válidos.")
     end
 end
 
-# Executar treinamento
-main()
-
+# Executar
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end
 
 
 # Para executar: 
 #  julia lstmrnntrain.jl
+ 
