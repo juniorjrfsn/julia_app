@@ -1,0 +1,46 @@
+name = "cnncheckin"
+uuid = "db044396-e2f8-438b-ad29-78f60d91f365"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"
+
+
+[[comando]]
+    texto =  """
+    julia cnncheckin.jl --treino
+
+
+    julia cnncheckin.jl --identifica imagem.jpg
+    julia cnncheckin.jl --identifica ../dados/teste.jpeg
+
+
+    julia cnncheckin.jl --help
+    """
+
+
+[[comando]]
+    texto = """
+    # Treinar o modelo
+    julia cnncheckin.jl --treino
+
+    # Identificar pessoa em diferentes formatos
+    julia cnncheckin.jl --identifica pessoa.jpg
+    julia cnncheckin.jl --identifica ../dados/foto.jpeg
+    julia cnncheckin.jl --identifica /caminho/completo/imagem.png
+
+    # Ver ajuda
+    julia cnncheckin.jl --help
+    """
+
+
+[[comando]]
+    texto = """
+    julia cnncheckin.jl --identifica nova_foto.jpg
+    """
+
+[[comando]]
+    texto = """ 
+    julia cnncheckin.jl --identifica ../../../dados/fotos_teste/teste.png
+ 
+    julia cnncheckin.jl --identifica ../../../dados/fotos_teste/ela.jpg
+
+    """

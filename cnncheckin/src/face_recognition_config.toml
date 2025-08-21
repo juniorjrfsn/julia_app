@@ -1,0 +1,36 @@
+[model]
+img_width = 128
+img_height = 128
+model_architecture = "CNN_v1"
+augmentation_used = true
+num_classes = 2
+
+[files]
+config_toml = "face_recognition_config.toml"
+model_data_toml = "face_recognition_model_data.toml"
+model_weights = "face_recognition_model.jld2"
+
+[data]
+data_path = "../../../dados/fotos"
+timestamp = "2025-08-21T18:25:18.111"
+person_names = ["junior", "lele"]
+
+[metadata]
+created_by = "cnncheckin.jl"
+version = "2.1"
+description = "Configurações do modelo de reconhecimento facial"
+last_saved = "2025-08-21T18:25:18.343"
+
+[training_stats]
+early_stopped = true
+total_training_images = 64
+training_duration_minutes = 1.1160624027252197
+total_validation_images = 16
+
+[training]
+best_epoch = 4
+batch_size = 8
+learning_rate = 0.0001
+final_accuracy = 0.9375
+early_stopping_patience = 10
+epochs_trained = 4

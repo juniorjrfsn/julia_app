@@ -25,6 +25,7 @@ julia > ]
 (@v1.8) pkg> generate mercadoRNA
 (@v1.8) pkg> generate lstmrnntrain
 (@v1.8) pkg> generate lstmcnntrain
+(@v1.8) pkg> generate cnncheckin
 
 ```
 
@@ -51,6 +52,13 @@ julia> ]
 (@v1.8) pkg> add ImageMagick
 (@v1.8) pkg> add QuartzImageIO
 (@v1.8) pkg> add JLD2
+(@v1.8) pkg> add MLDatasets
+(@v1.8) pkg> add CUDA
+(@v1.8) pkg> add Statistics
+(@v1.8) pkg> add Random
+(@v1.8) pkg> add ImageTransformations
+
+
 ```
 
 
