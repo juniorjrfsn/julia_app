@@ -44,3 +44,21 @@ version = "0.1.0"
     julia cnncheckin.jl --identifica ../../../dados/fotos_teste/ela.jpg
 
     """
+[[comando]]
+    texto = """ 
+
+    julia cnncheckin_train.jl
+    julia cnncheckin_identify.jl ../../../dados/fotos_teste/ela.jpg
+    julia cnncheckin_identify.jl ../../../dados/fotos_teste/teste.png
+    
+    julia cnncheckin_info.jl
+    julia cnncheckin_model_data.jl
+    julia cnncheckin_validate.jl
+    julia cnncheckin_export_config.jl backup_config_2025.toml
+    julia cnncheckin_help.jl
+
+
+    julia cnncheckin_debug.jl ../../../dados/fotos_teste/teste.png
+    julia cnncheckin_debug.jl --dir ../../../dados/fotos_teste/
+
+ """

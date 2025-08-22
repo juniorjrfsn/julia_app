@@ -8,25 +8,25 @@ layer_number = 1
 kernel_size = [3, 3]
 input_channels = 3
 stride = [1, 1]
-layer_type = "Flux.Conv{2, 4, typeof(NNlib.relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
 [[layer_info]]
 eps = "unknown"
 trainable = true
 layer_number = 2
 momentum = 0.10000000149011612
 num_features = 32
-layer_type = "Flux.BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 3
 dropout_rate = 0.1
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 layer_number = 4
 stride = [2, 2]
 pool_size = [2, 2]
-layer_type = "Flux.MaxPool{2, 4}"
+layer_type = "MaxPool{2, 4}"
 [[layer_info]]
 trainable = true
 pad = [1, 1, 1, 1]
@@ -35,25 +35,25 @@ layer_number = 5
 kernel_size = [3, 3]
 input_channels = 32
 stride = [1, 1]
-layer_type = "Flux.Conv{2, 4, typeof(NNlib.relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
 [[layer_info]]
 eps = "unknown"
 trainable = true
 layer_number = 6
 momentum = 0.10000000149011612
 num_features = 64
-layer_type = "Flux.BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 7
 dropout_rate = 0.1
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 layer_number = 8
 stride = [2, 2]
 pool_size = [2, 2]
-layer_type = "Flux.MaxPool{2, 4}"
+layer_type = "MaxPool{2, 4}"
 [[layer_info]]
 trainable = true
 pad = [1, 1, 1, 1]
@@ -62,25 +62,25 @@ layer_number = 9
 kernel_size = [3, 3]
 input_channels = 64
 stride = [1, 1]
-layer_type = "Flux.Conv{2, 4, typeof(NNlib.relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
 [[layer_info]]
 eps = "unknown"
 trainable = true
 layer_number = 10
 momentum = 0.10000000149011612
 num_features = 128
-layer_type = "Flux.BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 11
 dropout_rate = 0.2
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 layer_number = 12
 stride = [2, 2]
 pool_size = [2, 2]
-layer_type = "Flux.MaxPool{2, 4}"
+layer_type = "MaxPool{2, 4}"
 [[layer_info]]
 trainable = true
 pad = [1, 1, 1, 1]
@@ -89,25 +89,25 @@ layer_number = 13
 kernel_size = [3, 3]
 input_channels = 128
 stride = [1, 1]
-layer_type = "Flux.Conv{2, 4, typeof(NNlib.relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
 [[layer_info]]
 eps = "unknown"
 trainable = true
 layer_number = 14
 momentum = 0.10000000149011612
 num_features = 128
-layer_type = "Flux.BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 15
 dropout_rate = 0.2
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 layer_number = 16
 stride = [2, 2]
 pool_size = [2, 2]
-layer_type = "Flux.MaxPool{2, 4}"
+layer_type = "MaxPool{2, 4}"
 [[layer_info]]
 trainable = true
 layer_number = 17
@@ -119,31 +119,31 @@ has_bias = true
 layer_number = 18
 input_size = 8192
 output_size = 256
-layer_type = "Flux.Dense{typeof(NNlib.relu), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 19
 dropout_rate = 0.5
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 has_bias = true
 layer_number = 20
 input_size = 256
 output_size = 64
-layer_type = "Flux.Dense{typeof(NNlib.relu), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
 [[layer_info]]
 trainable = true
 layer_number = 21
 dropout_rate = 0.4
-layer_type = "Flux.Dropout{Float64, Colon, Random.TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 [[layer_info]]
 trainable = true
 has_bias = true
 layer_number = 22
 input_size = 64
 output_size = 2
-layer_type = "Flux.Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
 
 [person_mappings]
 junior = 1
@@ -151,7 +151,7 @@ lele = 2
 
 [model_summary]
 input_shape = [128, 128]
-created_at = "2025-08-21T18:25:16.687"
+created_at = "2025-08-21T21:00:07.124"
 total_layers = 22
 model_type = "CNN"
 output_classes = 2
@@ -160,7 +160,7 @@ output_classes = 2
 format_version = "1.0"
 created_by = "cnncheckin.jl v2.1"
 companion_files = ["face_recognition_model.jld2", "face_recognition_config.toml"]
-saved_at = "2025-08-21T18:25:17.536"
+saved_at = "2025-08-21T21:00:07.972"
 description = "Dados estruturais e estatísticas do modelo CNN"
 
 [weights_summary]
@@ -169,112 +169,112 @@ total_parameters = 2354818
 
     [weights_summary.layer_statistics.layer_13_bias]
     shape = [128]
-    max = 0.0013641653349623084
-    min = -0.0015250295400619507
+    max = 0.0019138228381052613
+    min = -0.001905202167108655
     count = 128
-    mean = 1.5051377886265982e-5
-    std = 0.0006334302015602589
+    mean = -8.438286749878898e-5
+    std = 0.0008623003377579153
 
     [weights_summary.layer_statistics.layer_5_weights]
     shape = [3, 3, 32, 64]
-    max = 0.08427253365516663
-    min = -0.08439726382493973
+    max = 0.08529789000749588
+    min = -0.08525944501161575
     count = 18432
-    mean = 9.875492651190143e-6
-    std = 0.04759763181209564
+    mean = -2.87938291876344e-5
+    std = 0.04779202118515968
 
     [weights_summary.layer_statistics.layer_9_bias]
     shape = [128]
-    max = 0.001417857245542109
-    min = -0.0013787730131298304
+    max = 0.002016930840909481
+    min = -0.0020833127200603485
     count = 128
-    mean = -7.289190762094222e-6
-    std = 0.0005928392638452351
+    mean = 0.0001582933618919924
+    std = 0.0008305181981995702
 
     [weights_summary.layer_statistics.layer_18_bias]
     shape = [256]
-    max = 0.0014060972025617957
-    min = -0.0012408142210915685
+    max = 0.0013042892096564174
+    min = -0.0019402768230065703
     count = 256
-    mean = -0.0001394466671627015
-    std = 0.0005204552435316145
+    mean = -0.00022294383961707354
+    std = 0.0006029294454492629
 
     [weights_summary.layer_statistics.layer_22_bias]
     shape = [2]
-    max = 5.781507206847891e-5
-    min = -5.7814944739220664e-5
+    max = 0.00010976225894410163
+    min = -0.00010976227349601686
     count = 2
-    mean = 6.366462912410498e-11
-    std = 8.176276605809107e-5
+    mean = -7.275957614183426e-12
+    std = 0.00015522728790529072
 
     [weights_summary.layer_statistics.layer_22_weights]
     shape = [2, 64]
-    max = 0.2982681393623352
-    min = -0.2997538149356842
+    max = 0.2918078899383545
+    min = -0.2757498323917389
     count = 128
-    mean = 0.010657990351319313
-    std = 0.17205806076526642
+    mean = 0.011187903583049774
+    std = 0.16163954138755798
 
     [weights_summary.layer_statistics.layer_13_weights]
     shape = [3, 3, 128, 128]
-    max = 0.05235551670193672
-    min = -0.052548546344041824
+    max = 0.0533449687063694
+    min = -0.05293123796582222
     count = 147456
-    mean = 0.00025052984710782766
-    std = 0.029535921290516853
+    mean = -4.578694642987102e-5
+    std = 0.029501551762223244
 
     [weights_summary.layer_statistics.layer_1_bias]
     shape = [32]
-    max = 0.001261441269889474
-    min = -0.0014871624298393726
+    max = 0.0018062383169308305
+    min = -0.0015779618406668305
     count = 32
-    mean = 7.469007687177509e-5
-    std = 0.0005670100799761713
+    mean = -8.794657333055511e-5
+    std = 0.0008278078166767955
 
     [weights_summary.layer_statistics.layer_5_bias]
     shape = [64]
-    max = 0.0009822372812777758
-    min = -0.0019742189906537533
+    max = 0.0018258581403642893
+    min = -0.001922447932884097
     count = 64
-    mean = -0.00010521428339416161
-    std = 0.0006554759456776083
+    mean = 6.632225267821923e-5
+    std = 0.0008221453172154725
 
     [weights_summary.layer_statistics.layer_20_weights]
     shape = [64, 256]
-    max = 0.13800369203090668
-    min = -0.1382833570241928
+    max = 0.13748566806316376
+    min = -0.13819272816181183
     count = 16384
-    mean = -0.0004704226157628
-    std = 0.0791129544377327
+    mean = 0.0006868476048111916
+    std = 0.07939688861370087
 
     [weights_summary.layer_statistics.layer_18_weights]
     shape = [256, 8192]
-    max = 0.028451383113861084
-    min = -0.028382621705532074
+    max = 0.030481457710266113
+    min = -0.029414426535367966
     count = 2097152
-    mean = -9.456354018766433e-5
-    std = 0.0154037494212389
+    mean = -0.00010069682321045548
+    std = 0.015409235842525959
 
     [weights_summary.layer_statistics.layer_1_weights]
     shape = [3, 3, 3, 32]
-    max = 0.13756847381591797
-    min = -0.138420969247818
+    max = 0.13827194273471832
+    min = -0.13696342706680298
     count = 864
-    mean = -0.0013681717682629824
-    std = 0.07850123196840286
+    mean = 0.0011796371545642614
+    std = 0.08127222955226898
 
     [weights_summary.layer_statistics.layer_20_bias]
     shape = [64]
-    max = 0.0005654218257404864
-    min = -0.0010526722762733698
+    max = 0.0008059795363806188
+    min = -0.0013941844226792455
     count = 64
-    mean = -0.0001972737954929471
-    std = 0.00029715083655901253
+    mean = -0.00023996712116058916
+    std = 0.000399418524466455
 
     [weights_summary.layer_statistics.layer_9_weights]
     shape = [3, 3, 64, 128]
-    max = 0.060154806822538376
-    min = -0.06048167869448662
+    max = 0.06066642329096794
+    min = -0.06114375218749046
     count = 73728
-    mean = 4.1798244637902826e-5
-    std = 0.03404965251684189
+    mean = 5.52333403902594e-5
+    std = 0.03406364843249321
