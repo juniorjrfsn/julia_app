@@ -26,6 +26,7 @@ julia > ]
 (@v1.8) pkg> generate lstmrnntrain
 (@v1.8) pkg> generate lstmcnntrain
 (@v1.8) pkg> generate cnncheckin
+(@v1.8) pkg> generate z_hrml
 
 ```
 
@@ -57,6 +58,9 @@ julia> ]
 (@v1.8) pkg> add Statistics
 (@v1.8) pkg> add Random
 (@v1.8) pkg> add ImageTransformations
+(@v1.8) pkg> add LinearAlgebra
+(@v1.8) pkg> add Plots
+ 
 
 
 ```
