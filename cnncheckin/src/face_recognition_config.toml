@@ -3,34 +3,32 @@ img_width = 128
 img_height = 128
 model_architecture = "CNN_v1"
 augmentation_used = true
-num_classes = 2
+num_classes = 3
 
-[files]
-config_toml = "face_recognition_config.toml"
-model_data_toml = "face_recognition_model_data.toml"
-model_weights = "face_recognition_model.jld2"
+[incremental_stats]
+incremental_accuracy = 0.64
+knowledge_distillation_used = true
+original_people = ["junior", "lele"]
+total_people = 3
+last_incremental_training = "2025-08-27T00:00:00.732"
+new_people_added = 1
+new_people = ["cachorro"]
 
 [data]
-data_path = "../../../dados/fotos"
-timestamp = "2025-08-21T21:00:08.413"
-person_names = ["junior", "lele"]
+data_path = "../../../dados/fotos_train"
+timestamp = "2025-08-27T00:00:00.732"
+person_names = ["junior", "lele", "cachorro"]
 
 [metadata]
-created_by = "cnncheckin.jl"
-version = "2.1"
-description = "Configurações do modelo de reconhecimento facial"
-last_saved = "2025-08-21T21:00:08.647"
-
-[training_stats]
-early_stopped = true
-total_training_images = 64
-training_duration_minutes = 1.4762975176175435
-total_validation_images = 16
+created_by = "cnncheckin.jl v1.0"
+version = "1.0"
+description = "Face recognition system configuration"
+last_saved = "2025-08-27T00:00:00.797"
 
 [training]
-best_epoch = 10
+epochs = 30
+best_epoch = 1
 batch_size = 8
 learning_rate = 0.0001
-final_accuracy = 0.875
-early_stopping_patience = 10
-epochs_trained = 10
+final_accuracy = 0.64
+epochs_trained = 13

@@ -1,3 +1,6 @@
+# projeto: cnncheckin
+# file: cnncheckin/src/cnncheckin_identify.jl
+
 using Flux
 using JLD2
 using Statistics
@@ -5,9 +8,9 @@ using Statistics
 include("cnncheckin_core.jl")
 using .CNNCheckinCore
 
-# Função para carregar modelo, configuração e dados do modelo (CORRIGIDA)
+# Function to load model, configuration and model data
 function load_model_and_config(model_filepath::String, config_filepath::String)
-    println("📂 Carregando modelo, configuração e dados do modelo...")
+    println("Carregando modelo, configuração e dados...")
     
     config = CNNCheckinCore.load_config(config_filepath)
     CNNCheckinCore.validate_config(config)
@@ -20,45 +23,32 @@ function load_model_and_config(model_filepath::String, config_filepath::String)
         data = load(model_filepath)
         model_data = data["model_data"]
         model_state = model_data["model_state"]
-        
-        # CORREÇÃO: Usar person_names da configuração (ordem correta)
         person_names = config["data"]["person_names"]
         num_classes = config["model"]["num_classes"]
         
-        # Verificar se há person_names salvos no modelo também
-        if haskey(model_data, "person_names")
-            saved_names = model_data["person_names"]
-            if saved_names != person_names
-                println("⚠️ Aviso: Nomes no modelo diferem da configuração")
-                println("   Modelo: $saved_names")
-                println("   Config: $person_names")
-                println("   Usando da configuração...")
-            end
-        end
-        
         model_data_toml = CNNCheckinCore.load_model_data_toml(CNNCheckinCore.MODEL_DATA_TOML_PATH)
         
-        println("✅ Modelo e configuração carregados com sucesso!")
-        println("📊 Informações do modelo:")
+        println("Modelo e configuração carregados com sucesso!")
+        println("Informações do modelo:")
         println("   - Classes: $num_classes")
         println("   - Pessoas: $(join(person_names, ", "))")
         println("   - Acurácia: $(round(config["training"]["final_accuracy"]*100, digits=2))%")
         println("   - Criado em: $(config["data"]["timestamp"])")
         
-        # Verificar mapeamento
-        println("🏷️ Mapeamento correto:")
+        # Verify mapping
+        println("Mapeamento correto:")
         for (i, name) in enumerate(person_names)
             println("   - Índice $i: $name")
         end
         
         if model_data_toml !== nothing
-            println("   - Dados TOML disponíveis: ✅")
+            println("   - Dados TOML disponíveis: Sim")
             total_params = get(get(model_data_toml, "weights_summary", Dict()), "total_parameters", 0)
             if total_params > 0
                 println("   - Total de parâmetros: $(total_params)")
             end
         else
-            println("   - Dados TOML disponíveis: ❌")
+            println("   - Dados TOML disponíveis: Não")
         end
         
         return model_state, person_names, config, model_data_toml
@@ -67,204 +57,362 @@ function load_model_and_config(model_filepath::String, config_filepath::String)
     end
 end
 
-# Função para fazer predição e registrar exemplo (VERSÃO TOTALMENTE CORRIGIDA)
+# Function to make prediction and log example
 function predict_person(model, person_names, img_path::String; save_example::Bool = true)
-    println("🔄 Processando imagem: $img_path")
+    println("Processando imagem: $img_path")
     
-    # Preprocessar imagem
+    # Preprocess image
     img_arrays = CNNCheckinCore.preprocess_image(img_path; augment=false)
     
     if img_arrays === nothing || length(img_arrays) == 0
-        println("❌ Não foi possível processar a imagem")
+        println("Não foi possível processar a imagem")
         return nothing, 0.0
     end
     
     img_array = img_arrays[1]
-    println("📏 Dimensões da imagem processada: $(size(img_array))")
+    println("Dimensões da imagem processada: $(size(img_array))")
     
-    # Preparar tensor de entrada - garantindo formato correto
+    # Prepare input tensor - ensuring correct format
     img_tensor = reshape(img_array, size(img_array)..., 1)
-    println("📏 Dimensões do tensor de entrada: $(size(img_tensor))")
+    println("Dimensões do tensor de entrada: $(size(img_tensor))")
     
     try
-        println("🧠 Executando predição...")
+        println("Executando predição...")
         
-        # Executar o modelo
+        # Run model
         logits = model(img_tensor)
-        println("📏 Dimensões da saída do modelo: $(size(logits))")
-        println("🔢 Logits brutos: $(vec(logits))")
+        println("Dimensões da saída do modelo: $(size(logits))")
+        println("Logits brutos: $(vec(logits))")
         
-        # Verificar compatibilidade de dimensões
+        # Check dimension compatibility
         if size(logits, 1) != length(person_names)
             error("Dimensão de saída do modelo ($(size(logits, 1))) não corresponde ao número de classes ($(length(person_names)))")
         end
         
-        # Converter para Float32 e aplicar softmax de forma robusta
+        # Convert to Float32 and apply softmax robustly
         logits_vec = Float32.(vec(logits))
-        println("🔢 Logits como vetor Float32: $logits_vec")
+        println("Logits como vetor Float32: $logits_vec")
         
-        # Aplicar softmax manualmente para maior controle
+        # Apply softmax manually for better control
         max_logit = maximum(logits_vec)
         exp_logits = exp.(logits_vec .- max_logit)
         sum_exp = sum(exp_logits)
         probabilities = exp_logits ./ sum_exp
         
-        println("📊 Probabilidades: $probabilities")
+        println("Probabilidades: $probabilities")
         
-        # Mostrar probabilidade para cada pessoa
-        println("📊 Probabilidades por pessoa:")
+        # Show probability for each person
+        println("Probabilidades por pessoa:")
         for (i, (name, prob)) in enumerate(zip(person_names, probabilities))
             println("   $i. $name: $(round(prob*100, digits=2))%")
         end
         
-        # Encontrar a classe com maior probabilidade
+        # Find class with highest probability
         pred_class = argmax(probabilities)
         confidence = probabilities[pred_class]
         
-        println("🎯 Classe predita: $pred_class")
-        println("📈 Confiança: $(round(confidence*100, digits=2))%")
+        println("Classe predita: $pred_class")
+        println("Confiança: $(round(confidence*100, digits=2))%")
         
-        # CORREÇÃO PRINCIPAL: Verificar se o índice é válido
+        # Check if index is valid
         if pred_class <= 0 || pred_class > length(person_names)
-            println("⚠️ Índice de classe inválido: $pred_class")
+            println("Índice de classe inválido: $pred_class")
             return "Desconhecido", Float64(confidence)
         end
         
-        # CORREÇÃO: O argmax já retorna o índice correto para Julia (1-based)
+        # The argmax already returns the correct index for Julia (1-based)
         person_name = person_names[pred_class]
-        println("👤 Pessoa identificada: $person_name")
+        println("Pessoa identificada: $person_name")
         
-        # Salvar exemplo se solicitado
+        # Save example if requested
         if save_example
             try
                 CNNCheckinCore.add_prediction_example_to_toml(img_path, person_name, Float64(confidence))
-                println("💾 Exemplo salvo com sucesso")
+                println("Exemplo salvo com sucesso")
             catch e
-                println("⚠️ Erro ao salvar exemplo: $e")
+                println("Erro ao salvar exemplo: $e")
             end
         end
         
         return person_name, Float64(confidence)
         
     catch e
-        println("❌ Erro ao realizar predição: $e")
-        println("📏 Detalhes do erro: $(typeof(e))")
-        if isa(e, BoundsError)
-            println("📏 Erro de bounds - verificando dimensões...")
-            println("   - Tamanho do tensor: $(size(img_tensor))")
-            println("   - Número de pessoas: $(length(person_names))")
+        println("Erro ao realizar predição: $e")
+        println("Detalhes do erro:")
+        for (exc, bt) in Base.catch_stack()
+            showerror(stdout, exc, bt)
+            println()
         end
         return nothing, 0.0
     end
 end
 
-# Função de identificação (VERSÃO FINAL CORRIGIDA)
-function identify_command(image_path::String)
-    println("🔍 Sistema de Reconhecimento Facial - Modo Identificação")
-    println("📸 Analisando imagem: $image_path")
+# Function to display prediction results in a formatted way
+function display_prediction_result(person_name, confidence, img_path::String)
+    println("\n" * "="^60)
+    println("RESULTADO DA IDENTIFICAÇÃO FACIAL")
+    println("="^60)
+    println("📸 Imagem: $(basename(img_path))")
+    println("👤 Pessoa identificada: $person_name")
+    println("📊 Confiança: $(round(confidence*100, digits=2))%")
+    
+    # Confidence level assessment
+    if confidence >= 0.9
+        println("✅ Confiança: MUITO ALTA")
+    elseif confidence >= 0.7
+        println("⚡ Confiança: ALTA")
+    elseif confidence >= 0.5
+        println("⚠️  Confiança: MODERADA")
+    else
+        println("❌ Confiança: BAIXA - Verificar manualmente")
+    end
+    
+    println("🕐 Timestamp: $(Dates.format(Dates.now(), "dd/mm/yyyy HH:MM:SS"))")
+    println("="^60)
+end
+
+# Function to validate authentication image against known person
+function authenticate_person(model, person_names, img_path::String, expected_person::String; 
+                           confidence_threshold::Float64 = 0.7)
+    println("🔐 Autenticando pessoa: $expected_person")
+    
+    predicted_person, confidence = predict_person(model, person_names, img_path; save_example=false)
+    
+    if predicted_person === nothing
+        return false, 0.0, "Erro na predição"
+    end
+    
+    is_authenticated = (predicted_person == expected_person) && (confidence >= confidence_threshold)
+    
+    if is_authenticated
+        status = "✅ AUTENTICADO"
+    elseif predicted_person != expected_person
+        status = "❌ PESSOA INCORRETA (predito: $predicted_person)"
+    else
+        status = "❌ CONFIANÇA INSUFICIENTE ($(round(confidence*100, digits=2))% < $(round(confidence_threshold*100, digits=0))%)"
+    end
+    
+    println("🔍 Resultado da autenticação:")
+    println("   - Esperado: $expected_person")
+    println("   - Predito: $predicted_person")
+    println("   - Confiança: $(round(confidence*100, digits=2))%")
+    println("   - Status: $status")
+    
+    return is_authenticated, confidence, status
+end
+
+# Batch identification function for multiple images
+function batch_identify(model, person_names, image_directory::String; 
+                       output_file::String = "batch_identification_results.txt")
+    println("🔄 Iniciando identificação em lote...")
+    
+    if !isdir(image_directory)
+        error("Diretório não encontrado: $image_directory")
+    end
+    
+    image_extensions = [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
+    results = []
+    
+    image_files = filter(f -> lowercase(splitext(f)[2]) in image_extensions, readdir(image_directory))
+    
+    if length(image_files) == 0
+        println("❌ Nenhuma imagem encontrada no diretório: $image_directory")
+        return results
+    end
+    
+    println("📁 Encontradas $(length(image_files)) imagens para processar")
+    
+    for (i, filename) in enumerate(image_files)
+        img_path = joinpath(image_directory, filename)
+        println("\n[$i/$(length(image_files))] Processando: $filename")
+        
+        try
+            person_name, confidence = predict_person(model, person_names, img_path; save_example=true)
+            
+            result = Dict(
+                "filename" => filename,
+                "path" => img_path,
+                "predicted_person" => person_name,
+                "confidence" => confidence,
+                "timestamp" => string(Dates.now()),
+                "success" => person_name !== nothing
+            )
+            
+            push!(results, result)
+            
+            if person_name !== nothing
+                println("   ✅ $(person_name) - $(round(confidence*100, digits=2))%")
+            else
+                println("   ❌ Falha na identificação")
+            end
+            
+        catch e
+            println("   ❌ Erro ao processar $filename: $e")
+            result = Dict(
+                "filename" => filename,
+                "path" => img_path,
+                "predicted_person" => nothing,
+                "confidence" => 0.0,
+                "timestamp" => string(Dates.now()),
+                "success" => false,
+                "error" => string(e)
+            )
+            push!(results, result)
+        end
+    end
+    
+    # Save results to file
+    try
+        open(output_file, "w") do io
+            println(io, "RESULTADO DA IDENTIFICAÇÃO EM LOTE")
+            println(io, "Gerado em: $(Dates.format(Dates.now(), "dd/mm/yyyy HH:MM:SS"))")
+            println(io, "Diretório: $image_directory")
+            println(io, "Total de imagens: $(length(image_files))")
+            println(io, "="^80)
+            
+            for result in results
+                println(io, "\nArquivo: $(result["filename"])")
+                println(io, "Pessoa: $(result["predicted_person"])")
+                println(io, "Confiança: $(round(result["confidence"]*100, digits=2))%")
+                println(io, "Status: $(result["success"] ? "Sucesso" : "Falha")")
+                if haskey(result, "error")
+                    println(io, "Erro: $(result["error"])")
+                end
+                println(io, "-"^40)
+            end
+        end
+        println("\n💾 Resultados salvos em: $output_file")
+    catch e
+        println("❌ Erro ao salvar resultados: $e")
+    end
+    
+    # Summary
+    successful = sum(r["success"] for r in results)
+    println("\n📊 RESUMO DA IDENTIFICAÇÃO EM LOTE:")
+    println("   - Total de imagens: $(length(image_files))")
+    println("   - Sucessos: $successful")
+    println("   - Falhas: $(length(image_files) - successful)")
+    println("   - Taxa de sucesso: $(round(successful/length(image_files)*100, digits=1))%")
+    
+    return results
+end
+
+# Main identification command
+function identify_command(img_path::String; auth_mode::Bool = false, expected_person::String = "")
+    println("🤖 Sistema de Reconhecimento Facial - Modo Identificação")
+    
+    if !isfile(img_path)
+        error("Arquivo de imagem não encontrado: $img_path")
+    end
     
     try
-        # Verificações preliminares
-        if !isfile(image_path)
-            error("Arquivo de imagem não encontrado: $image_path")
-        end
-        if !isfile(CNNCheckinCore.MODEL_PATH)
-            error("Modelo não encontrado! Execute primeiro: julia cnncheckin_train.jl")
-        end
-        if !isfile(CNNCheckinCore.CONFIG_PATH)
-            error("Configuração não encontrada! Execute primeiro: julia cnncheckin_train.jl")
-        end
+        # Load model and configuration
+        model, person_names, config, model_data_toml = load_model_and_config(
+            CNNCheckinCore.MODEL_PATH, 
+            CNNCheckinCore.CONFIG_PATH
+        )
         
-        # Carregar modelo e configuração
-        model, person_names, config, model_data_toml = load_model_and_config(CNNCheckinCore.MODEL_PATH, CNNCheckinCore.CONFIG_PATH)
-        
-        println("🔄 Iniciando processo de predição...")
-        
-        # Fazer predição
-        person_name, confidence = predict_person(model, person_names, image_path; save_example=true)
-        
-        if person_name === nothing
-            println("❌ Não foi possível processar a imagem")
-            return false
-        end
-        
-        println("\n" * "="^50)
-        println("🎯 Resultado da Identificação:")
-        println("   👤 Pessoa: $person_name")
-        println("   📈 Confiança: $(round(confidence*100, digits=2))%")
-        println("="^50)
-        
-        println("\n📊 Informações do Modelo:")
-        println("   🧠 Acurácia do modelo: $(round(config["training"]["final_accuracy"]*100, digits=2))%")
-        println("   📅 Treinado em: $(config["data"]["timestamp"])")
-        println("   🎓 Melhor epoch: $(config["training"]["best_epoch"])")
-        
-        if model_data_toml !== nothing
-            total_params = get(get(model_data_toml, "weights_summary", Dict()), "total_parameters", 0)
-            if total_params > 0
-                model_size = get(get(model_data_toml, "weights_summary", Dict()), "model_size_mb", 0.0)
-                println("   🔢 Parâmetros do modelo: $(total_params)")
-                println("   💾 Tamanho estimado: $(model_size) MB")
-            end
-            examples = get(model_data_toml, "prediction_examples", [])
-            if length(examples) > 0
-                println("\n📏 Exemplo salvo como predição #$(length(examples))")
-            end
-        end
-        
-        # Avaliar confiança
-        println("\n🎚️ Avaliação da Confiança:")
-        if confidence >= 0.8
-            println("   ✅ Identificação com ALTA confiança")
-        elseif confidence >= 0.6
-            println("   ⚠️ Identificação com MÉDIA confiança")
-        elseif confidence >= 0.4
-            println("   ⚠️ Identificação com BAIXA confiança - verifique manualmente")
+        if auth_mode && !isempty(expected_person)
+            # Authentication mode
+            is_authenticated, confidence, status = authenticate_person(model, person_names, 
+                                                                      img_path, expected_person)
+            return is_authenticated, confidence, status
         else
-            println("   ❓ Identificação com MUITO BAIXA confiança - pessoa desconhecida?")
+            # Regular identification mode
+            person_name, confidence = predict_person(model, person_names, img_path)
+            
+            if person_name !== nothing
+                display_prediction_result(person_name, confidence, img_path)
+                return person_name, confidence
+            else
+                println("❌ Falha na identificação da imagem")
+                return nothing, 0.0
+            end
         end
-        
-        # Verificação final da lógica
-        println("\n🔍 Verificação de Sanidade:")
-        println("   - Total de classes no modelo: $(length(person_names))")
-        println("   - Pessoa identificada está na posição correta? $(person_name in person_names ? "✅" : "❌")")
-        if person_name in person_names
-            correct_index = findfirst(x -> x == person_name, person_names)
-            println("   - Índice correto de '$person_name': $correct_index")
-        end
-        
-        return true
         
     catch e
         println("❌ Erro durante identificação: $e")
-        println("📏 Tipo do erro: $(typeof(e))")
-        if isa(e, MethodError)
-            println("📏 Erro de método - possivelmente relacionado ao modelo ou dados")
-        elseif isa(e, ArgumentError)
-            println("📏 Erro de argumento - possivelmente relacionado a tipos ou conversões")
-        end
-        return false
+        return nothing, 0.0
     end
 end
 
-# Executar comando se for chamado diretamente
-if abspath(PROGRAM_FILE) == @__FILE__
-    if length(ARGS) < 1
-        println("❌ Erro: Caminho da imagem não fornecido")
-        println("Uso: julia cnncheckin_identify_fixed.jl <caminho_da_imagem>")
+# Command line interface
+function main()
+    if length(ARGS) == 0
+        println("Uso:")
+        println("  julia cnncheckin_identify.jl <caminho_da_imagem>")
+        println("  julia cnncheckin_identify.jl <caminho_da_imagem> --auth <nome_esperado>")
+        println("  julia cnncheckin_identify.jl --batch <diretório_imagens>")
         println()
-        println("Exemplo:")
-        println("  julia cnncheckin_identify_fixed.jl ../../../dados/fotos_teste/teste.png")
-    else
-        success = identify_command(ARGS[1])
-        if success
-            println("✅ Identificação concluída!")
+        println("Exemplos:")
+        println("  julia cnncheckin_identify.jl foto.jpg")
+        println("  julia cnncheckin_identify.jl foto.jpg --auth \"João Silva\"")
+        println("  julia cnncheckin_identify.jl --batch ./fotos_teste/")
+        return
+    end
+    
+    if ARGS[1] == "--batch"
+        if length(ARGS) < 2
+            println("❌ Especifique o diretório para identificação em lote")
+            return
+        end
+        
+        # Load model first
+        try
+            model, person_names, config, model_data_toml = load_model_and_config(
+                CNNCheckinCore.MODEL_PATH, 
+                CNNCheckinCore.CONFIG_PATH
+            )
+            
+            batch_identify(model, person_names, ARGS[2])
+        catch e
+            println("❌ Erro durante identificação em lote: $e")
+        end
+        
+    elseif length(ARGS) >= 3 && ARGS[2] == "--auth"
+        # Authentication mode
+        img_path = ARGS[1]
+        expected_person = ARGS[3]
+        
+        is_authenticated, confidence, status = identify_command(img_path; 
+                                                               auth_mode=true, 
+                                                               expected_person=expected_person)
+        
+        if is_authenticated
+            println("\n🎉 Autenticação bem-sucedida!")
         else
-            println("💥 Falha na identificação")
-            println("\n🔧 Dicas de troubleshooting:")
-            println("   1. Verifique se a imagem existe e não está corrompida")
-            println("   2. Execute: julia cnncheckin_validate.jl")
-            println("   3. Se necessário, retreine o modelo: julia cnncheckin_train.jl")
+            println("\n🚫 Autenticação falhou!")
+        end
+        
+    else
+        # Regular identification mode
+        img_path = ARGS[1]
+        result = identify_command(img_path)
+        
+        if result[1] !== nothing
+            println("\n🎯 Identificação concluída com sucesso!")
+        else
+            println("\n❌ Identificação não foi possível")
         end
     end
 end
+
+# Execute if called directly
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end
+
+
+
+
+# Identificação simples: julia cnncheckin_identify.jl foto.jpg
+# Autenticação: julia cnncheckin_identify.jl foto.jpg --auth "Nome Pessoa"
+# Lote: julia cnncheckin_identify.jl --batch ./diretorio/
+
+# Identificação simples: julia cnncheckin_identify.jl ../../../dados/fotos_auth/nl.jpg
+
+#  julia cnncheckin_identify.jl ../../../dados/fotos_auth/objeto-1.jpg
+#  julia cnncheckin_identify.jl ../../../dados/fotos_auth/objeto-2.jpg
+#  julia cnncheckin_identify.jl ../../../dados/fotos_auth/objeto-3.jpeg
+
+#  julia cnncheckin_identify.jl ../../../dados/fotos_auth/teste.png
