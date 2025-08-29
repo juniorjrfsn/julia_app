@@ -182,6 +182,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
     main()
 end
 
-# julia cnncheckin_acount.jl
+# julia cnncheckin_acount_1.jl
 
  

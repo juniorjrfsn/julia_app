@@ -67,14 +67,18 @@ julia> ]
 (@v1.8) pkg> add Gtk
 (@v1.8) pkg> add PlotlyJS
 (@v1.8) pkg> add cuDNN
+(@v1.11) pkg> add GLib
+(@v1.8) pkg> add GNNlib
+(@v1.8) pkg> add PGLib
+(@v1.8) pkg> add GenLib
 
-
- 
   
 
 
 ```
 
+ GLib
+ PGLib GenLib MHLib MQLib TPLib Git GLNS GLTF GLM GLPK Libz GLFW Glob GZip DTALib LRSLib CDDLib GNNlib
 
 ## **Executar o arquivo**
 ```

@@ -1,24 +1,29 @@
 # projeto: cnncheckin
-# file: cnncheckin/src/cnncheckin_core.jl
+# file: cnncheckin/src/cnncheckin_acount_core.jl
 # Parte 1: Funções principais e configuração do sistema
+# Funções principais do sistema de captura de fotos
+
+# projeto: cnncheckin
+# file: cnncheckin/src/cnncheckin_acount_core.jl
+# Funções principais do sistema de captura de fotos - versão corrigida
 
 using VideoIO
 using Images
 using FileIO
 using Dates
 
-# Try to load optional graphics packages
+# Sistema de display com múltiplos fallbacks
 graphics_available = Dict()
 
-# Try PlotlyJS
+# Try to load optional graphics packages
 try
-    using PlotlyJS
-    graphics_available["plotlyjs"] = true
+    using Gtk, GLib, Cairo
+    graphics_available["gtk"] = true
 catch
-    graphics_available["plotlyjs"] = false
+    graphics_available["gtk"] = false
+    println("⚠️ GTK não disponível - interface gráfica limitada")
 end
 
-# Try Plots
 try
     using Plots
     graphics_available["plots"] = true
@@ -26,64 +31,29 @@ catch
     graphics_available["plots"] = false
 end
 
-# Try ImageView and Gtk
-try
-    using ImageView, Gtk
-    graphics_available["imageview"] = true
-catch
-    graphics_available["imageview"] = false
-end
+DISPLAY_AVAILABLE = graphics_available["gtk"]
+DISPLAY_TYPE = DISPLAY_AVAILABLE ? "gtk" : "console"
 
-# Sistema de display com múltiplos fallbacks
-DISPLAY_AVAILABLE = false
-DISPLAY_TYPE = "none"
-global DISPLAY_AVAILABLE, DISPLAY_TYPE
+"""
+    criar_diretorio(caminho::String)
 
-# Função para detectar ambiente gráfico disponível
-function detectar_ambiente_grafico()
-    # Verificar se estamos em ambiente gráfico
-    if !haskey(ENV, "DISPLAY") && !haskey(ENV, "WAYLAND_DISPLAY")
-        println("⚠️  Nenhum ambiente gráfico detectado")
-        return false, "none"
-    end
-    
-    # Testar diferentes backends gráficos em ordem de preferência
-    if graphics_available["plotlyjs"]
-        println("✅ PlotlyJS disponível")
-        return true, "plotlyjs"
-    elseif graphics_available["plots"]
-        try
-            Plots.gr()
-            println("✅ Plots disponível")
-            return true, "plots"
-        catch e
-            println("⚠️  Plots com erro: $(typeof(e).__name__)")
-        end
-    elseif graphics_available["imageview"]
-        println("✅ ImageView disponível")
-        return true, "imageview"
-    end
-    
-    return false, "external"
-end
-
-# Inicializar sistema de display
-DISPLAY_AVAILABLE, DISPLAY_TYPE = detectar_ambiente_grafico()
-
-if !DISPLAY_AVAILABLE
-    println("🔧 Modo fallback ativo - usando visualizadores externos")
-end
-
-# Função para criar diretório se não existir
-function criar_diretorio(caminho)
+Cria um diretório se ele não existir.
+"""
+function criar_diretorio(caminho::String)
     if !isdir(caminho)
         mkpath(caminho)
         println("📁 Diretório criado: $caminho")
+        return true
     end
+    return false
 end
 
-# Função para listar todas as fotos em uma pasta
-function listar_fotos(pasta)
+"""
+    listar_fotos(pasta::String) -> Vector{String}
+
+Lista todas as fotos válidas em uma pasta.
+"""
+function listar_fotos(pasta::String)
     if !isdir(pasta)
         return String[]
     end
@@ -104,8 +74,12 @@ function listar_fotos(pasta)
     return sort(fotos)
 end
 
-# Função para exibir informações da foto
-function info_foto(caminho_foto)
+"""
+    info_foto(caminho_foto::String) -> String
+
+Retorna informações detalhadas sobre uma foto.
+"""
+function info_foto(caminho_foto::String)
     if !isfile(caminho_foto)
         return "❌ Arquivo não encontrado"
     end
@@ -148,168 +122,12 @@ function info_foto(caminho_foto)
     end
 end
 
-# Função aprimorada para visualizar imagens
-function mostrar_imagem(caminho_foto, titulo="Imagem")
-    if !isfile(caminho_foto)
-        println("❌ Arquivo não encontrado: $caminho_foto")
-        return false
-    end
-    
-    try
-        img = load(caminho_foto)
-        
-        if DISPLAY_TYPE == "imageview" && graphics_available["imageview"]
-            try
-                imshow(img)
-                return true
-            catch e
-                println("⚠️  Erro ImageView: $e")
-            end
-        elseif DISPLAY_TYPE == "plots" && graphics_available["plots"]
-            try
-                p = Plots.plot(img, title=titulo, axis=nothing, border=:none)
-                display(p)
-                return true
-            catch e
-                println("⚠️  Erro Plots: $e")
-            end
-        elseif DISPLAY_TYPE == "plotlyjs" && graphics_available["plotlyjs"]
-            try
-                # Converter imagem para formato PlotlyJS
-                img_array = channelview(img)
-                fig = PlotlyJS.plot(PlotlyJS.heatmap(z=img_array[1,:,:], colorscale="Greys"))
-                display(fig)
-                return true
-            catch e
-                println("⚠️  Erro PlotlyJS: $e")
-            end
-        end
-        
-        # Fallback para visualizador externo
-        return abrir_com_visualizador_externo(caminho_foto)
-        
-    catch e
-        println("❌ Erro ao carregar imagem: $e")
-        return false
-    end
-end
+"""
+    verificar_webcam() -> (Bool, Int)
 
-# Função melhorada para visualizador externo
-function abrir_com_visualizador_externo(caminho_foto)
-    if !isfile(caminho_foto)
-        println("❌ Arquivo não encontrado")
-        return false
-    end
-    
-    visualizadores = []
-    
-    if Sys.islinux()
-        # Lista expandida de visualizadores Linux
-        linux_viewers = [
-            ("eog", "Eye of GNOME"),
-            ("gwenview", "KDE Gwenview"),
-            ("feh", "Feh (leve)"),
-            ("display", "ImageMagick"),
-            ("gimp", "GIMP"),
-            ("firefox", "Firefox"),
-            ("google-chrome", "Google Chrome"),
-            ("xdg-open", "Padrão do sistema")
-        ]
-        visualizadores = linux_viewers
-    elseif Sys.iswindows()
-        visualizadores = [("start", "Windows padrão")]
-    elseif Sys.isapple()
-        visualizadores = [("open", "macOS padrão")]
-    end
-    
-    for (comando, nome) in visualizadores
-        try
-            if Sys.islinux()
-                # Verificar se o comando existe
-                run(pipeline(`which $comando`, devnull), wait=true)
-                
-                if comando == "xdg-open"
-                    run(`$comando $caminho_foto`, wait=false)
-                elseif comando in ["firefox", "google-chrome"]
-                    run(`$comando file://$caminho_foto`, wait=false)
-                else
-                    run(`$comando $caminho_foto`, wait=false)
-                end
-            elseif Sys.iswindows()
-                run(`cmd /c start "" "$caminho_foto"`, wait=false)
-            elseif Sys.isapple()
-                run(`open $caminho_foto`, wait=false)
-            end
-            
-            println("🖼️  Imagem aberta com $nome")
-            return true
-            
-        catch
-            continue
-        end
-    end
-    
-    println("❌ Nenhum visualizador disponível encontrado")
-    println("💡 Instale um visualizador:")
-    println("   sudo apt install eog gwenview feh imagemagick")
-    return false
-end
-
-# Função para criar thumbnail em ASCII (fallback criativo)
-function mostrar_ascii_thumb(caminho_foto, largura=60)
-    try
-        img = load(caminho_foto)
-        mostrar_ascii_thumb_with_img(img, largura, basename(caminho_foto))
-        return true
-    catch e
-        println("❌ Erro ao gerar preview ASCII: $e")
-        return false
-    end
-end
-
-# Função auxiliar para ASCII com imagem já carregada
-function mostrar_ascii_thumb_with_img(img, largura=60, nome="Preview")
-    try
-        # Redimensionar para ASCII
-        h, w = size(img)
-        nova_h = round(Int, largura * h / w / 2)  # /2 para compensar proporção dos caracteres
-        
-        # Converter para escala de cinza
-        if eltype(img) <: RGB
-            img_gray = Gray.(img)
-        else
-            img_gray = img
-        end
-        
-        # Redimensionar
-        img_small = imresize(img_gray, (nova_h, largura))
-        
-        # Caracteres ASCII por intensidade
-        chars = " .:-=+*#%@"
-        
-        println("\n" * "="^largura)
-        println("📸 $nome")
-        println("="^largura)
-        
-        for i in 1:size(img_small, 1)
-            linha = ""
-            for j in 1:size(img_small, 2)
-                intensidade = gray(img_small[i, j])
-                char_idx = min(length(chars), max(1, round(Int, intensidade * length(chars))))
-                linha *= chars[char_idx]
-            end
-            println(linha)
-        end
-        println("="^largura)
-        
-        return true
-    catch e
-        println("❌ Erro ao gerar preview ASCII: $e")
-        return false
-    end
-end
-
-# Função aprimorada para verificar webcam
+Verifica se há webcam disponível e retorna (sucesso, índice).
+Versão corrigida para tratar tipos de erro adequadamente.
+"""
 function verificar_webcam()
     println("🔍 Verificando webcam...")
     
@@ -324,14 +142,15 @@ function verificar_webcam()
                 frame = read(camera)
                 if frame !== nothing
                     println("✅ Captura de frame funcionando")
-                    println("📏 Resolução: $(size(frame))")
+                    println("📐 Resolução: $(size(frame))")
                 end
                 
                 close(camera)
                 return true, i
             catch e
                 if i == 0
-                    println("⚠️  Webcam padrão (índice 0): $(typeof(e).__name__)")
+                    # Corrigido: usar string(typeof(e)) em vez de typeof(e).__name__
+                    println("⚠️ Webcam padrão (índice 0): $(string(typeof(e)))")
                 end
                 continue
             end
@@ -346,78 +165,72 @@ function verificar_webcam()
     end
 end
 
-# Função auxiliar para preview temporário
-function mostrar_imagem_temp(img)
+"""
+    capturar_frame(camera) -> Union{Nothing, Matrix}
+
+Captura um frame da webcam com múltiplas tentativas.
+"""
+function capturar_frame(camera)
+    melhor_frame = nothing
+    for tentativa in 1:3
+        try
+            frame = read(camera)
+            if frame !== nothing
+                melhor_frame = frame
+                break
+            end
+        catch e
+            println("⚠️ Tentativa $tentativa falhou: $e")
+        end
+        sleep(0.1)
+    end
+    return melhor_frame
+end
+
+"""
+    salvar_foto(frame, pasta::String, prefixo::String="foto") -> String
+
+Salva um frame como foto e retorna o caminho do arquivo.
+"""
+function salvar_foto(frame, pasta::String, prefixo::String="foto")
+    criar_diretorio(pasta)
+    
+    timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS-sss")
+    nome_arquivo = "$(prefixo)_$timestamp.jpg"
+    caminho_completo = joinpath(pasta, nome_arquivo)
+    
     try
-        if DISPLAY_TYPE == "imageview" && graphics_available["imageview"]
-            imshow(img)
-        else
-            println("🖼️  Preview carregado (feche a janela para continuar)")
-        end
-        return true
+        save(caminho_completo, frame)
+        tamanho_kb = round(filesize(caminho_completo) / 1024, digits=1)
+        println("✅ Foto salva: $nome_arquivo ($(tamanho_kb) KB)")
+        return caminho_completo
     catch e
-        return mostrar_ascii_thumb_temp(img)
+        println("❌ Erro ao salvar foto: $e")
+        return ""
     end
 end
 
-function mostrar_ascii_thumb_temp(img, largura=40)
-    println("\n📺 Preview ASCII:")
-    mostrar_ascii_thumb_with_img(img, largura, "Preview Webcam")
-end
+"""
+    mostrar_estatisticas(pastas::Vector{String})
 
-# Função para gerenciamento de arquivos
-function gerenciar_arquivos()
-    println("\n🗂️  === GERENCIADOR DE ARQUIVOS ===")
-    
-    pastas_disponiveis = ["fotos_rosto", "fotos_rosto_simples", "fotos_rosto_preview"]
-    
-    while true
-        println("\n📋 Opções de gerenciamento:")
-        println("1 - 📊 Estatísticas das pastas")
-        println("2 - 🧹 Limpeza de arquivos")
-        println("3 - 📁 Criar backup")
-        println("4 - 🔄 Reorganizar arquivos")
-        println("5 - 🔍 Buscar por data")
-        println("0 - ↩️  Voltar ao menu principal")
-        
-        print("\nEscolha uma opção: ")
-        opcao = strip(readline())
-        
-        if opcao == "0"
-            break
-        elseif opcao == "1"
-            mostrar_estatisticas(pastas_disponiveis)
-        elseif opcao == "2"
-            limpar_arquivos(pastas_disponiveis)
-        elseif opcao == "3"
-            criar_backup(pastas_disponiveis)
-        elseif opcao == "4"
-            reorganizar_arquivos(pastas_disponiveis)
-        elseif opcao == "5"
-            buscar_por_data(pastas_disponiveis)
-        else
-            println("❌ Opção inválida!")
-        end
-    end
-end
-
-function mostrar_estatisticas(pastas)
+Mostra estatísticas das pastas de fotos.
+"""
+function mostrar_estatisticas(pastas::Vector{String})
     println("\n📊 === ESTATÍSTICAS ===")
     
     total_fotos = 0
-    total_tamanho = 0
+    total_tamanho = 0.0
     
     for pasta in pastas
         if isdir(pasta)
             fotos = listar_fotos(pasta)
-            tamanho_pasta = sum(filesize(foto) for foto in fotos)
+            tamanho_pasta = sum(filesize(foto) for foto in fotos) / (1024*1024)
             
             println("\n📁 $pasta:")
             println("   📸 Fotos: $(length(fotos))")
-            println("   💾 Tamanho: $(round(tamanho_pasta / (1024*1024), digits=2)) MB")
+            println("   💾 Tamanho: $(round(tamanho_pasta, digits=2)) MB")
             
             if !isempty(fotos)
-                # Primeira e última foto (por nome)
                 primeira = basename(first(sort(fotos)))
                 ultima = basename(last(sort(fotos)))
                 println("   📅 Primeira: $primeira")
@@ -433,42 +246,74 @@ function mostrar_estatisticas(pastas)
     
     println("\n🏆 TOTAL GERAL:")
     println("   📸 Fotos: $total_fotos")
-    println("   💾 Tamanho: $(round(total_tamanho / (1024*1024), digits=2)) MB")
+    println("   💾 Tamanho: $(round(total_tamanho, digits=2)) MB")
 end
 
-function limpar_arquivos(pastas)
-    println("\n🧹 === LIMPEZA DE ARQUIVOS ===")
-    println("⚠️  ATENÇÃO: Esta operação é irreversível!")
+"""
+    abrir_com_visualizador_externo(caminho_foto::String) -> Bool
+
+Abre foto com visualizador externo do sistema.
+"""
+function abrir_com_visualizador_externo(caminho_foto::String)
+    if !isfile(caminho_foto)
+        println("❌ Arquivo não encontrado")
+        return false
+    end
     
-    for pasta in pastas
-        if isdir(pasta)
-            fotos = listar_fotos(pasta)
-            if !isempty(fotos)
-                println("\n📁 $pasta: $(length(fotos)) fotos")
-                print("Deseja limpar esta pasta? (digite 'LIMPAR' para confirmar): ")
-                confirmacao = strip(readline())
+    visualizadores = []
+    
+    if Sys.islinux()
+        linux_viewers = [
+            ("eog", "Eye of GNOME"),
+            ("gwenview", "KDE Gwenview"), 
+            ("feh", "Feh (leve)"),
+            ("display", "ImageMagick"),
+            ("xdg-open", "Padrão do sistema")
+        ]
+        visualizadores = linux_viewers
+    elseif Sys.iswindows()
+        visualizadores = [("start", "Windows padrão")]
+    elseif Sys.isapple()
+        visualizadores = [("open", "macOS padrão")]
+    end
+    
+    for (comando, nome) in visualizadores
+        try
+            if Sys.islinux()
+                run(pipeline(`which $comando`, devnull), wait=true)
                 
-                if confirmacao == "LIMPAR"
-                    try
-                        for foto in fotos
-                            rm(foto)
-                        end
-                        println("✅ Pasta $pasta limpa!")
-                    catch e
-                        println("❌ Erro ao limpar $pasta: $e")
-                    end
+                if comando == "xdg-open"
+                    run(`$comando $caminho_foto`, wait=false)
                 else
-                    println("❌ Operação cancelada para $pasta")
+                    run(`$comando $caminho_foto`, wait=false)
                 end
-            else
-                println("📁 $pasta: vazia")
+            elseif Sys.iswindows()
+                run(`cmd /c start "" "$caminho_foto"`, wait=false)
+            elseif Sys.isapple()
+                run(`open $caminho_foto`, wait=false)
             end
+            
+            println("🖼️ Imagem aberta com $nome")
+            return true
+            
+        catch
+            continue
         end
     end
+    
+    println("❌ Nenhum visualizador disponível encontrado")
+    println("💡 Instale um visualizador:")
+    println("   sudo apt install eog gwenview feh imagemagick")
+    return false
 end
 
-function criar_backup(pastas)
-    println("\n📁 === CRIAR BACKUP ===")
+"""
+    criar_backup(pastas::Vector{String}) -> String
+
+Cria backup das fotos e retorna o caminho do backup.
+"""
+function criar_backup(pastas::Vector{String})
+    println("\n📦 === CRIAR BACKUP ===")
     
     timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
     pasta_backup = "backup_fotos_$timestamp"
@@ -492,7 +337,7 @@ function criar_backup(pastas)
                         cp(foto, destino)
                         total_copiadas += 1
                     catch e
-                        println("⚠️  Erro ao copiar $(basename(foto)): $e")
+                        println("⚠️ Erro ao copiar $(basename(foto)): $e")
                     end
                 end
             end
@@ -501,84 +346,143 @@ function criar_backup(pastas)
     
     println("✅ Backup criado: $pasta_backup")
     println("📸 Total de fotos copiadas: $total_copiadas")
+    return pasta_backup
 end
 
-function reorganizar_arquivos(pastas)
-    println("\n🔄 === REORGANIZAR ARQUIVOS ===")
-    println("Esta função renomeia arquivos seguindo padrão: foto_NNNN_data_hora.ext")
-    
-    for pasta in pastas
-        if isdir(pasta)
-            fotos = listar_fotos(pasta)
-            if !isempty(fotos)
-                print("Reorganizar $pasta ($(length(fotos)) fotos)? (s/N): ")
-                if lowercase(strip(readline())) in ["s", "sim"]
-                    println("🔄 Reorganizando $pasta...")
-                    
-                    for (i, foto) in enumerate(fotos)
-                        try
-                            timestamp = Dates.format(Dates.unix2datetime(stat(foto).mtime), "yyyy-mm-dd_HH-MM-SS")
-                            _, ext = splitext(foto)
-                            novo_nome = "foto_$(lpad(i, 4, '0'))_$timestamp$ext"
-                            novo_caminho = joinpath(dirname(foto), novo_nome)
-                            
-                            if foto != novo_caminho
-                                mv(foto, novo_caminho)
-                                println("  ✅ $(basename(foto)) → $novo_nome")
-                            end
-                        catch e
-                            println("  ❌ Erro com $(basename(foto)): $e")
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
+"""
+    limpar_pasta(pasta::String) -> Int
 
-function buscar_por_data(pastas)
-    println("\n🔍 === BUSCAR POR DATA ===")
-    print("Digite a data (formato: yyyy-mm-dd) ou parte dela: ")
-    busca = strip(readline())
-    
-    if isempty(busca)
-        println("❌ Data não informada")
-        return
+Remove todas as fotos de uma pasta e retorna quantas foram removidas.
+"""
+function limpar_pasta(pasta::String)
+    if !isdir(pasta)
+        return 0
     end
     
-    encontradas = String[]
+    fotos = listar_fotos(pasta)
+    removidas = 0
     
-    for pasta in pastas
-        if isdir(pasta)
-            fotos = listar_fotos(pasta)
-            for foto in fotos
-                if occursin(busca, basename(foto))
-                    push!(encontradas, foto)
-                end
-            end
+    for foto in fotos
+        try
+            rm(foto)
+            removidas += 1
+        catch e
+            println("⚠️ Erro ao remover $(basename(foto)): $e")
         end
     end
     
-    if isempty(encontradas)
-        println("❌ Nenhuma foto encontrada com '$busca'")
-    else
-        println("✅ Encontradas $(length(encontradas)) fotos:")
-        for (i, foto) in enumerate(encontradas)
-            tamanho_kb = round(filesize(foto) / 1024, digits=1)
-            println("  $i. $(basename(foto)) ($(tamanho_kb) KB)")
+    return removidas
+end
+
+# Configurações padrão do sistema
+const CONFIG_PADRAO = Dict(
+    "pasta_fotos" => "fotos_rosto",
+    "num_fotos_padrao" => 5,
+    "intervalo_padrao" => 3,
+    "qualidade_jpg" => 95,
+    "prefixo_arquivo" => "foto"
+)
+
+"""
+    get_config(chave::String)
+
+Obtém configuração padrão.
+"""
+function get_config(chave::String)
+    return get(CONFIG_PADRAO, chave, nothing)
+end
+
+# Variáveis globais para estado da aplicação
+mutable struct AppState
+    camera
+    camera_index::Int
+    fotos_capturadas::Vector{String}
+    pasta_atual::String
+    webcam_ativa::Bool
+    
+    AppState() = new(nothing, -1, String[], get_config("pasta_fotos"), false)
+end
+
+# Instância global do estado
+const app_state = AppState()
+
+"""
+    inicializar_webcam() -> Bool
+
+Inicializa a webcam e retorna sucesso.
+"""
+function inicializar_webcam()
+    if app_state.webcam_ativa
+        return true
+    end
+    
+    webcam_ok, camera_index = verificar_webcam()
+    if !webcam_ok
+        return false
+    end
+    
+    try
+        app_state.camera = VideoIO.opencamera(camera_index)
+        app_state.camera_index = camera_index
+        app_state.webcam_ativa = true
+        
+        # Warm-up da câmera
+        for _ in 1:3
+            try
+                read(app_state.camera)
+                sleep(0.2)
+            catch
+                break
+            end
         end
         
-        print("\nDeseja visualizar alguma? (número ou ENTER para sair): ")
-        entrada = strip(readline())
-        if !isempty(entrada)
-            try
-                indice = parse(Int, entrada)
-                if 1 <= indice <= length(encontradas)
-                    mostrar_imagem(encontradas[indice])
-                end
-            catch
-                println("❌ Número inválido")
-            end
+        println("📹 Webcam inicializada (índice: $camera_index)")
+        return true
+    catch e
+        println("❌ Erro ao inicializar webcam: $e")
+        return false
+    end
+end
+
+"""
+    fechar_webcam()
+
+Fecha a webcam se estiver ativa.
+"""
+function fechar_webcam()
+    if app_state.webcam_ativa && app_state.camera !== nothing
+        try
+            close(app_state.camera)
+            app_state.webcam_ativa = false
+            app_state.camera = nothing
+            println("📹 Webcam fechada")
+        catch e
+            println("⚠️ Erro ao fechar webcam: $e")
         end
     end
+end
+
+"""
+    capturar_foto_atual() -> String
+
+Captura uma foto da webcam ativa e retorna o caminho do arquivo.
+"""
+function capturar_foto_atual()
+    if !app_state.webcam_ativa || app_state.camera === nothing
+        println("❌ Webcam não está ativa")
+        return ""
+    end
+    
+    frame = capturar_frame(app_state.camera)
+    if frame === nothing
+        println("❌ Falha ao capturar frame")
+        return ""
+    end
+    
+    caminho = salvar_foto(frame, app_state.pasta_atual)
+    if !isempty(caminho)
+        push!(app_state.fotos_capturadas, caminho)
+    end
+    
+    return caminho
 end

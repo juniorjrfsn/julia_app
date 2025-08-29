@@ -1,40 +1,218 @@
 # projeto: cnncheckin
 # file: cnncheckin/src/cnncheckin_acount.jl
+# Versão corrigida com verificação de dependências e widgets GTK modernos
+ 
+# Versão corrigida com compatibilidade GTK
 
+using Pkg
 
-# projeto: cnncheckin
-# file: cnncheckin/src/cnncheckin_viewer.jl
+# Lista de pacotes necessários
+required_packages = ["Gtk", "Cairo", "VideoIO", "Images", "FileIO", "Dates"]
 
-using VideoIO
-using ImageView
-using Images
-using FileIO
-using Dates
-using Gtk
-
-# Função para criar diretório se não existir
-function criar_diretorio(caminho)
-    if !isdir(caminho)
-        mkpath(caminho)
-        println("Diretório criado: $caminho")
+println("🔧 Verificando dependências...")
+for pkg in required_packages
+    try
+        eval(Meta.parse("using $pkg"))
+        println("✅ $pkg - OK")
+    catch
+        println("📦 Instalando $pkg...")
+        try
+            Pkg.add(pkg)
+            eval(Meta.parse("using $pkg"))
+            println("✅ $pkg instalado e carregado")
+        catch e
+            println("❌ Erro ao instalar $pkg: $e")
+        end
     end
 end
 
-# Função para listar todas as fotos em uma pasta
-function listar_fotos(pasta)
+using Gtk, Cairo, VideoIO, Images, FileIO, Dates
+import GLib
+
+# Configurações padrão
+const CONFIG = Dict(
+    "pasta_fotos" => "fotos_rosto",
+    "num_fotos_padrao" => 5,
+    "intervalo_padrao" => 3
+)
+
+# Estado da aplicação
+mutable struct AppState
+    camera
+    camera_index::Int
+    webcam_ativa::Bool
+    pasta_atual::String
+    fotos_capturadas::Vector{String}
+    
+    AppState() = new(nothing, -1, false, CONFIG["pasta_fotos"], String[])
+end
+
+const app_state = AppState()
+
+# GUI Components
+mutable struct CNNCheckInGUI
+    window::GtkWindow
+    preview_area::GtkDrawingArea  # Voltando para GtkDrawingArea
+    btn_iniciar::GtkButton
+    btn_parar::GtkButton
+    btn_capturar::GtkButton
+    btn_visualizar::GtkButton
+    entry_pasta::GtkEntry
+    label_status::GtkLabel
+    label_contador::GtkLabel
+    timer_id::Union{Int, Nothing}
+    
+    CNNCheckInGUI() = new()
+end
+
+const gui = CNNCheckInGUI()
+
+"""
+    criar_diretorio(caminho::String)
+Cria diretório se não existir.
+"""
+function criar_diretorio(caminho::String)
+    if !isdir(caminho)
+        mkpath(caminho)
+        println("📁 Diretório criado: $caminho")
+    end
+end
+
+"""
+    verificar_webcam() -> (Bool, Int)
+Verifica webcam disponível.
+"""
+function verificar_webcam()
+    println("🔍 Verificando webcam...")
+    
+    for i in 0:2
+        try
+            camera = VideoIO.opencamera(i)
+            frame = read(camera)
+            if frame !== nothing
+                println("✅ Webcam encontrada no índice $i")
+                close(camera)
+                return true, i
+            end
+            close(camera)
+        catch e
+            continue
+        end
+    end
+    
+    println("❌ Nenhuma webcam encontrada")
+    return false, -1
+end
+
+"""
+    inicializar_webcam() -> Bool
+Inicializa webcam.
+"""
+function inicializar_webcam()
+    if app_state.webcam_ativa
+        return true
+    end
+    
+    webcam_ok, camera_index = verificar_webcam()
+    if !webcam_ok
+        return false
+    end
+    
+    try
+        app_state.camera = VideoIO.opencamera(camera_index)
+        app_state.camera_index = camera_index
+        app_state.webcam_ativa = true
+        
+        # Warm-up da câmera
+        for _ in 1:3
+            try
+                read(app_state.camera)
+                sleep(0.1)
+            catch
+                break
+            end
+        end
+        
+        println("📹 Webcam inicializada")
+        return true
+    catch e
+        println("❌ Erro ao inicializar webcam: $e")
+        return false
+    end
+end
+
+"""
+    fechar_webcam()
+Fecha webcam.
+"""
+function fechar_webcam()
+    if app_state.webcam_ativa && app_state.camera !== nothing
+        try
+            close(app_state.camera)
+            app_state.webcam_ativa = false
+            app_state.camera = nothing
+            println("📹 Webcam fechada")
+        catch e
+            println("⚠️ Erro ao fechar webcam: $e")
+        end
+    end
+end
+
+"""
+    capturar_frame()
+Captura frame da webcam.
+"""
+function capturar_frame()
+    if !app_state.webcam_ativa || app_state.camera === nothing
+        return nothing
+    end
+    
+    try
+        return read(app_state.camera)
+    catch
+        return nothing
+    end
+end
+
+"""
+    salvar_foto(frame, pasta::String) -> String
+Salva foto e retorna caminho.
+"""
+function salvar_foto(frame, pasta::String)
+    criar_diretorio(pasta)
+    
+    timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS-sss")
+    nome_arquivo = "foto_$timestamp.jpg"
+    caminho_completo = joinpath(pasta, nome_arquivo)
+    
+    try
+        save(caminho_completo, frame)
+        println("✅ Foto salva: $nome_arquivo")
+        return caminho_completo
+    catch e
+        println("❌ Erro ao salvar: $e")
+        return ""
+    end
+end
+
+"""
+    listar_fotos(pasta::String) -> Vector{String}
+Lista fotos válidas na pasta.
+"""
+function listar_fotos(pasta::String)
     if !isdir(pasta)
         return String[]
     end
     
-    extensoes_validas = [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
+    extensoes = [".jpg", ".jpeg", ".png", ".bmp"]
     fotos = String[]
     
     for arquivo in readdir(pasta)
-        caminho_completo = joinpath(pasta, arquivo)
-        if isfile(caminho_completo)
+        caminho = joinpath(pasta, arquivo)
+        if isfile(caminho)
             _, ext = splitext(lowercase(arquivo))
-            if ext in extensoes_validas
-                push!(fotos, caminho_completo)
+            if ext in extensoes
+                push!(fotos, caminho)
             end
         end
     end
@@ -42,438 +220,546 @@ function listar_fotos(pasta)
     return sort(fotos)
 end
 
-# Função para exibir informações da foto
-function info_foto(caminho_foto)
-    if !isfile(caminho_foto)
-        return "Arquivo não encontrado"
+"""
+    abrir_visualizador(foto::String)
+Abre foto no visualizador do sistema.
+"""
+function abrir_visualizador(foto::String)
+    if !isfile(foto)
+        return false
     end
     
     try
-        img = load(caminho_foto)
-        nome_arquivo = basename(caminho_foto)
-        tamanho = size(img)
-        
-        # Extrair timestamp do nome se possível
-        timestamp_info = ""
-        if occursin("_", nome_arquivo)
-            partes = split(nome_arquivo, "_")
-            if length(partes) >= 3
-                data_parte = partes[2]
-                hora_parte = split(partes[3], ".")[1]
-                timestamp_info = "\n📅 Data/Hora: $(replace(data_parte, "-" => "/")) $(replace(hora_parte, "-" => ":"))"
-            end
+        if Sys.islinux()
+            run(`xdg-open $foto`, wait=false)
+        elseif Sys.iswindows()
+            run(`cmd /c start "" "$foto"`, wait=false)
+        elseif Sys.isapple()
+            run(`open $foto`, wait=false)
         end
-        
-        return "📁 Arquivo: $nome_arquivo\n📏 Dimensões: $(tamanho[2])x$(tamanho[1]) pixels$timestamp_info"
-    catch e
-        return "Erro ao ler informações: $e"
-    end
-end
-
-# Visualizador de fotos com navegação
-function visualizar_fotos()
-    pastas_disponiveis = ["fotos_rosto", "fotos_rosto_simples"]
-    pasta_escolhida = nothing
-    
-    println("=== VISUALIZADOR DE FOTOS CAPTURADAS ===")
-    println("Pastas disponíveis:")
-    
-    for (i, pasta) in enumerate(pastas_disponiveis)
-        if isdir(pasta)
-            fotos = listar_fotos(pasta)
-            println("$i - $pasta ($(length(fotos)) fotos)")
-        else
-            println("$i - $pasta (pasta não existe)")
-        end
-    end
-    
-    print("Escolha a pasta (1-$(length(pastas_disponiveis))): ")
-    escolha = readline()
-    
-    try
-        indice = parse(Int, escolha)
-        if 1 <= indice <= length(pastas_disponiveis)
-            pasta_escolhida = pastas_disponiveis[indice]
-        else
-            println("Escolha inválida!")
-            return
-        end
+        println("🖼️ Foto aberta")
+        return true
     catch
-        println("Entrada inválida!")
-        return
+        println("❌ Erro ao abrir visualizador")
+        return false
     end
-    
-    fotos = listar_fotos(pasta_escolhida)
-    
-    if isempty(fotos)
-        println("Nenhuma foto encontrada na pasta $pasta_escolhida")
-        return
-    end
-    
-    println("\n🖼️  Encontradas $(length(fotos)) fotos!")
-    println("Comandos:")
-    println("- ENTER ou 'n': próxima foto")
-    println("- 'p': foto anterior")
-    println("- 'i': informações da foto atual")
-    println("- 'l': listar todas as fotos")
-    println("- 'j <número>': pular para foto específica")
-    println("- 'q': sair")
-    
-    foto_atual = 1
-    
-    while true
-        if foto_atual < 1
-            foto_atual = 1
-        elseif foto_atual > length(fotos)
-            foto_atual = length(fotos)
-        end
-        
-        caminho_foto = fotos[foto_atual]
-        
-        try
-            img = load(caminho_foto)
-            
-            # Exibir a imagem
-            println("\n" * "="^50)
-            println("📸 Foto $foto_atual de $(length(fotos))")
-            println("📁 $(basename(caminho_foto))")
-            println("="^50)
-            
-            # Tentar exibir a imagem
-            try
-                imshow(img)
-            catch e
-                println("⚠️  Não foi possível exibir a imagem na janela: $e")
-                println("Mas a imagem existe e pode ser aberta manualmente.")
-            end
-            
-        catch e
-            println("❌ Erro ao carregar imagem: $e")
-        end
-        
-        print("\n[Foto $foto_atual/$(length(fotos))] Comando: ")
-        comando = lowercase(strip(readline()))
-        
-        if comando == "q" || comando == "sair"
-            break
-        elseif comando == "" || comando == "n" || comando == "next"
-            foto_atual += 1
-            if foto_atual > length(fotos)
-                println("📍 Última foto alcançada!")
-                foto_atual = length(fotos)
-            end
-        elseif comando == "p" || comando == "prev" || comando == "anterior"
-            foto_atual -= 1
-            if foto_atual < 1
-                println("📍 Primeira foto alcançada!")
-                foto_atual = 1
-            end
-        elseif comando == "i" || comando == "info"
-            println("\n" * info_foto(fotos[foto_atual]))
-        elseif comando == "l" || comando == "list"
-            println("\n📋 Lista de todas as fotos:")
-            for (i, foto) in enumerate(fotos)
-                marcador = i == foto_atual ? "➤ " : "  "
-                println("$marcador$i. $(basename(foto))")
-            end
-        elseif startswith(comando, "j ") || startswith(comando, "jump ")
-            try
-                numero = parse(Int, split(comando)[2])
-                if 1 <= numero <= length(fotos)
-                    foto_atual = numero
-                    println("🔄 Pulando para foto $numero")
-                else
-                    println("❌ Número inválido! Use 1-$(length(fotos))")
-                end
-            catch
-                println("❌ Formato inválido! Use 'j <número>'")
-            end
-        else
-            println("❌ Comando não reconhecido!")
-        end
-    end
-    
-    println("\n👋 Visualizador encerrado!")
 end
 
-# Função para capturar fotos com preview em tempo real
-function capturar_fotos_com_preview()
-    pasta_fotos = "fotos_rosto_preview"
-    criar_diretorio(pasta_fotos)
+# === CALLBACKS DA GUI ===
+
+"""
+    on_draw_preview(widget, cr)
+Callback para desenhar preview.
+"""
+function on_draw_preview(widget, cr)
+    # Fundo preto
+    Cairo.set_source_rgb(cr, 0, 0, 0)
+    Cairo.paint(cr)
     
-    println("=== CAPTURADOR COM PREVIEW ===")
-    println("Esta função mostra a webcam em tempo real")
-    println("Pressione ESPAÇO para capturar uma foto")
-    println("Pressione 'q' para sair")
-    println("Pressione ENTER para começar...")
-    readline()
-    
-    try
-        camera = VideoIO.opencamera()
-        foto_count = 0
+    if !app_state.webcam_ativa
+        # Texto quando webcam não ativa
+        Cairo.set_source_rgb(cr, 1, 1, 1)
+        Cairo.select_font_face(cr, "Arial", Cairo.FONT_SLANT_NORMAL, Cairo.FONT_WEIGHT_BOLD)
+        Cairo.set_font_size(cr, 16)
         
-        println("📹 Webcam iniciada! Pressione ESPAÇO para capturar, 'q' para sair")
+        text = "Webcam não iniciada"
+        text_ext = Cairo.text_extents(cr, text)
         
-        # Loop principal de captura com preview
-        while true
+        w = Gtk.allocated_width(widget)
+        h = Gtk.allocated_height(widget)
+        x = (w - text_ext.width) / 2
+        y = (h + text_ext.height) / 2
+        
+        Cairo.move_to(cr, x, y)
+        Cairo.show_text(cr, text)
+    else
+        # Desenhar frame se disponível
+        frame = capturar_frame()
+        if frame !== nothing
             try
-                frame = read(camera)
-                if frame !== nothing
-                    # Mostrar preview contínuo
-                    try
-                        imshow(frame)
-                    catch
-                        # Se não conseguir mostrar, continuar
-                    end
-                    
-                    # Verificar entrada do usuário (simulação - em uma implementação real
-                    # seria necessário capturar eventos de teclado de forma não-bloqueante)
-                    print("\r📷 Foto $foto_count capturadas | ESPAÇO=capturar, ENTER=continuar, 'q'+ENTER=sair: ")
-                    
-                    # Aguardar entrada
-                    entrada = readline()
-                    entrada = strip(entrada)
-                    
-                    if lowercase(entrada) == "q"
-                        break
-                    elseif entrada == " " || lowercase(entrada) == "capturar"
-                        # Capturar foto
-                        timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
-                        nome_arquivo = "foto_preview_$(foto_count + 1)_$timestamp.jpg"
-                        caminho_completo = joinpath(pasta_fotos, nome_arquivo)
-                        
-                        save(caminho_completo, frame)
-                        foto_count += 1
-                        
-                        println("✅ Foto $foto_count salva: $nome_arquivo")
-                        sleep(1)  # Pause para mostrar a mensagem
-                    end
-                else
-                    println("❌ Erro ao capturar frame")
-                    break
-                end
-                
+                desenhar_frame_cairo(cr, frame, widget)
             catch e
-                println("❌ Erro durante captura: $e")
-                break
+                # Em caso de erro, mostrar mensagem
+                Cairo.set_source_rgb(cr, 1, 1, 0)
+                Cairo.move_to(cr, 10, 30)
+                Cairo.show_text(cr, "Erro no preview")
+            end
+        end
+    end
+    
+    return false
+end
+
+"""
+    desenhar_frame_cairo(cr, frame, widget)
+Desenha frame no contexto Cairo.
+"""
+function desenhar_frame_cairo(cr, frame, widget)
+    try
+        # Converter para RGB se necessário
+        if eltype(frame) != RGB{N0f8}
+            frame = RGB.(frame)
+        end
+        
+        h, w = size(frame)
+        widget_w = Gtk.allocated_width(widget)
+        widget_h = Gtk.allocated_height(widget)
+        
+        # Calcular escala mantendo aspecto
+        scale = min(widget_w / w, widget_h / h)
+        new_w = round(Int, w * scale)
+        new_h = round(Int, h * scale)
+        
+        # Redimensionar se necessário
+        if new_w != w || new_h != h
+            frame = imresize(frame, (new_h, new_w))
+        end
+        
+        # Preparar dados da imagem para Cairo
+        img_data = zeros(UInt8, new_h * new_w * 4)
+        
+        idx = 1
+        for i in 1:new_h
+            for j in 1:new_w
+                pixel = frame[i, j]
+                img_data[idx] = round(UInt8, blue(pixel) * 255)   # B
+                img_data[idx+1] = round(UInt8, green(pixel) * 255) # G
+                img_data[idx+2] = round(UInt8, red(pixel) * 255)   # R
+                img_data[idx+3] = 255  # A
+                idx += 4
             end
         end
         
-        close(camera)
-        println("\n🎉 Captura finalizada! $foto_count fotos salvas em $pasta_fotos")
+        # Criar surface Cairo
+        stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, new_w)
+        surface = Cairo.CairoImageSurface(img_data, Cairo.FORMAT_RGB24, new_w, new_h, stride)
+        
+        # Centralizar imagem
+        offset_x = (widget_w - new_w) / 2
+        offset_y = (widget_h - new_h) / 2
+        
+        Cairo.save(cr)
+        Cairo.translate(cr, offset_x, offset_y)
+        Cairo.set_source_surface(cr, surface, 0, 0)
+        Cairo.paint(cr)
+        Cairo.restore(cr)
         
     catch e
-        println("❌ Erro ao acessar webcam: $e")
+        println("⚠️ Erro ao desenhar frame: $e")
     end
 end
 
-# Função para capturar fotos do rosto (mantida do código original)
-function capturar_fotos_rosto()
+"""
+    atualizar_preview()
+Timer callback para atualizar preview.
+"""
+function atualizar_preview()
+    if app_state.webcam_ativa && gui.preview_area !== nothing
+        Gtk.queue_draw(gui.preview_area)
+    end
+    return app_state.webcam_ativa
+end
+
+"""
+    on_iniciar_clicked(button)
+Callback botão iniciar.
+"""
+function on_iniciar_clicked(button)
+    if inicializar_webcam()
+        # Iniciar timer para preview
+        gui.timer_id = GLib.g_timeout_add(100, atualizar_preview)
+        
+        # Atualizar interface
+        Gtk.set_gtk_property!(gui.btn_iniciar, :sensitive, false)
+        Gtk.set_gtk_property!(gui.btn_parar, :sensitive, true)
+        Gtk.set_gtk_property!(gui.btn_capturar, :sensitive, true)
+        Gtk.set_gtk_property!(gui.label_status, :label, "✅ Webcam ativa")
+    else
+        Gtk.set_gtk_property!(gui.label_status, :label, "❌ Erro ao iniciar webcam")
+    end
+end
+
+"""
+    on_parar_clicked(button)
+Callback botão parar.
+"""
+function on_parar_clicked(button)
+    if gui.timer_id !== nothing
+        GLib.g_source_remove(gui.timer_id)
+        gui.timer_id = nothing
+    end
+    
+    fechar_webcam()
+    
+    # Atualizar interface
+    Gtk.set_gtk_property!(gui.btn_iniciar, :sensitive, true)
+    Gtk.set_gtk_property!(gui.btn_parar, :sensitive, false)
+    Gtk.set_gtk_property!(gui.btn_capturar, :sensitive, false)
+    Gtk.set_gtk_property!(gui.label_status, :label, "🔴 Webcam desligada")
+    
+    # Redesenhar preview
+    Gtk.queue_draw(gui.preview_area)
+end
+
+"""
+    on_capturar_clicked(button)
+Callback botão capturar.
+"""
+function on_capturar_clicked(button)
+    frame = capturar_frame()
+    if frame !== nothing
+        pasta = Gtk.get_gtk_property(gui.entry_pasta, :text, String)
+        app_state.pasta_atual = pasta
+        
+        caminho = salvar_foto(frame, pasta)
+        if !isempty(caminho)
+            push!(app_state.fotos_capturadas, caminho)
+            contador = length(app_state.fotos_capturadas)
+            Gtk.set_gtk_property!(gui.label_contador, :label, "Fotos: $contador")
+            Gtk.set_gtk_property!(gui.label_status, :label, "📸 Foto: $(basename(caminho))")
+        end
+    else
+        Gtk.set_gtk_property!(gui.label_status, :label, "❌ Erro ao capturar foto")
+    end
+end
+
+"""
+    on_visualizar_clicked(button)
+Callback botão visualizar.
+"""
+function on_visualizar_clicked(button)
+    pasta = Gtk.get_gtk_property(gui.entry_pasta, :text, String)
+    fotos = listar_fotos(pasta)
+    
+    if !isempty(fotos)
+        abrir_visualizador(last(fotos))  # Abre a última foto
+    else
+        Gtk.set_gtk_property!(gui.label_status, :label, "❌ Nenhuma foto encontrada")
+    end
+end
+
+"""
+    on_destroy(widget)
+Callback destruição da janela.
+"""
+function on_destroy(widget)
+    if gui.timer_id !== nothing
+        GLib.g_source_remove(gui.timer_id)
+    end
+    fechar_webcam()
+    Gtk.gtk_quit()
+end
+
+"""
+    criar_interface()
+Cria interface principal.
+"""
+function criar_interface()
+    # Janela principal
+    gui.window = GtkWindow("CNN Check-In", 750, 550)
+    Gtk.set_gtk_property!(gui.window, :resizable, false)
+    
+    # Layout principal
+    vbox = GtkBox(:v, 10)
+    Gtk.set_gtk_property!(vbox, :margin_left, 10)
+    Gtk.set_gtk_property!(vbox, :margin_right, 10)
+    Gtk.set_gtk_property!(vbox, :margin_top, 10)
+    Gtk.set_gtk_property!(vbox, :margin_bottom, 10)
+    
+    # Título
+    title = GtkLabel("CNN Check-In - Captura Facial")
+    # Remover markup - usar texto simples
+    push!(vbox, title)
+    
+    # Container horizontal
+    hbox = GtkBox(:h, 10)
+    
+    # === PREVIEW ===
+    frame_preview = GtkFrame("Preview da Webcam")
+    Gtk.set_gtk_property!(frame_preview, :width_request, 400)
+    Gtk.set_gtk_property!(frame_preview, :height_request, 300)
+    
+    gui.preview_area = GtkDrawingArea()
+    Gtk.set_gtk_property!(gui.preview_area, :width_request, 380)
+    Gtk.set_gtk_property!(gui.preview_area, :height_request, 280)
+    
+    # Conectar callback de desenho
+    Gtk.signal_connect(on_draw_preview, gui.preview_area, "draw")
+    
+    push!(frame_preview, gui.preview_area)
+    push!(hbox, frame_preview)
+    
+    # === CONTROLES ===
+    vbox_ctrl = GtkBox(:v, 10)
+    Gtk.set_gtk_property!(vbox_ctrl, :width_request, 320)
+    
     # Configurações
-    pasta_fotos = "fotos_rosto"
-    num_fotos = 10  # Número de fotos a capturar
-    intervalo = 3   # Intervalo em segundos entre capturas
+    frame_config = GtkFrame("Configurações")
+    vbox_config = GtkBox(:v, 5)
+    Gtk.set_gtk_property!(vbox_config, :margin_left, 5)
+    Gtk.set_gtk_property!(vbox_config, :margin_right, 5)
+    Gtk.set_gtk_property!(vbox_config, :margin_top, 5)
+    Gtk.set_gtk_property!(vbox_config, :margin_bottom, 5)
     
-    # Criar diretório para as fotos
-    criar_diretorio(pasta_fotos)
+    # Pasta de destino
+    hbox_pasta = GtkBox(:h, 5)
+    label_pasta = GtkLabel("Pasta:")
+    Gtk.set_gtk_property!(label_pasta, :width_request, 50)
+    push!(hbox_pasta, label_pasta)
     
-    println("=== CAPTURADOR DE FOTOS FACIAIS ===")
-    println("Instruções:")
-    println("- Posicione-se em frente à webcam")
-    println("- Mude de ângulo a cada captura (frontal, perfil esquerdo, perfil direito, etc.)")
-    println("- Pressione ENTER para iniciar")
-    println("- Pressione 'q' na janela da webcam para sair antecipadamente")
-    println()
+    gui.entry_pasta = GtkEntry()
+    Gtk.set_gtk_property!(gui.entry_pasta, :text, CONFIG["pasta_fotos"])
+    push!(hbox_pasta, gui.entry_pasta)
     
-    readline()  # Aguarda pressionar ENTER
+    push!(vbox_config, hbox_pasta)
+    push!(frame_config, vbox_config)
+    push!(vbox_ctrl, frame_config)
     
-    try
-        # Abrir webcam (geralmente índice 0 para webcam padrão)
-        camera = VideoIO.opencamera()
-        
-        println("📹 Webcam iniciada! Preparando para capturar $num_fotos fotos...")
-        println("⏰ Primeira foto em 5 segundos...")
-        
-        # Aguardar 5 segundos antes da primeira captura
-        for i in 5:-1:1
-            print("\r⏳ $i segundos... ")
-            sleep(1)
-        end
-        println("\n🚀 Iniciando capturas!")
-        
-        foto_count = 0
-        
-        while foto_count < num_fotos
-            try
-                # Capturar frame da webcam
-                frame = read(camera)
-                
-                if frame !== nothing
-                    # Gerar nome único para a foto
-                    timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
-                    nome_arquivo = "foto_$(foto_count + 1)_$timestamp.jpg"
-                    caminho_completo = joinpath(pasta_fotos, nome_arquivo)
-                    
-                    # Salvar a imagem
-                    save(caminho_completo, frame)
-                    
-                    foto_count += 1
-                    
-                    println("✅ Foto $foto_count/$num_fotos salva: $nome_arquivo")
-                    
-                    if foto_count < num_fotos
-                        println("📐 Próxima foto em $intervalo segundos... Mude de ângulo!")
-                        
-                        # Mostrar preview da imagem capturada
-                        try
-                            imshow(frame)
-                            for i in intervalo:-1:1
-                                print("\r⏰ Próxima captura em $i segundos... ")
-                                sleep(1)
-                            end
-                            println()
-                        catch
-                            # Se imshow não funcionar, apenas aguardar
-                            sleep(intervalo)
-                        end
-                    end
-                else
-                    println("❌ Erro ao capturar frame da webcam")
-                    break
-                end
-                
-            catch e
-                println("❌ Erro durante captura: $e")
-                break
-            end
-        end
-        
-        # Fechar webcam
-        close(camera)
-        
-        if foto_count == num_fotos
-            println("\n🎉 Captura concluída com sucesso!")
-            println("📁 $foto_count fotos salvas na pasta: $pasta_fotos")
-        else
-            println("\n⚠️ Captura interrompida. $foto_count fotos salvas.")
-        end
-        
-    catch e
-        println("❌ Erro ao acessar webcam: $e")
-        println("\n💡 Dicas para resolver:")
-        println("- Verifique se a webcam está conectada")
-        println("- Feche outros programas que possam estar usando a webcam")
-        println("- Execute o script com permissões adequadas")
-    end
+    # Controles da webcam
+    frame_webcam = GtkFrame("Controle da Webcam")
+    vbox_webcam = GtkBox(:v, 5)
+    Gtk.set_gtk_property!(vbox_webcam, :margin_left, 5)
+    Gtk.set_gtk_property!(vbox_webcam, :margin_right, 5)
+    Gtk.set_gtk_property!(vbox_webcam, :margin_top, 5)
+    Gtk.set_gtk_property!(vbox_webcam, :margin_bottom, 5)
+    
+    gui.btn_iniciar = GtkButton("🔴 Iniciar Webcam")
+    gui.btn_parar = GtkButton("⏹️ Parar Webcam")
+    Gtk.set_gtk_property!(gui.btn_parar, :sensitive, false)
+    
+    push!(vbox_webcam, gui.btn_iniciar)
+    push!(vbox_webcam, gui.btn_parar)
+    
+    push!(frame_webcam, vbox_webcam)
+    push!(vbox_ctrl, frame_webcam)
+    
+    # Captura
+    frame_capture = GtkFrame("Captura de Fotos")
+    vbox_capture = GtkBox(:v, 5)
+    Gtk.set_gtk_property!(vbox_capture, :margin_left, 5)
+    Gtk.set_gtk_property!(vbox_capture, :margin_right, 5)
+    Gtk.set_gtk_property!(vbox_capture, :margin_top, 5)
+    Gtk.set_gtk_property!(vbox_capture, :margin_bottom, 5)
+    
+    gui.btn_capturar = GtkButton("📸 Capturar Foto")
+    Gtk.set_gtk_property!(gui.btn_capturar, :sensitive, false)
+    push!(vbox_capture, gui.btn_capturar)
+    
+    push!(frame_capture, vbox_capture)
+    push!(vbox_ctrl, frame_capture)
+    
+    # Visualização
+    frame_view = GtkFrame("Visualizar")
+    vbox_view = GtkBox(:v, 5)
+    Gtk.set_gtk_property!(vbox_view, :margin_left, 5)
+    Gtk.set_gtk_property!(vbox_view, :margin_right, 5)
+    Gtk.set_gtk_property!(vbox_view, :margin_top, 5)
+    Gtk.set_gtk_property!(vbox_view, :margin_bottom, 5)
+    
+    gui.btn_visualizar = GtkButton("🖼️ Ver Fotos")
+    push!(vbox_view, gui.btn_visualizar)
+    
+    push!(frame_view, vbox_view)
+    push!(vbox_ctrl, frame_view)
+    
+    push!(hbox, vbox_ctrl)
+    push!(vbox, hbox)
+    
+    # === STATUS ===
+    frame_status = GtkFrame("Status do Sistema")
+    vbox_status = GtkBox(:v, 5)
+    Gtk.set_gtk_property!(vbox_status, :margin_left, 5)
+    Gtk.set_gtk_property!(vbox_status, :margin_right, 5)
+    Gtk.set_gtk_property!(vbox_status, :margin_top, 5)
+    Gtk.set_gtk_property!(vbox_status, :margin_bottom, 5)
+    
+    gui.label_status = GtkLabel("Sistema inicializado")
+    # Remover halign - não existe em versões antigas
+    push!(vbox_status, gui.label_status)
+    
+    gui.label_contador = GtkLabel("Fotos: 0")
+    push!(vbox_status, gui.label_contador)
+    
+    push!(frame_status, vbox_status)
+    push!(vbox, frame_status)
+    
+    push!(gui.window, vbox)
+    
+    # === CONECTAR SINAIS ===
+    Gtk.signal_connect(on_iniciar_clicked, gui.btn_iniciar, "clicked")
+    Gtk.signal_connect(on_parar_clicked, gui.btn_parar, "clicked")
+    Gtk.signal_connect(on_capturar_clicked, gui.btn_capturar, "clicked")
+    Gtk.signal_connect(on_visualizar_clicked, gui.btn_visualizar, "clicked")
+    Gtk.signal_connect(on_destroy, gui.window, "destroy")
+    
+    gui.timer_id = nothing
 end
 
-# Função alternativa com interface mais simples
-function capturar_fotos_simples()
-    pasta_fotos = "fotos_rosto_simples"
-    criar_diretorio(pasta_fotos)
+"""
+    verificar_sistema() -> Bool
+Verifica se o sistema está funcionando.
+"""
+function verificar_sistema()
+    println("🔍 Verificando sistema...")
     
-    println("=== MODO SIMPLES ===")
-    println("Pressione ENTER para cada captura, ou digite 'sair' para terminar")
-    
+    # Testar GTK
     try
-        camera = VideoIO.opencamera()
-        foto_count = 0
-        
-        while true
-            println("\n📸 Posicione-se e pressione ENTER para capturar (ou 'sair'):")
-            entrada = readline()
-            
-            if lowercase(strip(entrada)) == "sair"
-                break
-            end
-            
-            try
-                frame = read(camera)
-                if frame !== nothing
-                    timestamp = Dates.format(now(), "yyyy-mm-dd_HH-MM-SS")
-                    nome_arquivo = "foto_$(foto_count + 1)_$timestamp.jpg"
-                    caminho_completo = joinpath(pasta_fotos, nome_arquivo)
-                    
-                    save(caminho_completo, frame)
-                    foto_count += 1
-                    
-                    println("✅ Foto salva: $nome_arquivo")
-                    
-                    # Mostrar preview
-                    try
-                        imshow(frame)
-                        sleep(2)
-                    catch
-                        # Continuar se não conseguir mostrar
-                    end
-                else
-                    println("❌ Erro ao capturar frame")
-                end
-            catch e
-                println("❌ Erro na captura: $e")
-            end
-        end
-        
-        close(camera)
-        println("\n🎉 $foto_count fotos salvas na pasta: $pasta_fotos")
-        
+        test_window = GtkWindow("Test", 100, 100)
+        Gtk.destroy(test_window)
+        println("✅ GTK funcionando")
     catch e
-        println("❌ Erro ao acessar webcam: $e")
+        println("❌ Erro GTK: $e")
+        return false
     end
+    
+    # Verificar webcam (não obrigatório para iniciar)
+    webcam_ok, _ = verificar_webcam()
+    if webcam_ok
+        println("✅ Webcam detectada")
+    else
+        println("⚠️ Webcam não detectada (pode ser iniciada depois)")
+    end
+    
+    return true
 end
 
-# Menu principal melhorado
+"""
+    main()
+Função principal.
+"""
 function main()
-    println("🔴 === CNN CHECK-IN - SISTEMA DE CAPTURA E VISUALIZAÇÃO ===")
-    println()
-    println("Escolha uma opção:")
-    println("1 - 📷 Captura Automática (10 fotos com intervalo)")
-    println("2 - 🖱️  Captura Manual (pressione ENTER para cada foto)")
-    println("3 - 👁️  Captura com Preview em Tempo Real")
-    println("4 - 🖼️  Visualizar Fotos Capturadas")
-    println("5 - ❌ Sair")
-    print("\n🔵 Escolha (1-5): ")
+    println("🚀 Iniciando CNN Check-In...")
     
-    escolha = readline()
-    
-    if escolha == "1"
-        capturar_fotos_rosto()
-    elseif escolha == "2"
-        capturar_fotos_simples()
-    elseif escolha == "3"
-        capturar_fotos_com_preview()
-    elseif escolha == "4"
-        visualizar_fotos()
-    elseif escolha == "5"
-        println("👋 Até logo!")
+    if !verificar_sistema()
+        println("❌ Sistema não está funcionando corretamente")
         return
-    else
-        println("❌ Escolha inválida!")
-        println()
-        main()
     end
     
-    # Perguntar se quer fazer algo mais
-    println("\n🔄 Deseja fazer algo mais?")
-    println("1 - Sim, voltar ao menu")
-    println("2 - Não, sair")
-    print("Escolha: ")
-    
-    continuar = readline()
-    if continuar == "1"
-        println()
-        main()
-    else
-        println("👋 Até logo!")
+    try
+        criar_interface()
+        Gtk.showall(gui.window)
+        
+        # Definir status inicial
+        Gtk.set_gtk_property!(gui.label_status, :label, "Pronto - clique em 'Iniciar Webcam'")
+        
+        # Iniciar loop principal do GTK
+        Gtk.gtk_main()
+        
+    catch e
+        println("❌ Erro na execução: $e")
+        if gui.timer_id !== nothing
+            GLib.g_source_remove(gui.timer_id)
+        end
+        fechar_webcam()
     end
 end
 
-# Executar o programa
+# Executar se for arquivo principal
 if abspath(PROGRAM_FILE) == @__FILE__
     main()
 end
+
+
+
+# === INSTRUÇÕES DE USO ===
+"""
+# CNN Check-In - Sistema de Captura Facial
+
+## Pré-requisitos:
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install libgtk-3-dev libcairo2-dev libpango1.0-dev v4l-utils
+
+# Pacotes Julia
+julia> using Pkg
+julia> Pkg.add(["Gtk", "Cairo", "VideoIO", "Images", "FileIO", "Dates"])
+```
+
+## Execução:
+```bash
+julia cnncheckin_acount.jl
+```
+
+## Como usar:
+1. Execute o programa
+2. Configure a pasta de destino se necessário
+3. Clique em "Iniciar Webcam" para ativar a câmera
+4. Use "Capturar Foto" para tirar fotos individuais
+5. Use "Ver Fotos" para visualizar as fotos capturadas
+6. As fotos são salvas com timestamp no nome
+
+## Funcionalidades:
+- Preview em tempo real da webcam
+- Captura de fotos com timestamp
+- Interface GTK intuitiva
+- Visualização automática das fotos
+- Salvamento em formato JPEG
+
+## Troubleshooting:
+- Se a webcam não for detectada, verifique se está conectada
+- Para problemas com GTK, reinstale os pacotes de desenvolvimento
+- As fotos são salvas na pasta especificada (padrão: "fotos_rosto")
+"""
+
+# === INSTRUÇÕES DE USO ===
+"""
+# CNN Check-In - Interface GTK
+
+## Pré-requisitos:
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install libgtk-3-dev gtk2-engines-pixbuf v4l-utils
+sudo apt install libcairo2-dev libpango1.0-dev
+
+# Pacotes Julia
+julia> using Pkg
+julia> Pkg.add(["Gtk", "GLib", "Cairo", "VideoIO", "Images", "FileIO", "Dates"])
+```
+
+## Execução:
+```bash
+julia cnncheckin_gui.jl
+```
+
+## Funcionalidades:
+- Preview em tempo real da webcam
+- Captura individual de fotos
+- Captura automática com intervalo configurável
+- Visualização das fotos capturadas
+- Backup automático das fotos
+- Limpeza de pastas
+- Interface intuitiva com GTK
+
+## Controles:
+1. Iniciar Webcam: Ativa a câmera e preview
+2. Capturar Foto: Tira uma foto individual
+3. Captura Automática: Sequência programada de fotos
+4. Visualizar: Abre as fotos no visualizador do sistema
+5. Backup: Cria cópia de segurança
+6. Limpar: Remove todas as fotos (com confirmação)
+
+## Configurações:
+- Pasta: Local onde salvar as fotos
+- Nº Fotos: Quantidade para captura automática
+- Intervalo: Tempo entre capturas automáticas (segundos)
+"""
 
 # Para executar:
 # julia cnncheckin_acount.jl
 
  
+# pkg-config --modversion gtk+-3.0
+# sudo apt update
+# sudo apt install libgtk-3-dev libcairo2-dev libpango1.0-dev
+
+# sudo apt update
+# sudo apt install libgtk-3-dev libcairo2-dev libpango1.0-dev libglib2.0-dev
+# sudo apt install v4l-utils  # Para webcam
+
+# julia -e "using Pkg; Pkg.build([\"Gtk\", \"Cairo\"])"
+# julia -e "using Pkg; Pkg.rm([\"Gtk\", \"GLib\", \"Cairo\"]); Pkg.add([\"Gtk\", \"GLib\", \"Cairo\"])"
+
+
+# julia cnncheckin_acount.jl
