@@ -60,7 +60,17 @@ julia> ]
 (@v1.8) pkg> add ImageTransformations
 (@v1.8) pkg> add LinearAlgebra
 (@v1.8) pkg> add Plots
+
+(@v1.8) pkg> add VideoIO
+(@v1.8) pkg> add ImageView
+(@v1.8) pkg> add Dates
+(@v1.8) pkg> add Gtk
+(@v1.8) pkg> add PlotlyJS
+(@v1.8) pkg> add cuDNN
+
+
  
+  
 
 
 ```
