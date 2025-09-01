@@ -3,10 +3,6 @@
 # Parte 1: Funções principais e configuração do sistema
 # Funções principais do sistema de captura de fotos
 
-# projeto: cnncheckin
-# file: cnncheckin/src/cnncheckin_acount_core.jl
-# Funções principais do sistema de captura de fotos - versão corrigida
-
 using VideoIO
 using Images
 using FileIO
