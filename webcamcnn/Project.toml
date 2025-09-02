@@ -1,0 +1,4 @@
+name = "webcamcnn"
+uuid = "719abeb6-3e9b-4681-aedf-9d3cea05eb07"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"

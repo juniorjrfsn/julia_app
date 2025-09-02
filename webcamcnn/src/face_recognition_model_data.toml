@@ -1,0 +1,192 @@
+prediction_examples = []
+
+[[layer_info]]
+trainable = true
+output_channels = 64
+layer_number = 1
+kernel_size = [3, 3]
+input_channels = 3
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 2
+num_features = 64
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 3
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 4
+pool_size = [2, 2]
+layer_type = "MaxPool{2, 4}"
+[[layer_info]]
+trainable = true
+output_channels = 128
+layer_number = 5
+kernel_size = [3, 3]
+input_channels = 64
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 6
+num_features = 128
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 7
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 8
+pool_size = [2, 2]
+layer_type = "MaxPool{2, 4}"
+[[layer_info]]
+trainable = true
+output_channels = 256
+layer_number = 9
+kernel_size = [3, 3]
+input_channels = 128
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 10
+num_features = 256
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 11
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 12
+pool_size = [2, 2]
+layer_type = "MaxPool{2, 4}"
+[[layer_info]]
+trainable = true
+output_channels = 256
+layer_number = 13
+kernel_size = [3, 3]
+input_channels = 256
+layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 14
+num_features = 256
+layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 15
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 16
+pool_size = [2, 2]
+layer_type = "MaxPool{2, 4}"
+[[layer_info]]
+trainable = true
+layer_number = 17
+layer_type = "typeof(Flux.flatten)"
+[[layer_info]]
+trainable = true
+layer_number = 18
+input_size = 16384
+output_size = 512
+layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 19
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 20
+input_size = 512
+output_size = 256
+layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
+[[layer_info]]
+trainable = true
+layer_number = 21
+layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+[[layer_info]]
+trainable = true
+layer_number = 22
+input_size = 256
+output_size = 1
+layer_type = "Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
+
+[person_mappings]
+junior = 1
+
+[model_summary]
+input_shape = [128, 128]
+created_at = "2025-09-02T19:21:23.367"
+total_layers = 22
+model_type = "CNN_FaceRecognition"
+output_classes = 1
+
+[metadata]
+format_version = "1.0"
+created_by = "cnncheckin.jl v1.0"
+saved_at = "2025-09-02T19:21:24.120"
+description = "CNN model for face recognition"
+
+[weights_summary]
+model_size_mb = 36.16
+total_parameters = 9480128
+
+    [weights_summary.layer_statistics.layer_20_weights]
+    shape = [256, 512]
+    max = 0.08838637918233871
+    min = -0.0883832648396492
+    count = 131072
+    mean = -3.734957135748118e-5
+    std = 0.051107410341501236
+
+    [weights_summary.layer_statistics.layer_22_weights]
+    shape = [1, 256]
+    max = 0.15216948091983795
+    min = -0.1527732014656067
+    count = 256
+    mean = -0.0007424675277434289
+    std = 0.0881907269358635
+
+    [weights_summary.layer_statistics.layer_5_weights]
+    shape = [3, 3, 64, 128]
+    max = 0.05892442166805267
+    min = -0.058924976736307144
+    count = 73728
+    mean = 4.75699343951419e-5
+    std = 0.03400667384266853
+
+    [weights_summary.layer_statistics.layer_1_weights]
+    shape = [3, 3, 3, 64]
+    max = 0.0997312068939209
+    min = -0.09972027689218521
+    count = 1728
+    mean = -0.000998316565528512
+    std = 0.05824587494134903
+
+    [weights_summary.layer_statistics.layer_13_weights]
+    shape = [3, 3, 256, 256]
+    max = 0.036084141582250595
+    min = -0.03608434647321701
+    count = 589824
+    mean = 2.910789226007182e-5
+    std = 0.020833438262343407
+
+    [weights_summary.layer_statistics.layer_18_weights]
+    shape = [512, 16384]
+    max = 0.01884445548057556
+    min = -0.01884445548057556
+    count = 8388608
+    mean = 6.530660357384477e-6
+    std = 0.010881506837904453
+
+    [weights_summary.layer_statistics.layer_9_weights]
+    shape = [3, 3, 128, 256]
+    max = 0.04166586697101593
+    min = -0.04166661947965622
+    count = 294912
+    mean = 7.351247040787712e-5
+    std = 0.02407248504459858

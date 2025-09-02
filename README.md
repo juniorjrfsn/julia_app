@@ -28,6 +28,7 @@ julia > ]
 (@v1.8) pkg> generate cnncheckin
 (@v1.8) pkg> generate z_hrml
 (@v1.8) pkg> generate autonomo
+(@v1.8) pkg> generate webcamcnn
 
 ```
 

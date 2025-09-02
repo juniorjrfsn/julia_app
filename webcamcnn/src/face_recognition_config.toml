@@ -1,0 +1,25 @@
+[model]
+img_width = 128
+img_height = 128
+model_architecture = "CNN_v1"
+augmentation_used = true
+num_classes = 1
+
+[data]
+data_path = "fotos_rosto"
+timestamp = "2025-09-02T19:21:24.546"
+person_names = ["junior"]
+
+[metadata]
+created_by = "cnncheckin.jl v1.0"
+version = "1.0"
+description = "Face recognition system configuration"
+last_saved = "2025-09-02T19:21:24.726"
+
+[training]
+epochs = 30
+best_epoch = 1
+batch_size = 8
+learning_rate = 0.0001
+final_accuracy = 1.0
+epochs_trained = 1
