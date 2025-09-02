@@ -72,6 +72,7 @@ julia> ]
 (@v1.8) pkg> add GNNlib
 (@v1.8) pkg> add PGLib
 (@v1.8) pkg> add GenLib
+(@v1.8) pkg> add GtkDrawingArea
 
   
 
