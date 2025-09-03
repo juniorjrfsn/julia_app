@@ -1,14 +1,18 @@
 # projeto: webcamcnn
 # file: webcamcnn/src/capture_and_train.jl
 
+# projeto: webcamcnn
+# file: webcamcnn/src/capture_and_train.jl
+
 using VideoIO
 using ImageView
 using Images
 using FileIO
 using Dates
+using TOML
 
 include("core.jl")
-include("pretrain.jl")
+include("pretrain_modified.jl")
 
 using .CNNCheckinCore
 
@@ -287,10 +291,10 @@ function main()
     captura_realizada = false
     
     if escolha == "1"
-        println("\n🎥 Iniciando captura automática...")
+        println("\n📥 Iniciando captura automática...")
         captura_realizada = capturar_fotos_rosto()
     elseif escolha == "2"
-        println("\n🎥 Iniciando captura manual...")
+        println("\n📥 Iniciando captura manual...")
         captura_realizada = capturar_fotos_simples()
     elseif escolha == "3"
         if dados_ok
@@ -378,9 +382,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
     end
 end
 
-# Instruções de uso
-println()
-println("=" ^ 60)
-println("INSTRUÇÕES DE USO:")
-println("julia capture_and_train.jl  # Executar captura e treinamento")
-println("=" ^ 60)
+# Export functions
+export capturar_fotos_rosto, capturar_fotos_simples, verificar_dados_treino, 
+       main, iniciar_treinamento
