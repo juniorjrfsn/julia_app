@@ -1,0 +1,4 @@
+name = "cnn"
+uuid = "6be152b7-b732-4ba6-b4ab-e7d0563617eb"
+authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
+version = "0.1.0"

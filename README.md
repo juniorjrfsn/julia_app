@@ -29,6 +29,7 @@ julia > ]
 (@v1.8) pkg> generate z_hrml
 (@v1.8) pkg> generate autonomo
 (@v1.8) pkg> generate webcamcnn
+(@v1.8) pkg> generate cnn
 
 ```
 
@@ -75,6 +76,10 @@ julia> ]
 (@v1.8) pkg> add GenLib
 (@v1.8) pkg> add GtkDrawingArea
 (@v1.11) pkg> add ColorSchemes
+(@v1.11) pkg> add Optimisers
+(@v1.11) pkg> add Colors
+
+
 
   
 
