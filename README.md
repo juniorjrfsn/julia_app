@@ -78,6 +78,7 @@ julia> ]
 (@v1.11) pkg> add ColorSchemes
 (@v1.11) pkg> add Optimisers
 (@v1.11) pkg> add Colors
+(@v1.11) pkg> add Glob
 
 
 
