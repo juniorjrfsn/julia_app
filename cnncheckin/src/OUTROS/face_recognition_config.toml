@@ -1,0 +1,34 @@
+[model]
+img_width = 128
+img_height = 128
+model_architecture = "CNN_v1"
+augmentation_used = true
+num_classes = 3
+
+[incremental_stats]
+incremental_accuracy = 0.9
+knowledge_distillation_used = true
+original_people = ["junior", "lele"]
+total_people = 3
+last_incremental_training = "2025-10-08T17:39:50.939"
+new_people_added = 1
+new_people = ["cachorro"]
+
+[data]
+data_path = "../../../dados/fotos_train"
+timestamp = "2025-10-08T17:39:50.939"
+person_names = ["junior", "lele", "cachorro"]
+
+[metadata]
+created_by = "cnncheckin.jl v1.0"
+version = "1.0"
+description = "Face recognition system configuration"
+last_saved = "2025-10-08T17:39:51.003"
+
+[training]
+epochs = 30
+best_epoch = 1
+batch_size = 8
+learning_rate = 0.0001
+final_accuracy = 0.9
+epochs_trained = 2
