@@ -46,8 +46,7 @@ version = "0.1.0"
     """
 [[comando]]
     texto = """ 
-
-    julia cnncheckin_train.jl
+ 
     julia cnncheckin_identify.jl ../../../dados/fotos_teste/ela.jpg
     julia cnncheckin_identify.jl ../../../dados/fotos_teste/teste.png
     
