@@ -93,8 +93,7 @@ while true
 end
 
  
-
-# julia xor.jl
+ 
 # Exemplo de uso:
 # julia xor.jl
 # Digite os valores de entrada (0 ou 1) para a porta lógica XOR:

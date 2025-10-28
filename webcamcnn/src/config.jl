@@ -1,8 +1,33 @@
 # webcamcnn/config.jl
-# Configuration and core utility functions with layer visualization
 
-using Flux, Images, FileIO, CUDA, Statistics, Random, JLD2, TOML
-using ImageTransformations, LinearAlgebra, Dates, VideoIO, Plots, ColorSchemes
+# Configuration and core utility functions with layer visualization
+# VERSÃO CORRIGIDA - Melhor tratamento de dependências
+
+# Importações básicas (sempre necessárias)
+using Flux, Images, FileIO, Statistics, Random, JLD2, TOML
+using ImageTransformations, LinearAlgebra, Dates, VideoIO, Plots
+
+# Importações opcionais (com fallback)
+try
+    using ColorSchemes
+    global HAS_COLORSCHEMES = true
+catch e
+    @warn "ColorSchemes não disponível. Usando cores padrão."
+    global HAS_COLORSCHEMES = false
+end
+
+try
+    using CUDA
+    global HAS_CUDA = CUDA.functional()
+    if HAS_CUDA
+        @info "CUDA disponível - GPU será usada para aceleração"
+    else
+        @info "CUDA não funcional - usando CPU"
+    end
+catch e
+    @warn "CUDA não disponível - usando CPU"
+    global HAS_CUDA = false
+end
 
 # Global Configuration
 const CONFIG = Dict(
@@ -19,9 +44,9 @@ const CONFIG = Dict(
     :visualizations_dir => nothing, # Will be set in init
     
     # Files
-    :model_file => "../../../dados/webcamcnn/face_model.jld2",
-    :config_file => "../../../dados/webcamcnn/system_config.toml",
-    :weights_file => "../../../dados/webcamcnn/model_weights.toml"
+    :model_file => "face_model.jld2",
+    :config_file => "system_config.toml",
+    :weights_file => "model_weights.toml"
 )
 
 # Initialize directories
@@ -116,7 +141,7 @@ function create_cnn_model(num_classes::Int)
     final_size = div(CONFIG[:img_size][1], 16)  # 4 max pools = 2^4 = 16
     final_features = 256 * final_size * final_size
     
-    return Chain(
+    model = Chain(
         # Feature extraction
         Conv((3, 3), 3 => 64, relu, pad=1),
         BatchNorm(64),
@@ -142,6 +167,18 @@ function create_cnn_model(num_classes::Int)
         Dropout(0.3),
         Dense(256, num_classes)
     )
+    
+    # Move to GPU if available
+    if HAS_CUDA
+        try
+            model = model |> gpu
+            @info "Model moved to GPU"
+        catch e
+            @warn "Could not move model to GPU: $e"
+        end
+    end
+    
+    return model
 end
 
 # Visualize layer activations during processing
@@ -192,6 +229,10 @@ function save_layer_visualization(activation, layer_idx::Int, layer_type::String
             
             # Create grid of feature maps
             grid_size = ceil(Int, sqrt(num_channels))
+            
+            # Escolher colorscheme baseado na disponibilidade
+            color_scheme = HAS_COLORSCHEMES ? :viridis : :blues
+            
             fig = plot(layout=(grid_size, grid_size), size=(800, 800))
             
             for c in 1:min(num_channels, grid_size^2)
@@ -201,7 +242,7 @@ function save_layer_visualization(activation, layer_idx::Int, layer_type::String
                     channel_data = (channel_data .- minimum(channel_data)) ./ (maximum(channel_data) - minimum(channel_data))
                 end
                 
-                heatmap!(fig[c], channel_data, color=:viridis, aspect_ratio=:equal, 
+                heatmap!(fig[c], channel_data, color=color_scheme, aspect_ratio=:equal, 
                         title="Ch $c", showaxis=false, grid=false)
             end
             
@@ -217,10 +258,12 @@ function save_layer_visualization(activation, layer_idx::Int, layer_type::String
             # Visualize as bar chart
             act_data = activation[:, 1]  # First batch
             
+            color_scheme = HAS_COLORSCHEMES ? :viridis : :blues
+            
             fig = bar(1:length(act_data), act_data, 
                      title="Layer $layer_idx - $layer_type Activations",
                      xlabel="Neuron Index", ylabel="Activation Value",
-                     color=:viridis)
+                     color=color_scheme)
             
             filename = joinpath(save_dir, "layer_$(layer_idx)_$(layer_type)_activations.png")
             savefig(fig, filename)
@@ -327,11 +370,13 @@ function save_system_config(person_names::Vector{String}, training_info::Dict)
     
     config_data = Dict(
         "system" => Dict(
-            "version" => "3.0-Enhanced",
+            "version" => "4.0-Enhanced-Fixed",
             "created" => string(Dates.now()),
             "img_size" => collect(CONFIG[:img_size]),
             "num_classes" => length(person_names),
-            "visualization_enabled" => true
+            "visualization_enabled" => true,
+            "has_cuda" => HAS_CUDA,
+            "has_colorschemes" => HAS_COLORSCHEMES
         ),
         "training" => training_info,
         "people" => Dict(
