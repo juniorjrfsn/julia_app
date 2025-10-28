@@ -1,6 +1,7 @@
 # projeto: cnncheckin
 # file: cnncheckin/src/cnncheckin_pretrain.jl
- # projeto: cnncheckin
+
+# projeto: cnncheckin
 # file: cnncheckin/src/cnncheckin_pretrain.jl
 # descrição: Script para pré-treinamento do modelo CNN
 
@@ -20,7 +21,7 @@ using .CNNCheckinCore
 
 """
     load_training_data(data_path::String; use_augmentation::Bool=true) 
-        -> Tuple{Vector{PersonData}, Vector{String}}
+        -> Tuple{Vector{CNNCheckinCore.PersonData}, Vector{String}}
 
 Carrega os dados de treinamento inicial do diretório especificado.
 
@@ -29,7 +30,7 @@ Carrega os dados de treinamento inicial do diretório especificado.
 - `use_augmentation::Bool`: Se deve aplicar data augmentation
 
 # Retorna
-- `Vector{PersonData}`: Dados de cada pessoa
+- `Vector{CNNCheckinCore.PersonData}`: Dados de cada pessoa
 - `Vector{String}`: Lista de nomes das pessoas
 """
 function load_training_data(data_path::String; use_augmentation::Bool=true)
@@ -94,13 +95,13 @@ function load_training_data(data_path::String; use_augmentation::Bool=true)
     end
     
     # Criar estruturas PersonData
-    people_data = PersonData[]
+    people_data = CNNCheckinCore.PersonData[]
     person_names = sort(collect(keys(person_images)))
     
     for (idx, person_name) in enumerate(person_names)
         images = person_images[person_name]
         if !isempty(images)
-            push!(people_data, PersonData(person_name, images, idx, false))
+            push!(people_data, CNNCheckinCore.PersonData(person_name, images, idx, false))
             @info "👤 $person_name: $(length(images)) imagens (Label: $idx)"
         end
     end
@@ -113,7 +114,7 @@ end
 # ============================================================================
 
 """
-    split_train_validation(people_data::Vector{PersonData}, split_ratio::Float64=0.8)
+    split_train_validation(people_data::Vector{CNNCheckinCore.PersonData}, split_ratio::Float64=0.8)
         -> Tuple{Tuple, Tuple}
 
 Divide os dados em conjuntos de treino e validação.
@@ -122,7 +123,7 @@ Divide os dados em conjuntos de treino e validação.
 - Tupla (train_images, train_labels)
 - Tupla (val_images, val_labels)
 """
-function split_train_validation(people_data::Vector{PersonData}, split_ratio::Float64=0.8)
+function split_train_validation(people_data::Vector{CNNCheckinCore.PersonData}, split_ratio::Float64=0.8)
     @info "📊 Dividindo dados em treino e validação..." ratio=split_ratio
     
     train_images = Array{Float32, 3}[]
@@ -220,7 +221,7 @@ Constrói a arquitetura CNN para reconhecimento facial.
 - Camada de saída com num_classes neurônios
 """
 function build_cnn_model(num_classes::Int, input_size::Tuple{Int,Int}=CNNCheckinCore.IMG_SIZE)
-    @info "🏗️  Construindo modelo CNN..." num_classes=num_classes input_size=input_size
+    @info "🗺️  Construindo modelo CNN..." num_classes=num_classes input_size=input_size
     
     # Calcular dimensões após as camadas convolucionais
     final_h = input_size[1]
