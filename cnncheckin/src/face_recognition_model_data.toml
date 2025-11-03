@@ -112,83 +112,82 @@ layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
 trainable = true
 layer_number = 22
 input_size = 256
-output_size = 3
+output_size = 2
 layer_type = "Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
 
 [person_mappings]
 junior = 1
-cachorro = 3
 lele = 2
 
 [model_summary]
 input_shape = [128, 128]
-created_at = "2025-10-27T20:39:11.132"
+created_at = "2025-11-02T20:47:45.328"
 total_layers = 22
 model_type = "CNN_FaceRecognition"
-output_classes = 3
+output_classes = 2
 
 [metadata]
 format_version = "2.0"
 created_by = "CNNCheckin v2.0"
-saved_at = "2025-10-27T20:39:11.758"
+saved_at = "2025-11-02T20:47:46.059"
 description = "Metadados do modelo CNN para reconhecimento facial"
 
 [weights_summary]
-model_size_mb = 36.17
-total_parameters = 9480640
+model_size_mb = 36.16
+total_parameters = 9480384
 
     [weights_summary.layer_statistics.layer_20_weights]
     shape = [256, 512]
-    max = 0.08884329348802567
-    min = -0.08889389783143997
+    max = 0.0889534130692482
+    min = -0.08888667821884155
     count = 131072
-    mean = -5.172938108444214e-5
-    std = 0.05098462104797363
+    mean = 8.777746552368626e-5
+    std = 0.05115127936005592
 
     [weights_summary.layer_statistics.layer_22_weights]
-    shape = [3, 256]
-    max = 0.15193237364292145
-    min = -0.15192385017871857
-    count = 768
-    mean = -0.0027663905639201403
-    std = 0.0731445699930191
+    shape = [2, 256]
+    max = 0.1526380032300949
+    min = -0.15223079919815063
+    count = 512
+    mean = 0.0022591999731957912
+    std = 0.08775130659341812
 
     [weights_summary.layer_statistics.layer_5_weights]
     shape = [3, 3, 64, 128]
-    max = 0.05979101359844208
-    min = -0.05980202183127403
+    max = 0.05980033427476883
+    min = -0.05977054312825203
     count = 73728
-    mean = -2.5079925762838684e-5
-    std = 0.03408316895365715
+    mean = -4.127495049033314e-5
+    std = 0.034161295741796494
 
     [weights_summary.layer_statistics.layer_1_weights]
     shape = [3, 3, 3, 64]
-    max = 0.10032598674297333
-    min = -0.09946248680353165
+    max = 0.09960615634918213
+    min = -0.1002129465341568
     count = 1728
-    mean = -6.342431152006611e-5
-    std = 0.057558752596378326
+    mean = -0.00046635890612378716
+    std = 0.05683028697967529
 
     [weights_summary.layer_statistics.layer_13_weights]
     shape = [3, 3, 256, 256]
-    max = 0.03701430931687355
-    min = -0.03704957291483879
+    max = 0.03703660890460014
+    min = -0.03704957664012909
     count = 589824
-    mean = -5.854283813278016e-7
-    std = 0.020834632217884064
+    mean = 5.816534667246742e-6
+    std = 0.020857248455286026
 
     [weights_summary.layer_statistics.layer_18_weights]
     shape = [512, 16384]
-    max = 0.01979910396039486
-    min = -0.019767459481954575
+    max = 0.019814634695649147
+    min = -0.01976596936583519
     count = 8388608
-    mean = -6.464258331106976e-5
-    std = 0.010891575366258621
+    mean = -6.672371819149703e-5
+    std = 0.010888020507991314
 
     [weights_summary.layer_statistics.layer_9_weights]
     shape = [3, 3, 128, 256]
-    max = 0.042574454098939896
-    min = -0.042573899030685425
+    max = 0.04256574437022209
+    min = -0.04257054626941681
     count = 294912
-    mean = 3.850802386295982e-5
-    std = 0.024039193987846375
+    mean = 4.407103915582411e-5
+    std = 0.02404746785759926
