@@ -580,5 +580,5 @@ if abspath(PROGRAM_FILE) == @__FILE__
     success = CheckinPretrain.pretrain_command()
     exit(success ? 0 : 1)
 end
-"""
 # julia  pretrain.jl
+"""
