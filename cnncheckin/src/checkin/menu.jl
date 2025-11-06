@@ -54,7 +54,7 @@ module Menu
     opção pode ser usada para "Sair".
     """
     function run_menu(options::Vector{String}; handlers=Dict{Int,Function}(), loop::Bool=true)
-        n = length(options)
+        n = length(options) # número de opções
         while true
             show_menu(options)
             choice = prompt_choice(n)
@@ -67,6 +67,7 @@ module Menu
             else
                 println("Opção $(choice) selecionada: ", options[choice])
             end
+            # Sair se não for para repetir ou se a última opção foi escolhida
             if !loop || choice == n
                 break
             end

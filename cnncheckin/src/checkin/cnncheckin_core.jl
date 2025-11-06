@@ -3,7 +3,7 @@
 # descrição: Módulo central com funcionalidades compartilhadas
 
 module CNNCheckinCore
-    include("config.jl") # inclui o módulo Config
+
     using Flux
     using Images
     using FileIO
@@ -40,6 +40,16 @@ module CNNCheckinCore
     const MIN_FILE_SIZE_BYTES = 500
     const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50MB
     const MIN_IMAGE_DIMENSION = 10
+
+
+    # ============================================================================
+    # CAMINHOS DE DADOS (usando ConfigParam)
+    # ============================================================================
+ 
+    using ..ConfigParam
+    const TRAIN_DATA_PATH       = ConfigParam.TRAIN_DATA_PATH
+    const INCREMENTAL_DATA_PATH = ConfigParam.INCREMENTAL_DATA_PATH
+    const AUTH_DATA_PATH        = ConfigParam.AUTH_DATA_PATH
 
     # ============================================================================
     # ESTRUTURAS DE DADOS

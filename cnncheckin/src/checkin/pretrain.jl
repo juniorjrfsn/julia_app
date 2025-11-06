@@ -12,9 +12,8 @@ module CheckinPretrain
     using JLD2
     using Dates
     using Logging
-    include("config_lib.jl") # inclui o módulo Config
-    include("cnncheckin_core.jl")
-    using .CNNCheckinCore
+    include("config_lib.jl") # inclui o módulo ConfigLib
+    using ..CNNCheckinCore  # Acessa o módulo pai (Checkin) que já incluiu CNNCheckinCore
 
     # ============================================================================
     # CARREGAMENTO DE DADOS

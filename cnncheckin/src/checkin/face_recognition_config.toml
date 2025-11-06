@@ -3,23 +3,32 @@ img_width = 128
 img_height = 128
 model_architecture = "CNN_FaceRecognition_v1"
 augmentation_used = true
-num_classes = 2
+num_classes = 3
+
+[incremental_stats]
+incremental_accuracy = 0.7
+knowledge_distillation_used = true
+original_people = ["junior", "lele"]
+total_people = 3
+last_incremental_training = "2025-11-06T15:23:51.987"
+new_people_added = 1
+new_people = ["cachorro"]
 
 [data]
 data_path = "/home/junior/Documentos/projetos/dados/fotos_train"
-timestamp = "2025-11-03T16:20:08.499"
-person_names = ["junior", "lele"]
+timestamp = "2025-11-06T15:23:51.987"
+person_names = ["junior", "lele", "cachorro"]
 
 [metadata]
 created_by = "CNNCheckin v2.0"
 version = "2.0"
 description = "Sistema de reconhecimento facial com aprendizado incremental"
-last_saved = "2025-11-03T16:20:08.662"
+last_saved = "2025-11-06T15:23:52.071"
 
 [training]
 epochs = 30
 best_epoch = 3
 batch_size = 8
 learning_rate = 0.0001
-final_accuracy = 0.9375
-epochs_trained = 3
+final_accuracy = 0.7
+epochs_trained = 14

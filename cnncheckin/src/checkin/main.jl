@@ -4,8 +4,12 @@
 module Checkin
     
     println("\n⚙️   Carregando módulo Checkin...\n") 
+    include("config.jl") # inclui o módulo Config
+    include("cnncheckin_core.jl")
+    using .CNNCheckinCore
     include("menu.jl") # inclui o módulo Menu 
     include("pretrain.jl") # inclui o módulo CheckinPretrain
+    include("incremental.jl") # inclui o módulo CheckinIncremental
     println("\n⚙️   Módulo Checkin carregado com sucesso.")
 
     function main()
@@ -33,6 +37,13 @@ module Checkin
                 end,
                 3 => () -> begin
                     println("🖼️ Iniciando treino incremental sem captura")
+                    success = Increment.incremental_learning_command()
+                    if success
+                        println("✅ Pré-treinamento concluído com sucesso!")
+                    else
+                        println("❌ Falha no pré-treinamento.")
+                    end
+                    #exit(success ? 0 : 1)
                   #  incremental_learning_command()
                 end,
                 4 => () -> begin
