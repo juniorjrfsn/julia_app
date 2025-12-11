@@ -197,6 +197,7 @@ end
     preprocess_image(img_path::String; augment::Bool = false) -> Union{Vector{Array{Float32, 3}}, Nothing}
 
 Carrega e preprocessa uma imagem para o modelo.
+Tenta detectar rosto usando script Python auxiliar. Se falhar, usa imagem completa.
 
 # Argumentos
 - `img_path::String`: Caminho para a imagem
@@ -208,11 +209,49 @@ Carrega e preprocessa uma imagem para o modelo.
 """
 function preprocess_image(img_path::String; augment::Bool = false)
     try
-        # Carregar imagem
-        img = load(img_path)
+        final_img = nothing
+        
+        # Tentar detecção de face via Python
+        # Caminho do script python (assumindo estar no mesmo dir deste arquivo ou src/)
+        script_dir = @__DIR__
+        python_script = joinpath(script_dir, "face_detect.py")
+        
+        face_detected = false
+        
+        if isfile(python_script)
+            # Criar caminho temporário para face
+            temp_face_path = replace(img_path, r"(\.[^.]+)$" => "_face\1")
+            
+            # Executar script python
+            # Retorno: 0=sucesso, 1=erro, 2=nenhuma face
+            cmd = `python3 $python_script $img_path $temp_face_path`
+            
+            try
+                process = run(pipeline(cmd, stdout=devnull, stderr=devnull), wait=false)
+                wait(process)
+                
+                if process.exitcode == 0 && isfile(temp_face_path)
+                    # Face detectada e salva com sucesso
+                    final_img = load(temp_face_path)
+                    face_detected = true
+                    # Limpar temp
+                    rm(temp_face_path, force=true)
+                    @debug "Face detectada em $img_path"
+                elseif process.exitcode == 2
+                    @debug "Nenhuma face detectada em $img_path, usando original"
+                end
+            catch e
+                @debug "Erro ao executar detecção facial: $e"
+            end
+        end
+        
+        # Fallback: carregar original se não detectou face
+        if final_img === nothing
+            final_img = load(img_path)
+        end
         
         # Converter para RGB
-        img = convert_to_rgb(img)
+        img = convert_to_rgb(final_img)
         
         # Redimensionar
         img_resized = imresize(img, IMG_SIZE)

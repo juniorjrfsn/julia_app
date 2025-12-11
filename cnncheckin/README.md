@@ -61,8 +61,18 @@ julia cnncheckin_identify_webcam.jl --identify
 - ✅ macOS
 - ✅ Windows (com WSL recomendado)
 - 📷 Webcam conectada (ou Iriun Webcam no celular)
+- 🐍 **Python 3.6+** (para detecção facial)
 
 ### Software
+
+```bash
+# Python e OpenCV (obrigatório para melhor precisão)
+# Ubuntu/Debian:
+sudo apt install python3-opencv
+
+# Outros sistemas (via pip):
+pip3 install opencv-python
+```
 
 ```julia
 # Julia 1.9 ou superior
