@@ -6,16 +6,16 @@ output_channels = 64
 layer_number = 1
 kernel_size = [3, 3]
 input_channels = 3
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), CuArray{Float32, 4, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 2
 num_features = 64
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), CuArray{Float32, 1, CUDA.DeviceMemory}, Float32, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 3
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 4
@@ -27,16 +27,16 @@ output_channels = 128
 layer_number = 5
 kernel_size = [3, 3]
 input_channels = 64
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), CuArray{Float32, 4, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 6
 num_features = 128
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), CuArray{Float32, 1, CUDA.DeviceMemory}, Float32, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 7
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 8
@@ -48,16 +48,16 @@ output_channels = 256
 layer_number = 9
 kernel_size = [3, 3]
 input_channels = 128
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), CuArray{Float32, 4, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 10
 num_features = 256
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), CuArray{Float32, 1, CUDA.DeviceMemory}, Float32, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 11
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 12
@@ -69,16 +69,16 @@ output_channels = 256
 layer_number = 13
 kernel_size = [3, 3]
 input_channels = 256
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
+layer_type = "Conv{2, 4, typeof(relu), CuArray{Float32, 4, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 14
 num_features = 256
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
+layer_type = "BatchNorm{typeof(identity), CuArray{Float32, 1, CUDA.DeviceMemory}, Float32, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 15
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 16
@@ -93,27 +93,27 @@ trainable = true
 layer_number = 18
 input_size = 16384
 output_size = 512
-layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(relu), CuArray{Float32, 2, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 19
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 20
 input_size = 512
 output_size = 256
-layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(relu), CuArray{Float32, 2, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 [[layer_info]]
 trainable = true
 layer_number = 21
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
+layer_type = "Dropout{Float64, Colon, CUDA.RNG}"
 [[layer_info]]
 trainable = true
 layer_number = 22
 input_size = 256
 output_size = 2
-layer_type = "Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
+layer_type = "Dense{typeof(identity), CuArray{Float32, 2, CUDA.DeviceMemory}, CuArray{Float32, 1, CUDA.DeviceMemory}}"
 
 [person_mappings]
 junior = 1
@@ -121,7 +121,7 @@ lele = 2
 
 [model_summary]
 input_shape = [128, 128]
-created_at = "2025-11-02T20:47:45.328"
+created_at = "2025-12-11T18:42:26.121"
 total_layers = 22
 model_type = "CNN_FaceRecognition"
 output_classes = 2
@@ -129,7 +129,7 @@ output_classes = 2
 [metadata]
 format_version = "2.0"
 created_by = "CNNCheckin v2.0"
-saved_at = "2025-11-02T20:47:46.059"
+saved_at = "2025-12-11T18:42:52.907"
 description = "Metadados do modelo CNN para reconhecimento facial"
 
 [weights_summary]
@@ -138,56 +138,56 @@ total_parameters = 9480384
 
     [weights_summary.layer_statistics.layer_20_weights]
     shape = [256, 512]
-    max = 0.0889534130692482
-    min = -0.08888667821884155
+    max = 0.08838798850774765
+    min = -0.0883873999118805
     count = 131072
-    mean = 8.777746552368626e-5
-    std = 0.05115127936005592
+    mean = -0.00010844592907233164
+    std = 0.05097630247473717
 
     [weights_summary.layer_statistics.layer_22_weights]
     shape = [2, 256]
-    max = 0.1526380032300949
-    min = -0.15223079919815063
+    max = 0.15240520238876343
+    min = -0.15210051834583282
     count = 512
-    mean = 0.0022591999731957912
-    std = 0.08775130659341812
+    mean = -0.00023298419546335936
+    std = 0.08769141882658005
 
     [weights_summary.layer_statistics.layer_5_weights]
     shape = [3, 3, 64, 128]
-    max = 0.05980033427476883
-    min = -0.05977054312825203
+    max = 0.05892261490225792
+    min = -0.058922264724969864
     count = 73728
-    mean = -4.127495049033314e-5
-    std = 0.034161295741796494
+    mean = -1.1413596439524554e-5
+    std = 0.033864136785268784
 
     [weights_summary.layer_statistics.layer_1_weights]
     shape = [3, 3, 3, 64]
-    max = 0.09960615634918213
-    min = -0.1002129465341568
+    max = 0.09969868510961533
+    min = -0.09973016381263733
     count = 1728
-    mean = -0.00046635890612378716
-    std = 0.05683028697967529
+    mean = 0.0005848802393302321
+    std = 0.057129308581352234
 
     [weights_summary.layer_statistics.layer_13_weights]
     shape = [3, 3, 256, 256]
-    max = 0.03703660890460014
-    min = -0.03704957664012909
+    max = 0.03608430549502373
+    min = -0.03608439117670059
     count = 589824
-    mean = 5.816534667246742e-6
-    std = 0.020857248455286026
+    mean = 2.765628414636012e-5
+    std = 0.020823176950216293
 
     [weights_summary.layer_statistics.layer_18_weights]
     shape = [512, 16384]
-    max = 0.019814634695649147
-    min = -0.01976596936583519
+    max = 0.01884445734322071
+    min = -0.01884445920586586
     count = 8388608
-    mean = -6.672371819149703e-5
-    std = 0.010888020507991314
+    mean = -2.4686110009497497e-6
+    std = 0.010881103575229645
 
     [weights_summary.layer_statistics.layer_9_weights]
     shape = [3, 3, 128, 256]
-    max = 0.04256574437022209
-    min = -0.04257054626941681
+    max = 0.0416661761701107
+    min = -0.041665904223918915
     count = 294912
-    mean = 4.407103915582411e-5
-    std = 0.02404746785759926
+    mean = 2.8242868211236782e-5
+    std = 0.02405780553817749

@@ -7,19 +7,19 @@ num_classes = 2
 
 [data]
 data_path = "../../../dados/fotos_train"
-timestamp = "2025-11-02T20:47:47.908"
+timestamp = "2025-12-11T18:42:53.377"
 person_names = ["junior", "lele"]
 
 [metadata]
 created_by = "CNNCheckin v2.0"
 version = "2.0"
 description = "Sistema de reconhecimento facial com aprendizado incremental"
-last_saved = "2025-11-02T20:47:48.085"
+last_saved = "2025-12-11T18:42:53.526"
 
 [training]
 epochs = 30
-best_epoch = 2
+best_epoch = 0
 batch_size = 8
 learning_rate = 0.0001
-final_accuracy = 1.0
-epochs_trained = 2
+final_accuracy = 0.0
+epochs_trained = 10

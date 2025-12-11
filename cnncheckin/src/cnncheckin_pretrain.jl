@@ -11,6 +11,7 @@ using Random
 using JLD2
 using Dates
 using Logging
+using CUDA
 
 include("cnncheckin_core.jl")
 using .CNNCheckinCore
@@ -167,41 +168,52 @@ end
 
 Cria batches para treinamento.
 """
-function create_batches(images, labels, batch_size::Int)
+function create_batches(images, labels, batch_size::Int; to_gpu::Bool=false)
     batches = []
     n_samples = length(images)
-    
+
     if n_samples == 0
         return batches
     end
-    
-    # Determinar range de labels
-    unique_labels = unique(labels)
+
+    # Embaralhar globalmente para batches mais variados
+    perm = randperm(n_samples)
+    images_shuf = images[perm]
+    labels_shuf = labels[perm]
+
+    # Determinar range de labels (garante cobertura completa)
+    unique_labels = unique(labels_shuf)
     label_range = minimum(unique_labels):maximum(unique_labels)
-    
+
     @info "🏷️  Criando batches:" n_samples=n_samples batch_size=batch_size label_range=label_range
-    
-    # Criar batches
+
+    # Criar batches sequenciais a partir do vetor embaralhado
     for i in 1:batch_size:n_samples
         end_idx = min(i + batch_size - 1, n_samples)
-        batch_images = images[i:end_idx]
-        batch_labels = labels[i:end_idx]
-        
+        batch_images = images_shuf[i:end_idx]
+        batch_labels = labels_shuf[i:end_idx]
+
         try
-            # Concatenar imagens
+            # Concatenar imagens (h,w,c,N)
             batch_tensor = cat(batch_images..., dims=4)
-            
-            # One-hot encoding dos labels
+
+            # One-hot encoding dos labels no intervalo correto
             batch_labels_onehot = Flux.onehotbatch(batch_labels, label_range)
-            
+
+            # Transferir para GPU se solicitado e disponível
+            if to_gpu && CUDA.has_cuda()
+                batch_tensor = gpu(batch_tensor)
+                batch_labels_onehot = gpu(batch_labels_onehot)
+            end
+
             push!(batches, (batch_tensor, batch_labels_onehot))
-            
+
         catch e
             @error "Erro ao criar batch" range="$i:$end_idx" exception=(e, catch_backtrace())
             continue
         end
     end
-    
+
     @info "✅ Criados $(length(batches)) batches"
     return batches
 end
@@ -320,7 +332,6 @@ function train_model!(model, train_data, val_data, epochs::Int, learning_rate::F
     
     # Configurar otimizador
     optimizer = ADAM(learning_rate, (0.9, 0.999), 1e-8)
-    opt_state = Flux.setup(optimizer, model)
     
     # Métricas
     train_losses = Float64[]
@@ -337,19 +348,23 @@ function train_model!(model, train_data, val_data, epochs::Int, learning_rate::F
     for epoch in 1:epochs
         epoch_loss = 0.0
         num_batches = 0
-        
+
         # Fase de treinamento
         for (x, y) in train_data
             try
-                loss, grads = Flux.withgradient(model) do m
-                    ŷ = m(x)
-                    Flux.logitcrossentropy(ŷ, y)
+                # calcular loss (pode ser computado duas vezes, evita dependências de API)
+                loss_val = Flux.logitcrossentropy(model(x), y)
+
+                # calcular gradientes e aplicar atualização
+                gs = gradient(params(model)) do
+                    Flux.logitcrossentropy(model(x), y)
                 end
-                
-                Flux.update!(opt_state, model, grads[1])
-                epoch_loss += loss
+
+                Flux.Optimise.update!(optimizer, params(model), gs)
+
+                epoch_loss += loss_val
                 num_batches += 1
-                
+
             catch e
                 @error "Erro no batch de treino" epoch=epoch exception=(e, catch_backtrace())
                 continue
@@ -422,8 +437,9 @@ function save_model(model, person_names::Vector{String}, training_info::Dict)
     )
     
     try
-        jldsave(CNNCheckinCore.MODEL_PATH; model_data=model_data)
-        @info "✅ Modelo salvo: $(CNNCheckinCore.MODEL_PATH)"
+        path = CNNCheckinCore.MODEL_PATH
+        @save path model_data
+        @info "✅ Modelo salvo: $path"
     catch e
         @error "Erro ao salvar modelo" exception=(e, catch_backtrace())
         return false
@@ -479,6 +495,9 @@ function pretrain_command()
     start_time = time()
     
     try
+        # semente determinística para reprodutibilidade básica
+        Random.seed!(1234)
+
         # 1. Carregar dados
         people_data, person_names = load_training_data(
             CNNCheckinCore.TRAIN_DATA_PATH; 
@@ -498,9 +517,14 @@ function pretrain_command()
         # 2. Dividir em treino/validação
         (train_images, train_labels), (val_images, val_labels) = split_train_validation(people_data)
         
-        # 3. Criar batches
-        train_batches = create_batches(train_images, train_labels, CNNCheckinCore.BATCH_SIZE)
-        val_batches = create_batches(val_images, val_labels, CNNCheckinCore.BATCH_SIZE)
+        # 3. Criar batches (detectar e usar GPU se disponível)
+        use_gpu = CUDA.has_cuda()
+        if use_gpu
+            @info "🔌 CUDA disponível — preparando dados para GPU"
+        end
+
+        train_batches = create_batches(train_images, train_labels, CNNCheckinCore.BATCH_SIZE; to_gpu=use_gpu)
+        val_batches = create_batches(val_images, val_labels, CNNCheckinCore.BATCH_SIZE; to_gpu=use_gpu)
         
         if isempty(train_batches)
             throw(ArgumentError("Não foi possível criar batches de treino!"))
@@ -508,6 +532,12 @@ function pretrain_command()
         
         # 4. Construir modelo
         model = build_cnn_model(num_classes)
+
+        # mover modelo para GPU se possível
+        if use_gpu && CUDA.has_cuda()
+            @info "🚀 Movendo modelo para GPU"
+            model = gpu(model)
+        end
         
         # 5. Treinar modelo
         train_losses, val_accuracies, best_val_acc, best_epoch = train_model!(
