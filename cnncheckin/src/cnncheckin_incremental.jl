@@ -450,20 +450,17 @@ function create_incremental_datasets(people_data::Vector{CNNCheckinCore.PersonDa
 end
 
 # Create batches for incremental learning
-function create_incremental_batches(images, labels, batch_size)
+function create_incremental_batches(images, labels, batch_size, num_classes)
     batches = []
     n_samples = length(images)
     if n_samples == 0
         return batches
     end
     
-    unique_labels = unique(labels)
-    min_label = minimum(unique_labels)
-    max_label = maximum(unique_labels)
-    label_range = min_label:max_label
+    label_range = 1:num_classes
     
     println("Criando batches incrementais:")
-    println("   - Labels únicos: $unique_labels")
+    println("   - Num classes: $num_classes")
     println("   - Range de labels: $label_range")
     
     for i in 1:batch_size:n_samples
@@ -475,7 +472,7 @@ function create_incremental_batches(images, labels, batch_size)
         try
             batch_labels_onehot = Flux.onehotbatch(batch_labels, label_range)
             push!(batches, (batch_tensor, batch_labels_onehot))
-            println("   Batch $(div(i-1, batch_size)+1): $(length(batch_labels)) amostras")
+            # println("   Batch $(div(i-1, batch_size)+1): $(length(batch_labels)) amostras")
         catch e
             println("Erro criando batch $i-$end_idx: $e")
             continue
@@ -731,8 +728,9 @@ function incremental_learning_command()
         
         # Create datasets and batches
         (train_images, train_labels), (val_images, val_labels) = create_incremental_datasets(people_data, original_person_names)
-        train_batches = create_incremental_batches(train_images, train_labels, CNNCheckinCore.BATCH_SIZE)
-        val_batches = create_incremental_batches(val_images, val_labels, CNNCheckinCore.BATCH_SIZE)
+        num_total_classes = length(all_person_names)
+        train_batches = create_incremental_batches(train_images, train_labels, CNNCheckinCore.BATCH_SIZE, num_total_classes)
+        val_batches = create_incremental_batches(val_images, val_labels, CNNCheckinCore.BATCH_SIZE, num_total_classes)
         
         if length(train_batches) == 0
             error("Não foi possível criar batches de treino incremental!")
