@@ -9,8 +9,10 @@ function refatorar_linhas(filepath::String)
     open(output_path, "w") do output
         open(filepath, "r") do file
             for (i, line) in enumerate(eachline(file))
+                
                 # Replace ponto e virgula por dois pontos em trechos de linha
                 # Campos : [ALA-AE-NUMERO-PROCESSO], [INSTRUMENTO-LEGAL], [ALA-AE-HISTORICO], [ALA-AE-CARGO-MT1]
+
                 if length(line) >= 106 
                     campo1_inicio = 106 # ✅ [ALA-AE-NUMERO-PROCESSO]
                     campo1_fim = min(117, length(line))
@@ -39,7 +41,6 @@ function refatorar_linhas(filepath::String)
                 else
                     println(output, line)
                 end
-
             end
         end
     end
