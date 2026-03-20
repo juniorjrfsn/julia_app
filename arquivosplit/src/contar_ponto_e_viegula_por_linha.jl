@@ -12,12 +12,12 @@ function contar_ponto_e_virgula(filepath::String)
                 if num_semicolons > 63
                     resultado = "Linha $i ($num_semicolons ponto e vírgulas): $line"
                     println(resultado)
-                    println(output, resultado)
+                    println(output, line)
                 end
                 if num_semicolons < 63
                     resultado = "Linha $i ($num_semicolons ponto e vírgulas): $line"
                     println(resultado)
-                    println(output, resultado)
+                    println(output, line)
                 end
             end
         end
@@ -35,3 +35,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 # julia .\arquivosplit\src\contar_ponto_e_viegula_por_linha.jl "D:\AGEPREV-PROJETOS\ALY.S.BIFPATEV.d17072017.txt"
+
+# julia .\arquivosplit\src\contar_ponto_e_viegula_por_linha.jl "D:\AGEPREV-PROJETOS\ALY.S.BIFPATEV.d17072017_linhas_truncadas_linhas_refatoradas.txt"
+
+# julia .\arquivosplit\src\contar_ponto_e_viegula_por_linha.jl "D:\AGEPREV-PROJETOS\ALY.S.BIFPATEV.d17072017_linhas_refatoradas.txt"

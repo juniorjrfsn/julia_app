@@ -43,3 +43,5 @@ end
 
 
 # julia .\arquivosplit\src\contar_caracteres_por_linha.jl "D:\AGEPREV-PROJETOS\ALY.S.BIFPATEV.d17072017.txt"
+
+# julia .\arquivosplit\src\contar_caracteres_por_linha.jl "D:\AGEPREV-PROJETOS\ALY.S.BIFPATEV.d17072017_linhas_truncadas_linhas_refatoradas.txt"
