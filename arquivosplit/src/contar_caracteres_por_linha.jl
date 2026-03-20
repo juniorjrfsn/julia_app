@@ -1,3 +1,6 @@
+# projeto arquivosplit
+# Arquivo: src/contar_caracteres_por_linha.jl
+
 function contar_caracteres_por_linha(filepath::String)
     # Gera o nome do arquivo de saída na pasta D:\AGEPREV-PROJETOS\
     filename = splitext(basename(filepath))[1] * "_linhas_fora_do_padrao.txt"

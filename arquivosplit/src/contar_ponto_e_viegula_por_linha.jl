@@ -1,4 +1,5 @@
-
+# projeto arquivosplit
+# Arquivo: src/contar_ponto_e_viegula_por_linha.jl
 
 function contar_ponto_e_virgula(filepath::String)
     # Gera o nome do arquivo de saída na pasta D:\AGEPREV-PROJETOS\

@@ -1,3 +1,6 @@
+# projeto arquivosplit
+# Arquivo: src/hamming_distance.jl
+
 module HammingDistance
     function calcular(str1::String, str2::String)
         if length(str1) != length(str2)

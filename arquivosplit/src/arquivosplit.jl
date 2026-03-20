@@ -1,3 +1,6 @@
+# projeto arquivosplit
+# Arquivo: src/arquivosplit.jl
+
 module arquivosplit
 	using FileIO
    using TOML

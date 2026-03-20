@@ -1,3 +1,6 @@
+# projeto arquivosplit
+# Arquivo: src/retirar_ponto_e_virgula_de_trecho_de_linha.jl
+
 function refatorar_linhas(filepath::String)
     # Gera o nome do arquivo de saída na pasta D:\AGEPREV-PROJETOS\
     filename = splitext(basename(filepath))[1] * "_linhas_refatoradas.txt"

@@ -1,3 +1,6 @@
+# projeto arquivosplit
+# Arquivo: src/matriz.jl
+
 # Definindo duas matrizes
 A = [1 2 3; 4 5 6; 7 8 9]
 B = [5 8 7; 6 5 4; 3 2 1]
