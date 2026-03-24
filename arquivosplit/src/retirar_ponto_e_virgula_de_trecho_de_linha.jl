@@ -16,19 +16,19 @@ function refatorar_linhas(filepath::String)
                 if length(line) >= 106 
                     campo1_inicio = 106 # ✅ [ALA-AE-NUMERO-PROCESSO]
                     campo1_fim = min(117, length(line))
-                    trecho1 = replace(line[campo1_inicio:campo1_fim], ";" => ":")
+                    trecho1 = replace(line[campo1_inicio:campo1_fim], ";" => "|")
 
                     campo2_inicio = 119  # ✅ [INSTRUMENTO-LEGAL]
                     campo2_fim = min(268, length(line))
-                    trecho2 = replace(line[campo2_inicio:campo2_fim], ";" => ":")
+                    trecho2 = replace(line[campo2_inicio:campo2_fim], ";" => "|")
 
                     campo3_inicio = 354   # ✅ [ALA-AE-HISTORICO]
                     campo3_fim = min(853, length(line)) 
-                    trecho3 = replace(line[campo3_inicio:campo3_fim], ";" => ":")
+                    trecho3 = replace(line[campo3_inicio:campo3_fim], ";" => "|")
 
                     campo4_inicio = 1225   # ✅ [ALA-AE-CARGO-MT1]
                     campo4_fim = min(1234, length(line))
-                    trecho4 = replace(line[campo4_inicio:campo4_fim], ";" => ":")
+                    trecho4 = replace(line[campo4_inicio:campo4_fim], ";" => "|")
 
                     nova_linha = 
                     line[1:campo1_inicio-1]            * trecho1 *   # ✅ [ALA-AE-NUMERO-PROCESSO]
