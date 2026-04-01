@@ -1,10 +1,10 @@
 [dados]
     [[dados.arquivo]]
-        arquivo_nomeorigem = "2 Pessoas - 04_2025 - v.1.49.csv"
+        arquivo_nomeorigem = "2 Pessoas - 02_2026 - v.1.60.1.csv"
         arquivo_qtde_parte = 4
-        arquivo_nome_parte = "2 Pessoas - 04_2025 - v.1.49 - Parte "
+        arquivo_nome_parte = "2 Pessoas - 02_2026 - v.1.60.1 - Parte "
 		
-# 111600   2 Pessoas - 04_2025 - v.1.49 - Parte 1
-# 223200   2 Pessoas - 04_2025 - v.1.49 - Parte 2
-# 334800   2 Pessoas - 04_2025 - v.1.49 - Parte 3
-# 446400   2 Pessoas - 04_2025 - v.1.49 - Parte 4
+# 119467   2 Pessoas - 02_2026 - v.1.60.1 - Parte 1
+# 238934   2 Pessoas - 02_2026 - v.1.60.1 - Parte 2
+# 358401   2 Pessoas - 02_2026 - v.1.60.1 - Parte 3
+# 477868   2 Pessoas - 02_2026 - v.1.60.1 - Parte 4
