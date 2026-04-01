@@ -1174,4 +1174,4 @@ end
 
 
 # execute
-# julia ./webcamcnn/src/main.jl
+# julia webcamcnn/src/main.jl

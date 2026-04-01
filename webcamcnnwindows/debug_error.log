@@ -1,0 +1,23 @@
+UndefVarError: `set_margin_start` not defined in `Main.webcamcnnwindows`
+Suggestion: check for spelling errors or missing imports.
+Stacktrace:
+  [1] build_capture_ui()
+    @ Main.webcamcnnwindows D:\projetos\julia_app\webcamcnnwindows\src\gui.jl:59
+  [2] start_gui()
+    @ Main.webcamcnnwindows D:\projetos\julia_app\webcamcnnwindows\src\gui.jl:28
+  [3] run_app()
+    @ Main.webcamcnnwindows D:\projetos\julia_app\webcamcnnwindows\src\webcamcnnwindows.jl:15
+  [4] (::var"#2#3")(f::IOStream)
+    @ Main D:\projetos\julia_app\webcamcnnwindows\run_test.jl:4
+  [5] open(::var"#2#3", ::String, ::Vararg{String}; kwargs::@Kwargs{})
+    @ Base .\io.jl:410
+  [6] open(::Function, ::String, ::String)
+    @ Base .\io.jl:407
+  [7] top-level scope
+    @ D:\projetos\julia_app\webcamcnnwindows\run_test.jl:1
+  [8] include(mod::Module, _path::String)
+    @ Base .\Base.jl:306
+  [9] exec_options(opts::Base.JLOptions)
+    @ Base .\client.jl:317
+ [10] _start()
+    @ Base .\client.jl:550

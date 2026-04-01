@@ -30,6 +30,7 @@ julia > ]
 (@v1.8) pkg> generate autonomo
 (@v1.8) pkg> generate webcamcnn
 (@v1.8) pkg> generate cnn
+(@v1.8) pkg> generate webcamcnnwindows
 
 ```
 
