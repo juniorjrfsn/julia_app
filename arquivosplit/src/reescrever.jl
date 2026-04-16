@@ -44,7 +44,7 @@ end
 # Exemplo de uso:
 # reescrever_arquivo("entrada.txt", "saida.txt")
 
-reescrever_arquivo("C:\\Users\\njunior\\Documents\\projetos\\julia_app\\arquivosplit\\src\\ALY.S.BIFPFIA4.d27072017_.txt",
- "C:\\Users\\njunior\\Documents\\projetos\\julia_app\\arquivosplit\\src\\ALY.S.BIFPFIA4.d27072017.txt")
+reescrever_arquivo("C:\\Users\\njunior\\Documents\\projetos\\ALY.S.BIFPFIA3.d27072017_.txt",
+ "C:\\Users\\njunior\\Documents\\projetos\\ALY.S.BIFPFIA3.d27072017.txt")
 
 # julia arquivosplit/src/reescrever.jl
