@@ -1,8 +1,6 @@
 # Projeto : arquivosplit
 # Arquivo: src/reescrever.jl
-"""
-    reescrever_arquivo(caminho_entrada::String, caminho_saida::String)
-
+""" 
 Lê um arquivo de texto linha por linha, onde cada linha tem campos separados por `;`.
 Salva as informações em um novo arquivo, encapsulando cada valor em aspas duplas.
 """
