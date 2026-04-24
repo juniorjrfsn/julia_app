@@ -28,6 +28,5 @@ julia > arquivosplit.greet();
 # executar
 
 ```
- cd arquivosplit/
- julia main.jl
+ julia arquivosplit/src/main.jl
 ```
