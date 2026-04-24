@@ -1,6 +1,7 @@
 # julia_app
 
 ## Create app
+
 ```
 $ cd julia_app
 julia_app $
@@ -31,10 +32,12 @@ julia > ]
 (@v1.8) pkg> generate webcamcnn
 (@v1.8) pkg> generate cnn
 (@v1.8) pkg> generate webcamcnnwindows
+(@v1.8) pkg> generate chatbot
 
 ```
 
 ## adicionar dependencias
+
 ```
 julia> ]
 (@v1.8) pkg> add JSON
@@ -93,6 +96,7 @@ julia> ]
  PGLib GenLib MHLib MQLib TPLib Git GLNS GLTF GLM GLPK Libz GLFW Glob GZip DTALib LRSLib CDDLib GNNlib
 
 ## **Executar o arquivo**
+
 ```
 julia> ]
 pkg> activate ./calculos

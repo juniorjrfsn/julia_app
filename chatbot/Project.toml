@@ -1,0 +1,10 @@
+name = "chatbot"
+uuid = "27adee62-6950-4e54-80ca-506c5b423acf"
+version = "0.1.0"
+authors = ["juniorjrfsn  <junior.jrfsn@gmail.com >"]
+
+[deps]
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[compat]
+julia = "1.6"

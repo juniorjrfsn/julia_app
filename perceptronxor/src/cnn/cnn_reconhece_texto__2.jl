@@ -1,3 +1,6 @@
+# Projeto : cnn
+# Arquivo: src/cnn/cnn_reconhece_texto__2.jl
+
 using LinearAlgebra
 using Random
 using Statistics

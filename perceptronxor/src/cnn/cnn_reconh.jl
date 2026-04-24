@@ -1,3 +1,6 @@
+# Projeto : cnn
+# Arquivo: src/cnn/cnn_reconh.jl
+
 using Flux, Images, ImageIO
 
 # Carregamento do modelo treinado

@@ -1,6 +1,5 @@
-# file cnn_cnn.jl
-# Script para carregar imagens, normalizá-las, criar batches e treinar uma CNN usando
-# basepath = "../../../../dados/imgs"
+# Projeto : cnn
+# Arquivo: src/cnn/cnn_cnn.jl
 
 using Flux
 using Flux: flatten

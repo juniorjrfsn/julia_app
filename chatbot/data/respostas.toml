@@ -1,0 +1,84 @@
+# Arquivo de perguntas e respostas do chatbot
+# Cada entrada possui uma resposta e várias perguntas associadas
+
+[[pares]]
+resposta = "Olá! Eu sou um chatbot. Como posso te ajudar hoje?"
+perguntas = [
+    "olá",
+    "oi",
+    "ola",
+    "hey",
+    "e aí",
+    "eai",
+    "bom dia",
+    "boa tarde",
+    "boa noite",
+    "oie",
+    "ooooi",
+    "oooooii",
+    "oooooooii",
+]
+
+[[pares]]
+resposta = "Eu sou um chatbot desenvolvido em Julia, treinado para responder perguntas com base em aprendizado de máquina."
+perguntas = [
+    "quem é você",
+    "o que você é",
+    "quem és tu",
+    "o que és tu",
+    "me fale sobre você",
+    "se apresente",
+    "qual seu nome",
+    "como você se chama",
+]
+
+[[pares]]
+resposta = "Estou bem, obrigado por perguntar! E você?"
+perguntas = [
+    "como vai",
+    "tudo bem",
+    "tudo bom",
+    "como você está",
+    "como está",
+    "como vai você",
+    "td bem",
+    "td bom",
+]
+
+[[pares]]
+resposta = "Me desculpe, mas não entendi sua pergunta. Pode reformular?"
+perguntas = ["__padrao__"]
+
+[[pares]]
+resposta = "Julia é uma linguagem de programação de alto desempenho voltada para computação científica e aprendizado de máquina."
+perguntas = [
+    "o que é julia",
+    "o que é a linguagem julia",
+    "julia é uma linguagem",
+    "me fale sobre julia",
+    "what is julia",
+]
+
+[[pares]]
+resposta = "Você pode me fazer perguntas e eu tentarei responder com base no meu treinamento!"
+perguntas = [
+    "o que você faz",
+    "para que você serve",
+    "qual sua função",
+    "o que sabe fazer",
+    "me ajude",
+    "como você funciona",
+]
+
+[[pares]]
+resposta = "Tchau! Foi um prazer conversar com você. Até mais!"
+perguntas = [
+    "tchau",
+    "até mais",
+    "adeus",
+    "até logo",
+    "bye",
+    "xau",
+    "falou",
+    "até",
+]

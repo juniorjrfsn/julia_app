@@ -1,6 +1,6 @@
-# project : autonomo
-# file    : src/network.jl
-# desc    : estrutura da rede neural recorrente (RNN) com N camadas empilhadas
+# Projeto : autonomo
+# Arquivo: src/network.jl
+# Desc    : estrutura da rede neural recorrente (RNN) com N camadas empilhadas
 #           cada camada tem pesos recorrentes próprios; camadas se alimentam em cascata
 
 # ╔══════════════════════════════════════════════════════════╗

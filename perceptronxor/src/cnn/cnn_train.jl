@@ -1,3 +1,6 @@
+# Projeto : cnn
+# Arquivo: src/cnn/cnn_train.jl
+
 using Flux, Zygote, Images, ImageIO, BSON, ProgressMeter, Random, MLUtils, Statistics
 import Flux.Optimise: Adam
 using Flux: onehotbatch

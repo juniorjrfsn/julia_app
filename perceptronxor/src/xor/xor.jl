@@ -1,7 +1,6 @@
-# Porta lógica XOR usando uma rede neural simples em Julia com Flux.jl
-# file: xor.jl
+# Projeto : perceptronxor
+# Arquivo: src/xor/xor.jl
 
- 
  # xor.jl
 using Random
 
@@ -73,15 +72,34 @@ for i in 1:size(X,1)
     a1 = sigmoid.(z1)
     z2 = a1 * W2 .+ b2
     a2 = sigmoid.(z2)
-    println("Entrada: $(X[i,:]) -> Saída: $(round(a2[1]; digits=3))")
+    predicted_val = a2[1] >= 0.5 ? 1 : 0
+    println("Entrada: $(X[i,:]) -> Saída da Rede: $(round(a2[1]; digits=3)) | Previsão Lógica: $predicted_val | Esperado: $(Int(y[i]))")
 end
 
 # Modo interativo
 println("\n--- Modo Interativo ---")
 while true
-    println("Digite os valores de entrada (0 ou 1) para a porta lógica XOR (ou Ctrl+C para sair):")
-    x1 = parse(Float32, readline())
-    x2 = parse(Float32, readline())
+    println("Digite os valores de entrada (0 ou 1) para a porta lógica XOR (ou pressione Enter vazio para sair):")
+    
+    input1 = strip(readline())
+    if isempty(input1)
+        println("Encerrando...")
+        break
+    end
+    x1 = tryparse(Float32, input1)
+    
+    input2 = strip(readline())
+    if isempty(input2)
+        println("Encerrando...")
+        break
+    end
+    x2 = tryparse(Float32, input2)
+    
+    if isnothing(x1) || isnothing(x2)
+        println("Entrada inválida. Por favor, digite números válidos (0 ou 1).")
+        continue
+    end
+
     x = [x1 x2]
 
     z1 = x * W1 .+ b1
@@ -89,13 +107,15 @@ while true
     z2 = a1 * W2 .+ b2
     a2 = sigmoid.(z2)
 
-    println("Saída da porta lógica XOR para a entrada ($(x1), $(x2)): $(round(a2[1]; digits=3))\n")
+    predicted_val = a2[1] >= 0.5 ? 1 : 0
+    println("Saída da porta lógica XOR para a entrada ($(x1), $(x2)): $(round(a2[1]; digits=3))")
+    println("-> Previsão Lógica: $predicted_val\n")
 end
 
  
  
 # Exemplo de uso:
-# julia xor.jl
+# julia ./perceptronxor/src/xor/xor.jl
 # Digite os valores de entrada (0 ou 1) para a porta lógica XOR:
 # 0
 # 1
