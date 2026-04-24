@@ -1,4 +1,4 @@
-# projeto arquivosplit
+# Projeto : arquivosplit
 # Arquivo: src/matriz.jl
 
 # Definindo duas matrizes
@@ -17,3 +17,6 @@ C = A * B
 # Imprimindo o resultado
 println("\nResultado da soma (A + B):")
 display(C)
+
+
+# julia arquivosplit/src/matriz.jl

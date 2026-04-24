@@ -1,3 +1,5 @@
+# Projeto : arquivosplit
+# Arquivo: src/reescrever.jl
 """
     reescrever_arquivo(caminho_entrada::String, caminho_saida::String)
 

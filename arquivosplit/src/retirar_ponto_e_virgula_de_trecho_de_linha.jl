@@ -1,4 +1,4 @@
-# projeto arquivosplit
+# Projeto : arquivosplit
 # Arquivo: src/retirar_ponto_e_virgula_de_trecho_de_linha.jl
 
 function refatorar_linhas(filepath::String)

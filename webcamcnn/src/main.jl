@@ -1,5 +1,6 @@
 #!/usr/bin/env julia
-# webcamcnn/src/main.jl
+# Projeto : webcamcnn
+# Arquivo: src/main.jl
 # Main system interface - Enhanced version with layer visualization
 
 

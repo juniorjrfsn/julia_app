@@ -1,4 +1,4 @@
-# projeto arquivosplit
+# Projeto : arquivosplit
 # Arquivo: src/hamming_distance.jl
 
 module HammingDistance
