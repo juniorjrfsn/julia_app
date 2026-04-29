@@ -1,6 +1,9 @@
 @echo off
 chcp 65001 >nul
 
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
 echo =====================================================
 echo     Docker Dev Full-Stack - Gerenciador
 echo =====================================================

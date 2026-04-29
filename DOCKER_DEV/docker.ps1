@@ -1,4 +1,5 @@
 # docker.ps1 - Gerenciador do Ambiente Docker Dev Full-Stack
+
 param(
     [string]$Action = "start"
 )
@@ -7,6 +8,8 @@ $ContainerName = "docker-dev"
 $ImageName = "dev-fullstack:latest"
 $HostPort = 2222
 $DockerDesktop = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+$DockerContext = "desktop-linux"
+$DockerPipe = "\\.\pipe\dockerDesktopLinuxEngine"
 
 function Write-Header($msg) {
     Write-Host ""
@@ -16,64 +19,173 @@ function Write-Header($msg) {
     Write-Host ""
 }
 
-function Write-Ok($msg) { Write-Host "[OK] $msg"    -ForegroundColor Green }
-function Write-Info($msg) { Write-Host "[..] $msg"    -ForegroundColor Yellow }
-function Write-Err($msg) { Write-Host "[ERRO] $msg"  -ForegroundColor Red }
+function Write-Ok($msg) { Write-Host "[OK]   $msg" -ForegroundColor Green }
+function Write-Info($msg) { Write-Host "[..]   $msg" -ForegroundColor Yellow }
+function Write-Err($msg) { Write-Host "[ERRO] $msg" -ForegroundColor Red }
 
-# ─── STOP ────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# STOP
+# ==============================================================================
 function Stop-Ambiente {
     Write-Header "Parando Ambiente Docker Dev"
-
     Write-Info "Removendo container '$ContainerName'..."
     docker rm -f $ContainerName 2>$null
     Write-Ok "Container removido."
 }
 
-# ─── DOCKER READY ─────────────────────────────────────────────────────────────
-function Wait-Docker {
-    # Testa se o daemon já responde
-    docker version 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Ok "Docker já está rodando."
-        return
+# ==============================================================================
+# Testa se o pipe do daemon esta disponivel
+# ==============================================================================
+function Test-DockerPipe {
+    return (Test-Path $DockerPipe)
+}
+
+# ==============================================================================
+# Testa se o daemon responde de verdade (apos o pipe existir)
+# ==============================================================================
+function Test-DockerReady {
+    $result = docker info 2>&1
+    return ($LASTEXITCODE -eq 0)
+}
+
+# ==============================================================================
+# Garante que o contexto correto esta ativo
+# ==============================================================================
+function Set-DockerContext {
+    $current = docker context show 2>$null
+    if ($current -ne $DockerContext) {
+        Write-Info "Ativando contexto '$DockerContext'..."
+        docker context use $DockerContext | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Err "Nao foi possivel ativar o contexto '$DockerContext'."
+            Write-Err "Execute manualmente: docker context use $DockerContext"
+            exit 1
+        }
+        Write-Ok "Contexto '$DockerContext' ativo."
     }
+    else {
+        Write-Ok "Contexto '$DockerContext' ja esta ativo."
+    }
+}
 
-    Write-Info "Iniciando Docker Desktop..."
-    Start-Process $DockerDesktop
+# ==============================================================================
+# Aguarda o Docker Daemon ficar disponivel via pipe
+# ==============================================================================
+function Wait-Docker {
+    Write-Info "Verificando se o Docker ja esta rodando..."
 
-    $max = 180
-    $elapsed = 0
-    while ($elapsed -lt $max) {
-        Start-Sleep -Seconds 5
-        $elapsed += 5
-        docker version 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Ok "Docker Daemon respondendo após ${elapsed}s."
+    if (Test-DockerPipe) {
+        if (Test-DockerReady) {
+            Write-Ok "Docker ja esta rodando."
+            Set-DockerContext
             return
         }
-        Write-Info "Aguardando Docker... (${elapsed}s / ${max}s)"
+        Write-Info "Pipe detectado. Aguardando daemon finalizar inicializacao..."
+    }
+    else {
+        if (-Not (Test-Path $DockerDesktop)) {
+            Write-Err "Docker Desktop nao encontrado em: $DockerDesktop"
+            Write-Err "Ajuste a variavel DockerDesktop no topo do script."
+            exit 1
+        }
+
+        $proc = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
+        if (-Not $proc) {
+            Write-Info "Iniciando Docker Desktop..."
+            Start-Process -FilePath $DockerDesktop
+            Write-Info "Aguardando processo subir (15s)..."
+            Start-Sleep -Seconds 15
+        }
+        else {
+            Write-Info "Docker Desktop ja esta aberto. Aguardando pipe do daemon..."
+        }
     }
 
-    Write-Err "Docker não respondeu em ${max}s. Verifique o Docker Desktop."
+    # Fase 1: aguarda o pipe aparecer
+    $maxPipe = 120
+    $elapsedP = 0
+    $interval = 5
+
+    Write-Info "Fase 1/2 - Aguardando pipe do daemon (max ${maxPipe}s)..."
+
+    while ($elapsedP -lt $maxPipe) {
+        Start-Sleep -Seconds $interval
+        $elapsedP += $interval
+
+        if (Test-DockerPipe) {
+            Write-Host ""
+            Write-Ok "Pipe disponivel apos ${elapsedP}s."
+            break
+        }
+
+        if ($elapsedP % 25 -eq 0) {
+            Write-Info "  aguardando pipe... (${elapsedP}s / ${maxPipe}s)"
+        }
+        else {
+            Write-Host "." -NoNewline -ForegroundColor DarkGray
+        }
+    }
+
+    if (-Not (Test-DockerPipe)) {
+        Write-Host ""
+        Write-Err "Pipe do Docker nao apareceu em ${maxPipe}s."
+        Write-Err "Verifique:"
+        Write-Err "  1. Se o icone do Docker na bandeja ficou verde"
+        Write-Err "  2. wsl --status  (no PowerShell)"
+        Write-Err "  3. Aba Troubleshoot no Docker Desktop"
+        exit 1
+    }
+
+    # Fase 2: aguarda o daemon responder
+    $maxDaemon = 60
+    $elapsedD = 0
+
+    Write-Info "Fase 2/2 - Aguardando daemon responder (max ${maxDaemon}s)..."
+
+    while ($elapsedD -lt $maxDaemon) {
+        if (Test-DockerReady) {
+            Write-Host ""
+            Write-Ok "Docker Daemon pronto!"
+            Set-DockerContext
+            return
+        }
+
+        Start-Sleep -Seconds $interval
+        $elapsedD += $interval
+
+        if ($elapsedD % 20 -eq 0) {
+            Write-Info "  aguardando daemon... (${elapsedD}s / ${maxDaemon}s)"
+        }
+        else {
+            Write-Host "." -NoNewline -ForegroundColor DarkGray
+        }
+    }
+
+    Write-Host ""
+    Write-Err "Daemon nao respondeu em ${maxDaemon}s apos o pipe estar disponivel."
+    Write-Err "Tente: docker context use $DockerContext  e rode o script novamente."
     exit 1
 }
 
-# ─── BUILD ────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# BUILD
+# ==============================================================================
 function Build-Imagem {
-    Write-Info "Construindo imagem '$ImageName' (pode demorar na 1ª vez)..."
+    Write-Info "Construindo imagem '$ImageName' (pode demorar na 1a vez)..."
     docker build -t $ImageName .
     if ($LASTEXITCODE -ne 0) {
         Write-Err "Build falhou. Verifique o Dockerfile."
         exit 1
     }
-    Write-Ok "Imagem construída com sucesso!"
+    Write-Ok "Imagem construida com sucesso!"
 }
 
-# ─── START ────────────────────────────────────────────────────────────────────
+# ==============================================================================
+# START
+# ==============================================================================
 function Start-Ambiente([bool]$WithBuild) {
     Write-Header "Iniciando Ambiente Docker Dev"
 
-    # Remove container antigo sem travar
     Write-Info "Removendo container anterior (se existir)..."
     docker rm -f $ContainerName 2>$null | Out-Null
     Write-Ok "Pronto."
@@ -94,47 +206,42 @@ function Start-Ambiente([bool]$WithBuild) {
         exit 1
     }
 
-    # Aguarda o SSH subir dentro do container
     Write-Info "Aguardando SSH iniciar no container..."
     Start-Sleep -Seconds 3
 
     Write-Host ""
     Write-Host "=====================================================" -ForegroundColor Green
-    Write-Host "  Container '$ContainerName' rodando!" -ForegroundColor Green
+    Write-Host "  Container '$ContainerName' rodando!"                 -ForegroundColor Green
     Write-Host "=====================================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "  Conectar via SSH:" -ForegroundColor White
-    Write-Host "    ssh root@localhost -p $HostPort" -ForegroundColor Yellow
-    Write-Host "    Senha: senha_forte_aqui" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  Entrar direto (sem SSH):" -ForegroundColor White
-    Write-Host "    docker exec -it $ContainerName bash" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  Ver logs:" -ForegroundColor White
-    Write-Host "    docker logs -f $ContainerName" -ForegroundColor Yellow
+    Write-Host "  SSH:  ssh root@localhost -p $HostPort"               -ForegroundColor Yellow
+    Write-Host "  Bash: docker exec -it $ContainerName bash"           -ForegroundColor Yellow
+    Write-Host "  Logs: docker logs -f $ContainerName"                 -ForegroundColor Yellow
     Write-Host ""
 }
 
-# ─── ROTEADOR ─────────────────────────────────────────────────────────────────
-switch ($Action.ToLower()) {
-    "start" { Start-Ambiente $false }
-    "build" { Start-Ambiente $true }
-    "stop" { Stop-Ambiente }
-    "restart" {
-        Stop-Ambiente
-        Write-Info "Aguardando 2 segundos..."
-        Start-Sleep -Seconds 2
-        Start-Ambiente $false
-    }
-    default {
-        Write-Err "Ação inválida: '$Action'"
-        Write-Host ""
-        Write-Host "Uso:" -ForegroundColor Cyan
-        Write-Host "  .\docker.ps1              # Inicia"
-        Write-Host "  .\docker.ps1 start        # Inicia"
-        Write-Host "  .\docker.ps1 stop         # Para"
-        Write-Host "  .\docker.ps1 restart      # Reinicia"
-        Write-Host "  .\docker.ps1 build        # Rebuilda e inicia"
-        exit 1
-    }
+# ==============================================================================
+# ROTEADOR
+# ==============================================================================
+$act = $Action.ToLower()
+
+if ($act -eq "start") {
+    Start-Ambiente $false
+}
+elseif ($act -eq "build") {
+    Start-Ambiente $true
+}
+elseif ($act -eq "stop") {
+    Stop-Ambiente
+}
+elseif ($act -eq "restart") {
+    Stop-Ambiente
+    Write-Info "Aguardando 2 segundos..."
+    Start-Sleep -Seconds 2
+    Start-Ambiente $false
+}
+else {
+    Write-Err "Acao invalida: '$Action'"
+    Write-Host "Uso: .\docker.ps1 [start|stop|restart|build]" -ForegroundColor Cyan
+    exit 1
 }

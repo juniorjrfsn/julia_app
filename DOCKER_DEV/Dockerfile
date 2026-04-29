@@ -2,7 +2,7 @@
 FROM python:3.11-slim-bookworm AS base
 
 # ==================== METADADOS ====================
-LABEL maintainer="Seu Nome <seuemail@exemplo.com>"
+LABEL maintainer="Nedir França<nfranca@ageprev.ms.gov.br>"
 LABEL description="Ambiente completo de desenvolvimento com múltiplos runtimes"
 
 # ==================== VARIÁVEIS DE AMBIENTE ====================
@@ -69,10 +69,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     erlang elixir \
     && rm -rf /var/lib/apt/lists/*
 
-# ==================== BANCO DE DADOS CLIENTS ====================
+# ==================== BANCO DE DADOS ====================
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    postgresql-client sqlite3 \
+    postgresql-contrib postgresql-client sqlite3 \
     && rm -rf /var/lib/apt/lists/*
+# docker pull postgres:latest
 
 # ==================== SERVIDOR FTP (vsftpd) ====================
 RUN apt-get update && apt-get install -y vsftpd \

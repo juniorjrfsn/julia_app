@@ -1,3 +1,5 @@
+![Logo do Docker](logo-docker.png)
+
 # Docker Dev Full-Stack
 
 ## Como usar (PowerShell — recomendado)
@@ -76,10 +78,49 @@ powershell
 
 ssh root@localhost -p 2222
 
-# Senha: senha_forte_aqui
+***Senha: senha_forte_aqui***
 
 Se pedir yes/no na primeira conexão, digite yes.
 
 Resumo do que estava errado
 ProblemaCausaCorreçãoContainer morria instantaneamenteImagem nunca foi buildada
-.\docker.ps1 buildSSH recusava conexãosshd rodava sem -D e saíaexec /usr/sbin/sshd -D no entrypointdocker logs vazioContainer morria antes de imprimirCorrigido pelo build correto
+
+SSH recusava conexãosshd rodava sem -D e saíaexec /usr/sbin/sshd -D no entrypointdocker logs vazio
+Container morria antes de imprimirCorrigido pelo build correto
+
+Solução rápida (sessão atual)
+Execute isso no PowerShell como Administrador antes de rodar o script:
+
+### Esse modo é temporário — vale só para a sessão atual do PowerShell
+
+#### Solução permanente para seu usuário
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+```
+
+#### Depois rode normalmente
+
+```powershell
+.\docker.ps1 build
+.\docker.ps1 start
+# Copie o arquivo para sua pasta e rode:
+.\docker.ps1 start
+.\docker.ps1 build   # primeira vez
+```
+
+RemoteSigned permite rodar scripts locais sem assinatura, mas exige assinatura em scripts baixados da internet. É o nível recomendado para desenvolvimento.
+
+Alternativa sem mudar a política
+
+```
+PowerShell -ExecutionPolicy Bypass -File .\docker.ps1 start
+PowerShell -ExecutionPolicy Bypass -File .\docker.ps1 build
+```
+
+#### Parar o wsl
+
+```
+wsl --shutdown
+```

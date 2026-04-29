@@ -306,3 +306,209 @@ RemoteSigned permite rodar scripts locais sem assinatura, mas exige assinatura e
 
 Alternativa sem mudar a política
 powershellPowerShell -ExecutionPolicy Bypass -File .\docker.ps1 start
+
+
+. A Solução "Quick Fix" (Reinstalação do Componente)
+Se o passo anterior não funcionar, o Windows pode ter corrompido o vínculo entre o WSL e o Hyper-V. Tente desativar e reativar a plataforma:
+
+
+
+# S:\DGI-Diretoria de Gestão da Informação\Bkp - Backup - Ex-servidores\Breno\Installers\UTIL\pgAdmin 4\v4\docs\en_US\html\_sources
+
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+whoami
+net localgroup "Hyper-V Administrators" $env:USERNAME /add
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+wsl --set-default-version 2
+docker logs docker-dev
+docker exec docker-dev ps aux | findstr sshd
+docker exec docker-dev /usr/sbin/sshd -t
+docker images
+
+Solução rápida (sessão atual)
+Execute isso no PowerShell como Administrador antes de rodar o script:
+powershellSet-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+Depois rode normalmente:
+powershell.\docker.ps1 start
+
+Esse modo é temporário — vale só para a sessão atual do PowerShell.
+
+Solução permanente para seu usuário
+powershellSet-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+RemoteSigned permite rodar scripts locais sem assinatura, mas exige assinatura em scripts baixados da internet. É o nível recomendado para desenvolvimento.
+
+Alternativa sem mudar a política
+PowerShell -ExecutionPolicy Bypass -File .\docker.ps1 start
+
+# 1. Status do WSL
+
+wsl --status
+
+# 2. Lista de distribuições e versões
+
+wsl -l -v
+
+# 3. Verificar se o processo do Docker está rodando
+
+Get-Process | Where-Object { $_.Name -like "*docker*" }
+
+# 4. Tentar o daemon diretamente
+
+docker version
+
+wsl --shutdown
+
+# Aguarde 10 segundos, depois abra o Docker Desktop manualmente
+
+# Verifica se a virtualização está ativa
+
+systeminfo | findstr /i "hyper-v"
+
+# Testa o pipe diretamente
+
+Test-Path "\\.\pipe\docker_engine"
+
+# Ver qual contexto está ativo
+
+docker context ls
+
+# Forçar o contexto correto
+
+docker context use desktop-linux
+
+# Testar novamente
+
+docker version
+
+# Resetar para o contexto padrão
+
+docker context use default
+
+docker version
+
+# 1. Fechar tudo
+
+wsl --shutdown
+
+# 2. Matar todos os processos do Docker
+
+Get-Process | Where-Object { $_.Name -like "*docker*" } | Stop-Process -Force
+
+# 3. Aguardar 15 segundos
+
+Start-Sleep -Seconds 15
+
+# 4. Abrir o Docker Desktop manualmente (pelo Menu Iniciar)
+
+# Aguarde o ícone ficar VERDE na bandeja (pode levar 1-2 min)
+
+# 5. Depois que ficar verde, teste
+
+docker version
+
+# 1. Abrir o Docker Desktop
+
+Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+docker version
+
+# Substitua o loop de espera no docker.ps1 por este
+
+Write-Host "[..] Aguardando daemon do Docker..."
+$timeout = 180
+$elapsed = 0
+while ($elapsed -lt $timeout) {
+    # Testa o pipe real, não o processo
+    if (Test-Path "\\.\pipe\dockerDesktopLinuxEngine") {
+        Write-Host "[OK] Docker daemon respondendo!"
+        break
+    }
+    Start-Sleep -Seconds 5
+    $elapsed += 5
+    Write-Host "[..] Aguardando... ($elapsed s / $timeout s)"
+}
+
+if ($elapsed -ge $timeout) {
+    Write-Host "[ERRO] Docker nao respondeu em $timeout segundos."
+    exit 1
+}
+
+Problema identificado!
+O erro crítico está aqui:
+Wsl/Service/CreateInstance/CreateVm/HCS/0x80070569
+Esse código 0x80070569 significa "Logon failure: the user has not been granted the requested logon type" — o serviço do WSL/Hyper-V não tem permissão para criar máquinas virtuais. O Docker Desktop usa WSL2/Hyper-V para rodar o engine Linux, e sem isso o daemon nunca sobe de verdade (pipe existe mas não responde).
+
+Solução — Passo a passo
+Passo 1 — Verificar se Hyper-V está habilitado
+powershell# Rodar como Administrador
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
+Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+Se algum aparecer State: Disabled, habilite:
+powershellEnable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
+Restart-Computer
+
+Passo 2 — Corrigir permissão do grupo Hyper-V (causa raiz do 0x80070569)
+powershell# Rodar como Administrador
+# Adiciona seu usuário ao grupo Hyper-V Administrators
+$user = $env:USERNAME
+Add-LocalGroupMember -Group "Hyper-V Administrators" -Member $user
+Depois reinicie o computador — essa permissão só vale após relogin.
+
+Passo 3 — Se estiver em domínio/ambiente corporativo (AGEPREV)
+O erro 0x80070569 em ambientes corporativos geralmente vem de Group Policy bloqueando virtualização. Verifique:
+powershell# Rodar como Administrador
+gpresult /H C:\Temp\gpo_report.html
+Start-Process "C:\Temp\gpo_report.html"
+Procure por políticas relacionadas a Hyper-V, VirtualMachine ou Logon rights. Se houver restrição de GPO, será necessário solicitar liberação ao administrador de TI.
+
+Passo 4 — Alternativa: mudar Docker para modo Hyper-V puro (sem WSL2)
+Se o WSL2 estiver bloqueado por política, o Docker Desktop pode rodar via Hyper-V diretamente:
+
+Abra Docker Desktop → Settings → General
+Desmarque "Use the WSL 2 based engine"
+Apply & Restart
+
+Ou via linha de comando, edite o arquivo de configuração:
+powershell$config = "$env:APPDATA\Docker\settings-store.json"
+# Abre para editar
+notepad $config
+Mude "wslEngineEnabled": true para "wslEngineEnabled": false.
+
+Passo 5 — Verificar logs detalhados do WSL/HCS
+powershell# Ver eventos recentes de erro de virtualização
+Get-WinEvent -LogName "Microsoft-Windows-Hyper-V-Worker-Admin" -MaxEvents 10 |
+  Select-Object TimeCreated, Message
+
+# Ou no log do Docker Desktop
+Get-Content "$env:LOCALAPPDATA\Docker\log\vm\dockerd.log" -Tail 50
+
+Resumo do diagnóstico
+O que acontecePor quêPipe existe mas docker build falhaDaemon nunca termina de inicializardocker version mostra só o ClientServer não responde (engine Linux não subiu)wsl falha com 0x80070569Usuário sem permissão para criar VM (Hyper-V/WSL2 bloqueado)SIGTERM no docker buildCLI tenta conectar, timeout, recebe sinal de encerramento
+A prioridade agora é resolver o 0x80070569 — todo o resto é consequência disso. Rode o Passo 2 como Administrador e reinicie. Se for ambiente corporativo, o Passo 3 vai revelar se há GPO bloqueando.
+
+# Garante que o contexto correto está ativo
+
+docker context use desktop-linux | Out-Null
+
+
+
+Abra o PowerShell como Administrador.
+
+Rode os comandos:
+```
+dism.exe /online /disable-feature /featurename:VirtualMachinePlatform /norestart
+dism.exe /online /disable-feature /featurename:Microsoft-Windows-Subsystem-Linux /norestart
+```
+Reinicie o PC.
+
+Após ligar, rode para reativar:
+
+```
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
