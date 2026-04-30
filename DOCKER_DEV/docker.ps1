@@ -197,6 +197,7 @@ function Start-Ambiente([bool]$WithBuild) {
     Write-Info "Subindo container em background..."
     docker run -d --privileged --name $ContainerName `
         -p "${HostPort}:22" `
+        -p "8000:8000" `
         -v /var/run/docker.sock:/var/run/docker.sock `
         -v "${PWD}:/app" `
         $ImageName

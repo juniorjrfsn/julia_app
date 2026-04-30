@@ -39,7 +39,12 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
 
 # ==================== PYTHON + DJANGO ====================
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir django djangorestframework django-cors-headers
+    && pip install --no-cache-dir django djangorestframework django-cors-headers \
+    && pip install django torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && pip install transformers datasets accelerate peft bitsandbytes \
+    && pip install django-crispy-forms crispy-bootstrap5 \
+    && pip install toml
+
 
 # ==================== RUST + CARGO ====================
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
@@ -122,7 +127,7 @@ RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.5-l
     && ln -s /usr/local/bin/julia /usr/bin/julia 
 # Instalar pacotes Julia
 # Instalar Julia e alguns pacotes
-RUN julia -e 'using Pkg; Pkg.add(["FileIO"]); Pkg.precompile()'
+RUN julia -e 'using Pkg; Pkg.add(["CSV","CUDA","DataFrames","Distributions","FileIO","Flux","Gtk","ImageCore","ImageDraw","ImageMagick","ImageTransformations","ImageView","Images","JLD2","JSON","JSON3","Luxor","MLDatasets","MLJ","MLJFlux","PlotlyJS","Plots","QuartzImageIO","SQLite","StatsBase","VideoIO","cuDNN","Dates","LinearAlgebra","Pkg","Random","Serialization","Statistics"]); Pkg.precompile()'
 
 
 
@@ -131,8 +136,12 @@ RUN julia -e 'using Pkg; Pkg.add(["FileIO"]); Pkg.precompile()'
 WORKDIR /app
 COPY . /app
 
+RUN git clone https://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@github.com/juniorjrfsn/chatbot_ageprev_py.git /srv/chatbot_ageprev_py \
+    && if [ -f /srv/chatbot_ageprev_py/requirements.txt ]; then pip install --no-cache-dir -r /srv/chatbot_ageprev_py/requirements.txt; fi
 # ==================== ENTRYPOINT ====================
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000 22
 
 CMD ["/entrypoint.sh"]
