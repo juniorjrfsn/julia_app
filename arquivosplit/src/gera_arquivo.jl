@@ -1,7 +1,4 @@
-function gerar_comandos()
-    input_file = "arquivosplit/src/tabela.txt"
-    output_file = "arquivosplit/src/comandos_db2.txt"
-    
+function gerar_comandos(tabela_file, saida_file)
     # Verifica se o arquivo de entrada existe
     if !isfile(input_file)
         println("Erro: O arquivo $input_file não foi encontrado.")
@@ -26,7 +23,15 @@ function gerar_comandos()
 end
 
 # Executa a função
-gerar_comandos()
+input_file = "C:/Users/njunior/Documents/RHFP/tabela_MSPREV.txt"
+output_file = "C:/Users/njunior/Documents/RHFP/comandos_db2_MSPREV.txt"
+
+gerar_comandos(input_file, output_file)
+
+input_file = "C:/Users/njunior/Documents/RHFP/tabela_PREVI.txt"
+output_file = "C:/Users/njunior/Documents/RHFP/comandos_db2_PREVI.txt"
+
+gerar_comandos(input_file, output_file)
 
 
 # julia arquivosplit/src/gera_arquivo.jl
