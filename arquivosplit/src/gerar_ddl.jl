@@ -62,8 +62,8 @@ function generate_ddl(input_file, output_file)
 end
 
 # Check if file exists and run
-input_json = "arquivosplit/src/MSPREV_SCHEMA.json"
-output_sql = "arquivosplit/src/MSPREV_DDL.sql"
+input_json = "C:/Users/njunior/Documents/RHFP/MSPREV_SCHEMA_CREATE.json"
+output_sql = "C:/Users/njunior/Documents/RHFP/MSPREV_DDL.sql"
 
 if isfile(input_json)
     try
@@ -77,8 +77,8 @@ end
 
 
 # Check if file exists and run
-input_json_2 = "arquivosplit/src/PREVI_SCHEMA.json"
-output_sql_2 = "arquivosplit/src/PREVI_DDL.sql"
+input_json_2 = "C:/Users/njunior/Documents/RHFP/PREVI_SCHEMA_CREATE.json"
+output_sql_2 = "C:/Users/njunior/Documents/RHFP/PREVI_DDL.sql"
 
 if isfile(input_json_2)
     try
