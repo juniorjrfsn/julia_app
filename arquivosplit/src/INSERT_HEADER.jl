@@ -44,7 +44,7 @@ function insert_header_in_file!(file_path::AbstractString, header::AbstractStrin
         return false
     end
 
-    new_content = header * "\n" * content
+    new_content = header * "\r\n" * content
     write(file_path, new_content)
     println("Cabeçalho inserido com sucesso em: $file_path")
     return true

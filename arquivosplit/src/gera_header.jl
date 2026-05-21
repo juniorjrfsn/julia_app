@@ -39,7 +39,7 @@ function generate_header(input_file, output_file)
 end
 
 # Execução para o schema MSPREV
-input_json = "C:/Users/njunior/Documents/RHFP/MSPREV_SCHEMA.json"
+input_json = "C:/Users/njunior/Documents/RHFP/MSPREV_SCHEMA_HEADER.json"
 output_json = "C:/Users/njunior/Documents/RHFP/MSPREV_HEADERS.json"
 
 if isfile(input_json)
@@ -53,7 +53,7 @@ else
 end
 
 # Execução para o schema PREVI
-input_json_2 = "C:/Users/njunior/Documents/RHFP/PREVI_SCHEMA.json"
+input_json_2 = "C:/Users/njunior/Documents/RHFP/PREVI_SCHEMA_HEADER.json"
 output_json_2 = "C:/Users/njunior/Documents/RHFP/PREVI_HEADERS.json"
 
 if isfile(input_json_2)
