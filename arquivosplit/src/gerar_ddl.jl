@@ -40,6 +40,24 @@ function generate_ddl(input_file, output_file)
                     type_str = "$data_type($size)"
                 end
                 
+                if uppercase(strip(type_str)) == "LONG VARCHAR(32700)"
+                    type_str = "TEXT"
+                elseif uppercase(strip(type_str)) == "BIGINT(8)"
+                    type_str = "INTEGER"
+                elseif uppercase(strip(type_str)) == "DOUBLE(8)"
+                    type_str = "NUMERIC(15,2)"
+                elseif uppercase(strip(type_str)) == "CLOB(1048576)"
+                    type_str = "TEXT"
+                elseif uppercase(strip(type_str)) == "BLOB(10485760)"
+                    type_str = "TEXT"
+                elseif uppercase(strip(type_str)) == "BLOB(16777216)"
+                    type_str = "TEXT"
+                end
+                 
+                if occursin("VARCHAR", uppercase(type_str)) || occursin("TEXT", uppercase(type_str))
+                    type_str *= " COLLATE Latin1_General_100_CI_AS"
+                end
+                
                 # "acrescentando NULL como default"
                 # If ACEITA_NULO is 'Y', we add NULL. Otherwise NOT NULL.
                 null_str = (nullable == "Y") ? "NULL" : "NOT NULL"
