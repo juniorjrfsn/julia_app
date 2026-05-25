@@ -99,7 +99,7 @@ if length(args) >= 1 && args[1] in ("-h", "--help")
     exit(0)
 end
 
-target = length(args) >= 1 ? args[1] : joinpath(@__DIR__, "TABELAS")
+target = length(args) >= 1 ? args[1] : raw"C:\Users\njunior\Documents\RHFP\TABELA"
 
 if isfile(target)
     println("Arquivo: $target")
