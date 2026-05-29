@@ -242,3 +242,6 @@ caminho_dados  = length(ARGS) >= 1 ? ARGS[1] : joinpath(raiz, "data", "respostas
 caminho_saida  = length(ARGS) >= 2 ? ARGS[2] : joinpath(raiz, "data", "modelo_treinado.toml")
 
 treinar(caminho_dados, caminho_saida)
+
+
+# julia chatbot/src/treinar.jl
