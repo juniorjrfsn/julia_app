@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>{{title}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+    --bg: #0d0d0f;
+    --surface: #17171a;
+    --border: #2a2a30;
+    --accent: #c8f135;
+    --text: #e8e8ec;
+    --muted: #6b6b78;
+    --danger: #ff5f5f;
+    }
+    body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header {
+    display: flex; align-items: baseline; gap: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1rem;
+    }
+    header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    }
+    header span { color: var(--muted); font-size: 0.8rem; }
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+    .form-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+    }
+    .form-row input:focus { border-color: var(--accent); }
+    .btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #0d0d0f;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.65rem 1.2rem;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-sm { font-size: 0.75rem; padding: 0.3rem 0.7rem; border-radius: 4px; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .task-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s;
+    }
+    .task-item:hover { border-color: var(--muted); }
+    .task-item.done { opacity: 0.45; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-check {
+    appearance: none;
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    }
+    .task-check:checked { background: var(--accent); border-color: var(--accent); }
+    .task-check:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -2px; left: 2px;
+    font-size: 13px;
+    color: #0d0d0f;
+    font-weight: 700;
+    }
+    .task-title { flex: 1; font-size: 0.9rem; }
+    .task-meta  { color: var(--muted); font-size: 0.7rem; }
+    .actions    { display: flex; gap: 0.4rem; }
+    .empty {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    }
+    .empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+    .stats {
+    display: flex; gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    }
+    .stats strong { color: var(--accent); font-family: 'Syne', sans-serif; }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+    <h1>// tasks</h1>
+    <span>julia mvc · HTTP.jl</span>
+    </header>
+    {{body}}
+</div>
+<script>
+    document.querySelectorAll('.task-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+        fetch('/tasks/' + cb.dataset.id + '/toggle', { method: 'POST' })
+        .then(() => location.reload());
+    });
+    });
+</script>
+</body>
+</html>

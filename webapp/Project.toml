@@ -1,0 +1,12 @@
+name = "webapp"
+uuid = "bb91f1e1-4fae-4a0f-9cd6-7a35e753f8ba"
+version = "0.1.0"
+authors = ["juniorjrfsn  <junior.jrfsn@gmail.com >"]
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+
+[compat]
+Dates = "1.11.0"
