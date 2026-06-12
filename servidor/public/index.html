@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requisição AJAX com jQuery e $.postJSON</title>
+    
+    <!-- Importação de fonte moderna do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-primary: #0284c7;
+            --accent-secondary: #4f46e5;
+            --accent-glow: rgba(2, 132, 199, 0.3);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Efeitos de fundo (Gradients dinâmicos) */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.2) 0%, transparent 70%);
+            top: 10%;
+            left: 10%;
+            z-index: -1;
+            filter: blur(40px);
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+            bottom: 10%;
+            right: 5%;
+            z-index: -1;
+            filter: blur(50px);
+        }
+
+        /* Container Principal com Glassmorphism */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(2, 132, 199, 0.1);
+        }
+
+        /* Título */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Formulário */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        /* Botão com Gradiente */
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            margin-top: 10px;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 6px 24px rgba(2, 132, 199, 0.4);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Seção de Resultados */
+        .result-section {
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 25px;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-title.error {
+            color: var(--error-color);
+        }
+
+        .badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        pre {
+            background: rgba(8, 12, 21, 0.9);
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            color: #38bdf8;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            max-height: 280px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 25px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+    
+    <!-- jQuery via CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+    <div class="glass-card">
+        <h1>jQuery $.postJSON</h1>
+        <p class="subtitle">Faça requisições HTTP POST do cliente e processe a resposta JSON</p>
+        
+        <div class="form-group">
+            <label for="nome">Nome do Usuário</label>
+            <div class="input-wrapper">
+                <input type="text" id="nome" placeholder="Digite seu nome..." value="Júnior">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">E-mail</label>
+            <div class="input-wrapper">
+                <input type="email" id="email" placeholder="usuario@email.com" value="junior@exemplo.com">
+            </div>
+        </div>
+
+        <button id="btnEnviar">Enviar Dados</button>
+
+        <div class="result-section" id="secaoResultado">
+            <div class="result-title" id="tituloResultado">
+                <span>✓ Resposta Recebida</span>
+                <span class="badge" id="statusBadge">200 OK</span>
+            </div>
+            <pre><code id="conteudoResultado"></code></pre>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Estendendo o jQuery ($) com a função personalizada $.postJSON
+            $.postJSON = function(url, data, callback) {
+                return $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify(data),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: callback,
+                    error: function(xhr, textStatus, errorThrown) {
+                        console.error("Erro na requisição $.postJSON:", errorThrown);
+                        
+                        // Atualiza interface com erro
+                        $("#tituloResultado")
+                            .removeClass("success")
+                            .addClass("error")
+                            .html('<span>✗ Falha na Conexão</span><span class="badge error">' + xhr.status + ' Error</span>');
+                        
+                        $("#conteudoResultado").text(JSON.stringify({
+                            erro: "Não foi possível se conectar ao servidor Julia.",
+                            detalhes: errorThrown || "Conexão Recusada",
+                            status: xhr.status,
+                            url_tentada: url,
+                            dica: "Verifique se o servidor HTTP foi iniciado na porta 8080."
+                        }, null, 2));
+                        
+                        $("#secaoResultado").fadeIn(300);
+                    }
+                });
+            };
+
+            // Escutador de clique no botão de envio
+            $("#btnEnviar").on("click", function() {
+                const urlDestino = "http://127.0.0.1:8080/api/postJSON";
+                const dadosFormulario = {
+                    nome: $("#nome").val(),
+                    email: $("#email").val(),
+                    data_envio: new Date().toLocaleString("pt-BR")
+                };
+
+                // Desabilitar botão temporariamente para evitar duplo clique
+                const $btn = $(this);
+                $btn.prop("disabled", true).text("Enviando...");
+
+                // Chamada usando a nova função $.postJSON
+                $.postJSON(urlDestino, dadosFormulario, function(resposta) {
+                    // Restaurar status padrão do título de resultado
+                    $("#tituloResultado")
+                        .removeClass("error")
+                        .html('<span>✓ Resposta Recebida</span><span class="badge">200 OK</span>');
+                    
+                    // Exibir a resposta formatada
+                    $("#conteudoResultado").text(JSON.stringify(resposta, null, 2));
+                    
+                    // Mostrar a seção com animação fadeIn do jQuery
+                    $("#secaoResultado").fadeIn(300);
+                }).always(function() {
+                    // Re-habilitar o botão
+                    $btn.prop("disabled", false).text("Enviar Dados");
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

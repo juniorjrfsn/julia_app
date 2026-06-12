@@ -1,4 +1,14 @@
 name = "servidor"
 uuid = "d6bf9dcf-bc75-4d8f-aee7-55e1e8fc310c"
-authors = ["juniorjrfsn <junior.jrfsn@gmail.com>"]
 version = "0.1.0"
+authors = ["juniorjrfsn <junior.jrfsn@gmail.com>"]
+
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[compat]
+HTTP = "2.1.1"
+JSON = "1.6.1"
+Sockets = "1.11.0"
