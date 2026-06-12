@@ -72,7 +72,7 @@ pkg> instantiate  # instala as dependências
 ```julia
 include("src/chatbot.jl")
 using .chatbot
-chatbot.iniciar("data/respostas.toml")
+chatbot.iniciar("chatbot/data/respostas.toml")
 ```
 
 ### 3. Conversar
@@ -81,8 +81,8 @@ chatbot.iniciar("data/respostas.toml")
 ==================================================
   Chatbot Julia — Aprendizado de Máquina
 ==================================================
-Carregando modelo de: data/respostas.toml
-Modelo carregado com 7 pares de perguntas/respostas.
+Carregando modelo de: chatbot/data/respostas.toml
+Modelo carregado com 16 pares de perguntas/respostas.
 Digite 'sair' para encerrar.
 
 Você: oi

@@ -33,6 +33,7 @@ julia > ]
 (@v1.8) pkg> generate cnn
 (@v1.8) pkg> generate webcamcnnwindows
 (@v1.8) pkg> generate chatbot
+(@v1.8) pkg> generate webapp
 
 ```
 
@@ -40,51 +41,55 @@ julia > ]
 
 ```
 julia> ]
-(@v1.8) pkg> add JSON
-(@v1.8) pkg> add Pkg
-(@v1.8) pkg> add SQLite
-(@v1.8) pkg> add DataFrames
-(@v1.8) pkg> add Flux
-(@v1.8) pkg> add StatsBase
-(@v1.8) pkg> add CSV
-(@v1.8) pkg> add MLJ
-(@v1.8) pkg> add MLJFlux
-(@v1.8) pkg> add Images
-(@v1.8) pkg> add FileIO
-(@v1.8) pkg> add Serialization
-(@v1.8) pkg> add Distributions
-(@v1.8) pkg> add ImageDraw
-(@v1.8) pkg> add ImageCore
-(@v1.8) pkg> add JSON3
-(@v1.8) pkg> add Luxor
-(@v1.8) pkg> add ImageMagick
-(@v1.8) pkg> add QuartzImageIO
-(@v1.8) pkg> add JLD2
-(@v1.8) pkg> add MLDatasets
-(@v1.8) pkg> add CUDA
-(@v1.8) pkg> add Statistics
-(@v1.8) pkg> add Random
-(@v1.8) pkg> add ImageTransformations
-(@v1.8) pkg> add LinearAlgebra
-(@v1.8) pkg> add Plots
+(@v1.12) pkg> add HTTP
+(@v1.12) pkg> add JSON3
+(@v1.12) pkg> add JSON
+(@v1.12) pkg> add Pkg
+(@v1.12) pkg> add SQLite
+(@v1.12) pkg> add DataFrames
+(@v1.12) pkg> add Flux
+(@v1.12) pkg> add StatsBase
+(@v1.12) pkg> add CSV
+(@v1.12) pkg> add MLJ
+(@v1.12) pkg> add MLJFlux
+(@v1.12) pkg> add Images
+(@v1.12) pkg> add FileIO
+(@v1.12) pkg> add Serialization
+(@v1.12) pkg> add Distributions
+(@v1.12) pkg> add ImageDraw
+(@v1.12) pkg> add ImageCore
+(@v1.12) pkg> add JSON3
+(@v1.12) pkg> add Luxor
+(@v1.12) pkg> add ImageMagick
+(@v1.12) pkg> add QuartzImageIO
+(@v1.12) pkg> add JLD2
+(@v1.12) pkg> add MLDatasets
+(@v1.12) pkg> add CUDA
+(@v1.12) pkg> add Statistics
+(@v1.12) pkg> add Random
+(@v1.12) pkg> add ImageTransformations
+(@v1.12) pkg> add LinearAlgebra
+(@v1.12) pkg> add Plots
 
-(@v1.8) pkg> add VideoIO
-(@v1.8) pkg> add ImageView
-(@v1.8) pkg> add Dates
-(@v1.8) pkg> add Gtk
-(@v1.8) pkg> add PlotlyJS
-(@v1.8) pkg> add cuDNN
-(@v1.11) pkg> add GLib
-(@v1.8) pkg> add GNNlib
-(@v1.8) pkg> add PGLib
-(@v1.8) pkg> add GenLib
-(@v1.8) pkg> add GtkDrawingArea
-(@v1.11) pkg> add ColorSchemes
-(@v1.11) pkg> add Optimisers
-(@v1.11) pkg> add Colors
-(@v1.11) pkg> add Glob
-(@v1.11) pkg> add TOML
- 
+(@v1.12) pkg> add VideoIO
+(@v1.12) pkg> add ImageView
+(@v1.12) pkg> add Dates
+(@v1.12) pkg> add Gtk
+(@v1.12) pkg> add PlotlyJS
+(@v1.12) pkg> add cuDNN
+(@v1.12) pkg> add GLib
+(@v1.12) pkg> add GNNlib
+(@v1.12) pkg> add PGLib
+(@v1.12) pkg> add GenLib
+(@v1.12) pkg> add GtkDrawingArea
+(@v1.12) pkg> add ColorSchemes
+(@v1.12) pkg> add Optimisers
+(@v1.12) pkg> add Colors
+(@v1.12) pkg> add Glob
+(@v1.12) pkg> add TOML
+
+(@v1.12) pkg> add HTTP
+(@v1.12) pkg> add JSON3
  
 
   

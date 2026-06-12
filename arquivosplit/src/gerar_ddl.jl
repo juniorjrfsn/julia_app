@@ -39,7 +39,7 @@ function generate_ddl(input_file, output_file)
                 elseif size > 0 && !(data_type in ["DATE", "INTEGER", "SMALLINT", "TIMESTAMP"])
                     type_str = "$data_type($size)"
                 end
-                
+
                 if uppercase(strip(type_str)) == "LONG VARCHAR(32700)"
                     type_str = "TEXT"
                 elseif uppercase(strip(type_str)) == "BIGINT(8)"
@@ -53,7 +53,7 @@ function generate_ddl(input_file, output_file)
                 elseif uppercase(strip(type_str)) == "BLOB(16777216)"
                     type_str = "TEXT"
                 end
-                 
+                
                 if occursin("VARCHAR", uppercase(type_str)) || occursin("TEXT", uppercase(type_str))
                     type_str *= " COLLATE Latin1_General_100_CI_AS"
                 end
