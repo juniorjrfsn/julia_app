@@ -1,63 +1,15 @@
 name = "cnncheckin"
 uuid = "db044396-e2f8-438b-ad29-78f60d91f365"
 authors = ["juniorjrfsn <70738507+juniorjrfsn@users.noreply.github.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
+[deps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+ImageTransformations = "02fcd773-0e25-5acc-982a-7f6622650795"
+Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+VideoIO = "d6d074c3-1acf-5d4c-9a43-ef38773959a2"
 
-[[comando]]
-    texto =  """
-    julia cnncheckin.jl --treino
-
-
-    julia cnncheckin.jl --identifica imagem.jpg
-    julia cnncheckin.jl --identifica ../dados/teste.jpeg
-
-
-    julia cnncheckin.jl --help
-    """
-
-
-[[comando]]
-    texto = """
-    # Treinar o modelo
-    julia cnncheckin.jl --treino
-
-    # Identificar pessoa em diferentes formatos
-    julia cnncheckin.jl --identifica pessoa.jpg
-    julia cnncheckin.jl --identifica ../dados/foto.jpeg
-    julia cnncheckin.jl --identifica /caminho/completo/imagem.png
-
-    # Ver ajuda
-    julia cnncheckin.jl --help
-    """
-
-
-[[comando]]
-    texto = """
-    julia cnncheckin.jl --identifica nova_foto.jpg
-    """
-
-[[comando]]
-    texto = """ 
-    julia cnncheckin.jl --identifica ../../../dados/fotos_teste/teste.png
- 
-    julia cnncheckin.jl --identifica ../../../dados/fotos_teste/ela.jpg
-
-    """
-[[comando]]
-    texto = """ 
- 
-    julia cnncheckin_identify.jl ../../../dados/fotos_teste/ela.jpg
-    julia cnncheckin_identify.jl ../../../dados/fotos_teste/teste.png
-    
-    julia cnncheckin_info.jl
-    julia cnncheckin_model_data.jl
-    julia cnncheckin_validate.jl
-    julia cnncheckin_export_config.jl backup_config_2025.toml
-    julia cnncheckin_help.jl
-
-
-    julia cnncheckin_debug.jl ../../../dados/fotos_teste/teste.png
-    julia cnncheckin_debug.jl --dir ../../../dados/fotos_teste/
-
- """
+[compat]
+julia = "1.10"
