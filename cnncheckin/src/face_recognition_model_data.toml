@@ -1,194 +1,33 @@
-prediction_examples = []
-
-[[layer_info]]
-trainable = true
-output_channels = 64
-layer_number = 1
-kernel_size = [3, 3]
-input_channels = 3
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 2
-num_features = 64
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 3
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 4
-pool_size = [2, 2]
-layer_type = "MaxPool{2, 4}"
-[[layer_info]]
-trainable = true
-output_channels = 128
-layer_number = 5
-kernel_size = [3, 3]
-input_channels = 64
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 6
-num_features = 128
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 7
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 8
-pool_size = [2, 2]
-layer_type = "MaxPool{2, 4}"
-[[layer_info]]
-trainable = true
-output_channels = 256
-layer_number = 9
-kernel_size = [3, 3]
-input_channels = 128
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 10
-num_features = 256
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 11
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 12
-pool_size = [2, 2]
-layer_type = "MaxPool{2, 4}"
-[[layer_info]]
-trainable = true
-output_channels = 256
-layer_number = 13
-kernel_size = [3, 3]
-input_channels = 256
-layer_type = "Conv{2, 4, typeof(relu), Array{Float32, 4}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 14
-num_features = 256
-layer_type = "BatchNorm{typeof(identity), Vector{Float32}, Float32, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 15
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 16
-pool_size = [2, 2]
-layer_type = "MaxPool{2, 4}"
-[[layer_info]]
-trainable = true
-layer_number = 17
-layer_type = "typeof(Flux.flatten)"
-[[layer_info]]
-trainable = true
-layer_number = 18
-input_size = 16384
-output_size = 512
-layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 19
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 20
-input_size = 512
-output_size = 256
-layer_type = "Dense{typeof(relu), Matrix{Float32}, Vector{Float32}}"
-[[layer_info]]
-trainable = true
-layer_number = 21
-layer_type = "Dropout{Float64, Colon, TaskLocalRNG}"
-[[layer_info]]
-trainable = true
-layer_number = 22
-input_size = 256
-output_size = 3
-layer_type = "Dense{typeof(identity), Matrix{Float32}, Vector{Float32}}"
-
 [person_mappings]
-junior = 1
-cachorro = 3
-lele = 2
+"Copo_americano_(4875979160)" = 3
+"WhatsApp Image 2026-10-22 at 09.28.41" = 6
+copo-americano-acr_lico-colorido-thumb = 9
+copo-festinha-rosa = 11
+copo-long-drink-cylinder-350ml-nadir = 12
+kit-6-copos-long-drink-roder-330ml-plastico-branco-cp031-01-2-1000x1000 = 24
+"images (3)" = 20
+copo_descartavel_transparente_ps_cristalcopo_80ml_cafe___1571403319_8bc5_600x600 = 15
+"images (2)" = 19
+red_cup_original_copo_vermelho_festa_americano_400ml_50un_17_1_ef480efbf866c6fd9be9fc2974310187 = 25
+copo-de-cafe-com-tampa-personalizado_st-cpn94626_detalhe = 10
+sem_t_tulo3 = 26
+copia-copo-cerveja-nadir-munich-300ml-942-1500x1500 = 8
+copo_plastico_para_cafe_110ml_54_1_93dd7cbf393fb51e773565e6cad779b6 = 16
+copo_americano_300ml_long_drink_nadir_60629_1_c0305efcdd0270f849d5c139b7ba5ad0 = 13
+"013559A000018-jogo-6-copos-vidro-verde-420ml-dcasa--5-.jpg" = 1
+"images (1)" = 18
+images = 17
+"images (5)" = 22
+"images (6)" = 23
+TheStackingPint0_354LTwilight3 = 5
+c768057420 = 7
+copo_de_vidro_200ml_caixa_com_12_unidades_7_1_aa5b2da8f5952901726fe278528419fa = 14
+"images (4)" = 21
+TheStackingPint0_354LCoastalTeal1 = 4
+61646530pdma001 = 2
 
 [model_summary]
 input_shape = [128, 128]
-created_at = "2025-12-11T19:20:21.659"
-total_layers = 22
-model_type = "CNN_FaceRecognition"
-output_classes = 3
-
-[metadata]
-format_version = "2.0"
-created_by = "CNNCheckin v2.0"
-saved_at = "2025-12-11T19:20:22.290"
-description = "Metadados do modelo CNN para reconhecimento facial"
-
-[weights_summary]
-model_size_mb = 36.17
-total_parameters = 9480640
-
-    [weights_summary.layer_statistics.layer_20_weights]
-    shape = [256, 512]
-    max = 0.08967608213424683
-    min = -0.08913768082857132
-    count = 131072
-    mean = -0.0001366430224152282
-    std = 0.050972312688827515
-
-    [weights_summary.layer_statistics.layer_22_weights]
-    shape = [3, 256]
-    max = 0.15237070620059967
-    min = -0.15229111909866333
-    count = 768
-    mean = 4.183678902336396e-5
-    std = 0.07173892110586166
-
-    [weights_summary.layer_statistics.layer_5_weights]
-    shape = [3, 3, 64, 128]
-    max = 0.05964227393269539
-    min = -0.05968870967626572
-    count = 73728
-    mean = 1.343821804766776e-5
-    std = 0.03386542201042175
-
-    [weights_summary.layer_statistics.layer_1_weights]
-    shape = [3, 3, 3, 64]
-    max = 0.09928179532289505
-    min = -0.10003498196601868
-    count = 1728
-    mean = 0.0005687722587026656
-    std = 0.057131994515657425
-
-    [weights_summary.layer_statistics.layer_13_weights]
-    shape = [3, 3, 256, 256]
-    max = 0.03704337030649185
-    min = -0.0370834618806839
-    count = 589824
-    mean = 3.319450479466468e-5
-    std = 0.020826026797294617
-
-    [weights_summary.layer_statistics.layer_18_weights]
-    shape = [512, 16384]
-    max = 0.019887607544660568
-    min = -0.019917264580726624
-    count = 8388608
-    mean = -5.466439688461833e-5
-    std = 0.010885155759751797
-
-    [weights_summary.layer_statistics.layer_9_weights]
-    shape = [3, 3, 128, 256]
-    max = 0.0427069254219532
-    min = -0.042505327612161636
-    count = 294912
-    mean = 2.3923179469420575e-5
-    std = 0.024060528725385666
+created_at = "2026-10-22T09:42:01.318"
+output_classes = 26
+total_parameters = 9489434

@@ -1,34 +1,20 @@
 [model]
 img_width = 128
 img_height = 128
-model_architecture = "CNN_FaceRecognition_v1"
-augmentation_used = true
-num_classes = 3
-
-[incremental_stats]
-incremental_accuracy = 0.94
-knowledge_distillation_used = true
-original_people = ["junior", "lele"]
-total_people = 3
-last_incremental_training = "2025-12-11T19:20:22.612"
-new_people_added = 1
-new_people = ["cachorro"]
+model_architecture = "CNN_FaceRecognition_v2"
+num_classes = 26
 
 [data]
-data_path = "../../../dados/fotos_train"
-timestamp = "2025-12-11T19:20:22.612"
-person_names = ["junior", "lele", "cachorro"]
+data_path = "D:\\projetos\\julia_app\\cnncheckin\\dados\\fotos_train"
+timestamp = "2026-10-22T09:42:00.429"
+person_names = ["013559A000018-jogo-6-copos-vidro-verde-420ml-dcasa--5-.jpg", "61646530pdma001", "Copo_americano_(4875979160)", "TheStackingPint0_354LCoastalTeal1", "TheStackingPint0_354LTwilight3", "WhatsApp Image 2026-10-22 at 09.28.41", "c768057420", "copia-copo-cerveja-nadir-munich-300ml-942-1500x1500", "copo-americano-acr_lico-colorido-thumb", "copo-de-cafe-com-tampa-personalizado_st-cpn94626_detalhe", "copo-festinha-rosa", "copo-long-drink-cylinder-350ml-nadir", "copo_americano_300ml_long_drink_nadir_60629_1_c0305efcdd0270f849d5c139b7ba5ad0", "copo_de_vidro_200ml_caixa_com_12_unidades_7_1_aa5b2da8f5952901726fe278528419fa", "copo_descartavel_transparente_ps_cristalcopo_80ml_cafe___1571403319_8bc5_600x600", "copo_plastico_para_cafe_110ml_54_1_93dd7cbf393fb51e773565e6cad779b6", "images", "images (1)", "images (2)", "images (3)", "images (4)", "images (5)", "images (6)", "kit-6-copos-long-drink-roder-330ml-plastico-branco-cp031-01-2-1000x1000", "red_cup_original_copo_vermelho_festa_americano_400ml_50un_17_1_ef480efbf866c6fd9be9fc2974310187", "sem_t_tulo3"]
 
 [metadata]
-created_by = "CNNCheckin v2.0"
-version = "2.0"
-description = "Sistema de reconhecimento facial com aprendizado incremental"
-last_saved = "2025-12-11T19:20:22.697"
+created_by = "CNNCheckin v2.1"
+last_saved = "2026-10-22T09:42:00.433"
 
 [training]
-epochs = 30
-best_epoch = 2
+best_epoch = 6
 batch_size = 8
-learning_rate = 0.0001
-final_accuracy = 0.94
-epochs_trained = 12
+final_accuracy = 1.0
+epochs_trained = 16

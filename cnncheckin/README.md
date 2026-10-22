@@ -165,5 +165,5 @@ julia --project=. src/cnncheckin.jl --capture "Maria" dados/fotos_train 15
 julia --project=. src/cnncheckin.jl --train dados/fotos_train
 
 # 3. validar/identificar
-julia --project=. src/cnncheckin.jl --identify dados/fotos_auth/joao.jpg
+julia --project=. src/cnncheckin.jl --identify "dados/fotos_auth/WhatsApp Image 2026-10-22 at 09.28.41.jpeg"
 ```
