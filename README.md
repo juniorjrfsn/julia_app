@@ -400,15 +400,50 @@ git push origin main
 Você pode simplesmente executar:
 
 
-#### Logon no GitHub Repositórios para sincronização
+#### Logon do Aplicativo no GitHub
 ```
 gh auth login --hostname github.com --git-protocol https --web
 ```
 
-git add .
-git commit -m "Atualização automática" 2>/dev/null || true
+#### Logon das credenciais no gitHub para Sincronização de repositório
+```
+# Busca automaticamente o usuário autenticado no GitHub
+GH_LOGIN=$(gh api user --jq '.login' 2>/dev/null || true)
+GH_ID=$(gh api user --jq '.id' 2>/dev/null || true)
+
+# Configura o Git somente se ainda não estiver definido
+if [ -n "$GH_LOGIN" ] && [ -z "$(git config --global --get user.name 2>/dev/null)" ]; then
+  git config --global user.name "$GH_LOGIN"
+fi
+
+if [ -n "$GH_ID" ] && [ -n "$GH_LOGIN" ] && [ -z "$(git config --global --get user.email 2>/dev/null)" ]; then
+  git config --global user.email "${GH_ID}+${GH_LOGIN}@users.noreply.github.com"
+fi
+
+# Exibe a configuração atual e sincroniza o repositório
+printf "\nGit configurado:\n"
+printf "Nome : %s\n" "$(git config --global --get user.name 2>/dev/null || echo 'não configurado')"
+printf "Email: %s\n" "$(git config --global --get user.email 2>/dev/null || echo 'não configurado')"
+printf "\n"
+
+git remote -v
+git status
 git pull --rebase origin main
 git push origin main
+```
+
+#### Adiciona mais uma conta credenciada para Sincronização de repositórios
+```
+# Adiciona outra conta do GitHub para uso do gh e do Git
+# use um nome de host e autentique com a conta desejada
+gh auth login --hostname github.com --git-protocol https --web
+
+# Se quiser manter contas diferentes no Git e no GitHub CLI, pode gerar
+# perfis separados usando:
+git config --global credential.helper store
+
+git config --global --list
+```
 
 Isso:
 
