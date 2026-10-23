@@ -399,6 +399,12 @@ git push origin main
 
 Você pode simplesmente executar:
 
+
+#### Logon no GitHub Repositórios para sincronização
+```
+gh auth login --hostname github.com --git-protocol https --web
+```
+
 git add .
 git commit -m "Atualização automática" 2>/dev/null || true
 git pull --rebase origin main
