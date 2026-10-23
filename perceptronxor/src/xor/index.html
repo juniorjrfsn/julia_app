@@ -3,283 +3,718 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Laboratório MLP XOR — Aprendizagem e Inferência</title>
+<title>Laboratório MLP XOR — Treinamento e Inferência</title>
 <style>
-:root{--navy:#103b70;--blue:#1976d2;--cyan:#dff3ff;--green:#18864b;--greenbg:#e4f8eb;--purple:#7047b8;--purplebg:#f0eaff;--red:#bd2637;--redbg:#ffeaed;--ink:#16263c;--muted:#5d6b7d;--line:#cbd8e7;--paper:#f4f7fb}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:linear-gradient(120deg,#0c2e58,#1769aa);color:white;padding:28px max(20px,calc((100% - 1240px)/2));position:relative;overflow:hidden}header:after{content:"2 → 4 → 1";position:absolute;right:4%;bottom:-24px;font-size:clamp(3rem,8vw,7rem);font-weight:900;opacity:.08;pointer-events:none}
-header h1{margin:0 0 8px;font-size:clamp(1.55rem,3vw,2.4rem)}header p{margin:0;max-width:950px;color:#e5f2ff}
-main{max-width:1240px;margin:auto;padding:22px 16px 48px}.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 18px;box-shadow:0 4px 14px #193b6010;scroll-margin-top:12px}.panel>h2{padding-bottom:9px;border-bottom:2px solid #e8f1fb}.panel:focus-within{border-color:#82bfff}
-h2{margin:0 0 12px;color:var(--navy);font-size:1.25rem}h3{margin:0 0 8px;font-size:1rem}.sub{color:var(--muted);margin-top:-4px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{border:1px solid var(--line);border-radius:10px;padding:13px;background:#fff}.card.blue{background:#f0f8ff;border-color:#9ed3ff}.card.green{background:var(--greenbg);border-color:#8ed9a8}.card.purple{background:var(--purplebg);border-color:#c9b4ff}.card.red{background:var(--redbg);border-color:#ffc0c8}
-label{display:block;font-weight:650;margin:8px 0 4px}input,select,button{font:inherit}input,select{width:100%;padding:9px;border:1px solid #b8c7d8;border-radius:8px;background:white;color:var(--ink)}button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:white;font-weight:700;cursor:pointer}button.secondary{background:#e7eef7;color:#173b65}button.green{background:var(--green)}button.red{background:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.math{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f3f6fa;padding:9px;border-radius:7px;overflow-wrap:anywhere}.pill{display:inline-block;border-radius:99px;padding:3px 9px;background:#e8f1fc;color:#174b80;font-weight:700;font-size:.82rem}.muted{color:var(--muted)}.big{font-size:1.55rem;font-weight:800}.good{color:var(--green)}.bad{color:var(--red)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:right;padding:8px;border-bottom:1px solid #e1e8f0}th{background:#eef4fb;color:#24486e}th:first-child,td:first-child{text-align:left}.tablewrap{overflow:auto}.bar{height:12px;border-radius:20px;background:#e7edf4;overflow:hidden}.bar span{display:block;height:100%;background:linear-gradient(90deg,#58b6ff,#1475d0);width:0;transition:width .25s}.step{border-left:4px solid var(--blue);padding:10px 13px;margin:10px 0;background:#f4f9ff;border-radius:0 8px 8px 0}.step strong,.step b{color:#123f70}.stepnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.stepnav button{min-width:112px}.phase-dots{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.phase-dot{border:1px solid #bfd3e8;border-radius:99px;padding:5px 10px;font-size:.85rem;background:#f4f8fc;color:#24486e}.phase-dot.active{background:#155da4;color:#fff;border-color:#155da4}.callout{padding:12px 14px;border:1px solid #a7d8ff;border-radius:10px;background:#eef8ff}.warning{border-color:#f0cf80;background:#fff9e9}.metric{font-variant-numeric:tabular-nums;letter-spacing:.01em}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #77bdff;outline-offset:2px} .actions button{transition:transform .12s,filter .12s}.actions button:hover{filter:brightness(1.06);transform:translateY(-1px)}.network{width:100%;height:auto;display:block;min-height:210px}.note{font-size:.9rem;color:var(--muted)}.formula{font-size:1.05rem}.hidden{display:none}footer{text-align:center;padding:20px;color:var(--muted)}
-@media(max-width:600px){.panel{padding:13px}.grid{grid-template-columns:1fr}th,td{padding:6px;font-size:.88rem}}
+:root{--navy:#0f3a6d;--navy2:#17508f;--blue:#1976d2;--sky:#e8f3ff;--green:#157a43;--greenbg:#e6f7ed;--purple:#6a40b0;--purplebg:#f1ebff;--red:#b82234;--redbg:#ffecef;--amber:#a15c00;--amberbg:#fff4de;--ink:#15243a;--muted:#5a6a7e;--line:#cddae9;--paper:#f3f6fb}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:56px}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+code,.math,pre{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
+.wrap{max-width:1240px;margin:auto;padding:0 16px}
+header{background:linear-gradient(120deg,#0b2d57,#17619f);color:#fff;padding:26px 0 18px}
+header h1{margin:0 0 6px;font-size:clamp(1.5rem,3vw,2.3rem)}header h1 span{font-weight:400;opacity:.8;font-size:.75em;margin-left:8px}
+header p{margin:0;max-width:980px;color:#dcecff}
+header code{background:#ffffff22;padding:1px 6px;border-radius:5px}
+nav{position:sticky;top:0;z-index:20;background:#0b2d57ee;backdrop-filter:blur(6px);border-top:1px solid #ffffff22}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:4px;padding-bottom:4px}
+nav a{color:#cfe5ff;text-decoration:none;padding:7px 12px;border-radius:7px;white-space:nowrap;font-weight:600;font-size:.9rem}
+nav a:hover{background:#ffffff1c;color:#fff}
+main{max-width:1240px;margin:auto;padding:20px 16px 48px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;margin:0 0 20px;box-shadow:0 4px 16px #193b6012;overflow:hidden}
+.panel-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(100deg,var(--navy),var(--navy2));color:#fff;padding:11px 18px}
+.panel-h .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--navy);font-weight:800}
+.panel-h h2{margin:0;font-size:1.15rem}.panel-h small{margin-left:auto;color:#cfe5ff}
+.panel-b{padding:18px}
+h3{margin:0 0 8px;font-size:1rem;color:var(--navy)}
+p{margin:.4em 0}.muted{color:var(--muted)}.note{font-size:.88rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.stack{display:grid;gap:12px}
+.card{border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:#fff}
+.card.blue{background:#f1f8ff;border-color:#a8d4fb}.card.green{background:var(--greenbg);border-color:#93d9ae}.card.purple{background:var(--purplebg);border-color:#cfbcff}.card.red{background:var(--redbg);border-color:#ffc2cb}.card.amber{background:var(--amberbg);border-color:#f2d08a}
+.math{background:#f2f6fb;border:1px solid #e1e9f2;border-radius:8px;padding:8px 10px;margin:6px 0;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem}
+.math b{color:var(--navy)}
+label{display:block;font-weight:650;margin:0 0 4px;font-size:.88rem}
+input,select,button{font:inherit}
+input[type=number],select{width:100%;padding:8px 9px;border:1px solid #b6c6d8;border-radius:8px;background:#fff;color:var(--ink)}
+button{border:0;border-radius:8px;padding:9px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button.secondary{background:#e5edf7;color:#173b65}button.green{background:var(--green)}button.red{background:var(--red)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffb74d;outline-offset:1px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.pill{display:inline-block;border-radius:99px;padding:2px 10px;font-weight:700;font-size:.82rem;background:#e8f1fc;color:#174b80}
+.pill.ok{background:var(--greenbg);color:var(--green)}.pill.bad{background:var(--redbg);color:var(--red)}.pill.warn{background:var(--amberbg);color:var(--amber)}
+.good{color:var(--green)}.bad{color:var(--red)}
+.big{font-size:1.6rem;font-weight:800;line-height:1.2}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid #e3eaf2;white-space:nowrap}
+th{background:#eef4fb;color:#24486e;position:sticky;top:0}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:#fff7e6}tr.sum td{background:#f1ebff;font-weight:700}
+tr.click{cursor:pointer}tr.click:hover td{background:#f0f7ff}
+.bar{height:10px;border-radius:9px;background:#e6edf5;overflow:hidden;min-width:70px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#58b6ff,#1475d0)}
+.bar.g span{background:linear-gradient(90deg,#6fd09a,#18864b)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{background:#e5edf7;color:#173b65;padding:6px 12px;border-radius:99px;font-weight:700}
+.chip.on{background:var(--navy);color:#fff}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}.seg label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:7px 12px;border:1px solid var(--line);border-radius:99px;cursor:pointer;font-weight:600;background:#fff}
+.seg input:checked+span{color:var(--navy)}.seg label:has(input:checked){background:var(--sky);border-color:#7db8ee}
+/* stepper */
+.st-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.st-ctl .chk{display:inline-flex;gap:6px;align-items:center;margin:0 0 0 auto;font-weight:600}
+.dots{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.dot{width:30px;height:30px;padding:0;border-radius:50%;background:#e5edf7;color:#173b65;font-size:.82rem}
+.dot.done{background:#bfe3cd;color:#0e5a31}.dot.on{background:var(--navy);color:#fff;box-shadow:0 0 0 3px #9ac4f0}
+.st-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.st-grid{grid-template-columns:1fr}}
+.st-fig{position:sticky;top:64px;background:#fafcff;border:1px solid var(--line);border-radius:11px;padding:8px}
+.step-card table{font-size:.82rem}.step-card th,.step-card td{padding:5px 7px}
+.step-card{border-left:5px solid var(--blue);background:#f6faff;border-radius:0 11px 11px 0;padding:12px 14px;margin-bottom:10px}
+.step-t{font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;gap:9px;align-items:center}
+.step-t .num{display:grid;place-items:center;min-width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:.8rem}
+.eqrow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;align-items:center}
+@media(max-width:620px){.eqrow{grid-template-columns:1fr}}
+svg.net{width:100%;height:auto;display:block}
+svg.net text{font-family:system-ui,sans-serif}
+.net .lbl{font-size:12px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.net .val{font-size:12px;font-weight:700;fill:#15243a}
+.net .col{font-size:14px;font-weight:800;text-anchor:middle}
+.net .nd{font-size:15px;font-weight:700;text-anchor:middle}
+svg.sigplot{width:100%;height:auto;max-width:430px}
+canvas#chart{width:100%;height:300px;border:1px solid var(--line);border-radius:10px;display:block}
+canvas#map{width:100%;max-width:300px;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;display:block}
+pre.log{background:#0f1f33;color:#d7e6f7;border-radius:10px;padding:12px;max-height:300px;overflow:auto;font-size:.82rem;margin:0}
+.progress{height:12px;border-radius:9px;background:#e1e9f2;overflow:hidden}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#4aa3f2,#1565c0);transition:width .15s}
+details{margin-top:10px}summary{cursor:pointer;font-weight:700;color:var(--navy)}
+footer{text-align:center;padding:20px;color:var(--muted);font-size:.9rem}
+.badge-model{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+@media(max-width:600px){.panel-b{padding:12px}th,td{padding:5px 6px;font-size:.82rem}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Laboratório MLP XOR</h1>
-  <p>Uma experiência interativa para acompanhar a aprendizagem por retropropagação (backpropagation) e a inferência de uma rede neural 2 → 4 → 1, neurônio por neurônio.</p>
-</header>
+<header><div class="wrap">
+  <h1>Laboratório MLP XOR <span id="hdrArch">2 → 4 → 1</span></h1>
+  <p>Simulador em JavaScript que reproduz, número por número, os scripts Julia (<code>xor_didatico.jl</code>): propagação direta, retropropagação em lote e inferência com o modelo treinado <code>xor_modelo.jls</code>. Todos os valores abaixo são calculados ao vivo; nada é ilustrativo.</p>
+</div></header>
+<nav><div class="wrap">
+  <a href="#s-arq">1 · Arquitetura</a><a href="#s-inf">2 · Inferência</a><a href="#s-lab">3 · Treino época a época</a><a href="#s-train">4 · Treinamento completo</a><a href="#s-ref">5 · Fórmulas e Julia</a>
+</div></nav>
+
 <main>
-<nav class="panel" aria-label="Navegação do laboratório"><strong>Ir para:</strong> <a href="#arquitetura">Arquitetura</a> · <a href="#inferencia">Inferência</a> · <a href="#treinamento">Treinamento</a> · <a href="#roteiro">Roteiro passo a passo</a> · <a href="#evolucao">Evolução</a></nav>
-<section class="panel">
-<h2>1. Configure a experiência</h2>
-<div class="grid">
- <div><label for="lr">Taxa de aprendizagem (η)</label><input id="lr" type="number" min="0.001" max="2" step="0.05" value="0.5"></div>
- <div><label for="epochs">Épocas de treinamento</label><input id="epochs" type="number" min="1" max="200000" step="1000" value="20000"></div>
- <div><label for="seed">Semente da inicialização</label><input id="seed" type="number" value="1234"></div>
- <div><label for="sample">Entrada para inferência</label><select id="sample"><option value="0,0">0 XOR 0</option><option value="0,1" selected>0 XOR 1</option><option value="1,0">1 XOR 0</option><option value="1,1">1 XOR 1</option></select></div>
-</div>
-<div class="actions"><button id="train">Treinar rede</button><button class="secondary" id="oneEpoch">Executar 1 época didática</button><button class="secondary" id="reset">Reinicializar pesos</button><button class="green" id="infer">Executar inferência</button></div>
-<p class="note">A demonstração usa quatro exemplos XOR, ativação sigmoide e perda quadrática média (MSE), seguindo a lógica do script Julia. Os parâmetros do navegador são independentes do arquivo .jls salvo pelo Julia. O treinamento é em lote: os gradientes dos quatro exemplos são calculados antes de atualizar os parâmetros.</p>
-<div id="status" class="step">Inicialize ou treine a rede para começar.</div>
+<!-- 1 -->
+<section class="panel" id="s-arq">
+  <div class="panel-h"><span class="n">1</span><h2>Arquitetura da rede</h2><small id="archTitle"></small></div>
+  <div class="panel-b"><div class="two">
+    <div class="stack"><div id="archFig"></div>
+      <div class="card"><h3>Ativação sigmoide</h3><div id="sigBig"></div><div class="math">σ(z) = 1 / (1 + e⁻ᶻ)      σ′ em função da saída a = σ(z):  σ′ = a·(1 − a)</div></div>
+    </div>
+    <div class="stack">
+      <div class="card blue"><h3>Camada de entrada</h3><div class="math">x = [x₁, x₂]   (0 ou 1)</div><p class="note">Os dois valores booleanos entram direto na camada oculta, sem ativação própria.</p></div>
+      <div class="card green"><h3>Camada oculta (<span class="hN">4</span> neurônios)</h3><div class="math">z₁ = x · W₁ + b₁
+a₁ = σ(z₁)</div><p class="note">Cada neurônio faz sua soma ponderada e comprime o resultado com a sigmoide. É esta camada que permite resolver o XOR, que não é linearmente separável.</p></div>
+      <div class="card purple"><h3>Camada de saída (1 neurônio)</h3><div class="math">z₂ = a₁ · W₂ + b₂
+ŷ = σ(z₂)</div><p class="note">ŷ é a probabilidade estimada de a saída ser 1. Regra de decisão: <b>ŷ ≥ 0,5 → VERDADEIRO</b>; caso contrário, FALSO.</p></div>
+    </div>
+  </div></div>
 </section>
 
-<section class="panel">
-<h2 id="arquitetura">2. Arquitetura da rede</h2>
-<svg id="network" class="network" viewBox="0 0 900 300" role="img" aria-label="Rede neural com duas entradas, quatro neurônios ocultos e uma saída"></svg>
-<div class="grid">
- <div class="card blue"><h3>Entradas</h3><div class="math">x = [x₁, x₂]</div><p>Os valores binários entram na rede sem ativação adicional.</p></div>
- <div class="card green"><h3>Camada oculta</h3><div class="math">z₁ = x · W₁ + b₁</div><div class="math">a₁ = σ(z₁)</div><p>Cada um dos quatro neurônios calcula sua própria soma ponderada e aplica a sigmoide.</p></div>
- <div class="card purple"><h3>Camada de saída</h3><div class="math">z₂ = a₁ · W₂ + b₂</div><div class="math">ŷ = σ(z₂)</div><p>A saída é interpretada como probabilidade estimada da classe 1.</p></div>
-</div>
-</section>
+<!-- 2 -->
+<section class="panel" id="s-inf">
+  <div class="panel-h"><span class="n">2</span><h2>Inferência passo a passo</h2><small>equivale a <code>julia xor_didatico.jl infer A B</code></small></div>
+  <div class="panel-b">
+    <div class="grid">
+      <div><label>Modelo usado na inferência</label>
+        <div class="seg" id="infSrc">
+          <label><input type="radio" name="infSrc" value="julia" checked><span>Julia treinado (xor_modelo.jls)</span></label>
+          <label><input type="radio" name="infSrc" value="lab"><span id="infSrcLabLbl">Laboratório (seções 3 e 4)</span></label>
+        </div></div>
+      <div><label>Entrada (x₁ XOR x₂)</label><div class="chips" id="infInputs" style="margin:0"></div></div>
+    </div>
+    <div class="badge-model" id="infStatus"></div>
+    <div id="infStepper"></div>
 
-<section class="panel">
-<h2 id="inferencia">3. Inferência passo a passo</h2>
-<p class="sub">Selecione uma entrada e veja os cálculos usando os pesos atuais da rede.</p>
-<div class="grid">
- <div class="card blue"><h3>Entrada</h3><div id="inputValues" class="big">(0, 1)</div><div class="math">x = [x₁, x₂]</div></div>
- <div class="card purple"><h3>Saída da rede</h3><div id="outValue" class="big">—</div><div id="decision" class="pill">Ainda sem inferência</div></div>
-</div>
-<div id="forwardSteps"></div>
-<div class="tablewrap"><table><thead><tr><th>Neurônio</th><th>Pesos recebidos</th><th>Viés</th><th>z (soma)</th><th>σ(z)</th></tr></thead><tbody id="hiddenTable"></tbody></table></div>
-<div class="card purple" style="margin-top:12px"><h3>Neurônio de saída</h3><div id="outputFormula" class="math">Execute a inferência para ver a fórmula.</div></div>
-</section>
-
-<section class="panel">
-<h2 id="treinamento">4. Treinamento: uma época por dentro</h2>
-<p>Em cada época, a rede percorre os quatro exemplos. Primeiro calcula a propagação direta; depois mede a perda; em seguida calcula os deltas e atualiza os parâmetros.</p>
-<div class="grid">
- <div class="card blue"><h3>Perda quadrática média</h3><div class="math">L = (1/n) Σ (y − ŷ)²</div><div id="loss" class="big">—</div><div class="bar"><span id="lossBar"></span></div></div>
- <div class="card green"><h3>Delta de saída</h3><div class="math">δ₂ = (ŷ − y) · ŷ · (1 − ŷ)</div><div id="deltaOut" class="math">—</div></div>
- <div class="card purple"><h3>Delta oculto</h3><div class="math">δ₁ = (δ₂ · W₂ᵀ) ⊙ a₁ ⊙ (1 − a₁)</div><div id="deltaHidden" class="math">—</div></div>
-</div>
-<div id="trainSteps"></div>
-<div class="grid" style="margin-top:12px">
- <div class="card"><h3>W₁ — pesos entrada → oculta</h3><div id="w1Table" class="tablewrap"></div></div>
- <div class="card"><h3>b₁ — vieses ocultos</h3><div id="b1Table" class="tablewrap"></div></div>
- <div class="card"><h3>W₂ — pesos oculta → saída</h3><div id="w2Table" class="tablewrap"></div></div>
- <div class="card"><h3>b₂ — viés de saída</h3><div id="b2Table"></div></div>
-</div>
-</section>
-
-
-<section class="panel" id="roteiro">
-  <h2>5. Roteiro guiado: o que acontece durante uma época?</h2>
-  <p class="sub">Clique em cada etapa depois de executar <b>Executar 1 época didática</b>. O roteiro usa os valores reais registrados nessa atualização e separa claramente previsão, erro, gradientes e ajuste dos parâmetros.</p>
-  <div class="callout warning"><b>Importante:</b> esta página treina uma rede JavaScript no navegador. Ela não carrega automaticamente o arquivo <code>xor_modelo.jls</code> do Julia; por isso, pesos, probabilidades e épocas podem ser diferentes dos mostrados no terminal.</div>
-  <div class="phase-dots" id="phaseDots" aria-label="Etapas do treinamento"></div>
-  <div class="stepnav"><button class="secondary" id="phasePrev" type="button">← Etapa anterior</button><button id="phaseNext" type="button">Próxima etapa →</button><button class="green" id="phaseShow" type="button">Mostrar etapa atual</button><span class="pill" id="phaseCounter">Etapa 1 de 5</span></div>
-  <div class="card blue" aria-live="polite"><h3 id="phaseTitle">1. Propagação direta</h3><p id="phaseIntro">A rede calcula uma previsão para cada uma das quatro entradas XOR usando os mesmos pesos iniciais.</p><div id="phaseContent"></div></div>
-  <div class="grid" style="margin-top:12px">
-    <div class="card"><h3>O que é uma época?</h3><p>Uma época corresponde a uma passagem de treinamento sobre os quatro exemplos: (0,0), (0,1), (1,0) e (1,1). Nesta implementação, os gradientes são agregados e os parâmetros são atualizados ao final do lote.</p></div>
-    <div class="card"><h3>O que muda?</h3><p>Os pesos controlam a influência de cada entrada; os vieses deslocam a soma ponderada. O gradiente descendente ajusta ambos para tentar reduzir a perda.</p></div>
+    <div class="two" style="margin-top:16px">
+      <div>
+        <h3>Resumo dos cálculos para a entrada escolhida</h3>
+        <div class="tablewrap" id="infSummary"></div>
+      </div>
+      <div>
+        <h3>Tabela-verdade com este modelo <span class="note">(clique numa linha para escolher a entrada)</span></h3>
+        <div class="tablewrap" id="infTruth"></div>
+      </div>
+    </div>
+    <div class="two" style="margin-top:16px">
+      <div><h3>Mapa de decisão</h3>
+        <canvas id="map" width="300" height="300"></canvas>
+        <p class="note">Probabilidade ŷ para qualquer par (x₁, x₂) entre 0 e 1. Verde = tende a VERDADEIRO, vermelho = tende a FALSO. Os quatro círculos são as entradas do XOR.</p></div>
+      <div><h3>Saída equivalente ao terminal do Julia</h3>
+        <pre class="log" id="infText" style="max-height:340px"></pre>
+        <p class="note">Mesmo roteiro do <code>forward_didatico</code> (valores com 3 casas para pesos e 6 para z e a).</p></div>
+    </div>
   </div>
 </section>
 
-<section class="panel">
-<h2 id="evolucao">6. Evolução do treinamento</h2>
-<div class="grid">
- <div class="card"><h3>Época atual</h3><div id="epochValue" class="big">0</div></div>
- <div class="card"><h3>Loss atual</h3><div id="lossValue" class="big">—</div></div>
- <div class="card"><h3>Precisão no XOR</h3><div id="accuracy" class="big">—</div></div>
-</div>
-<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Entrada</th><th>Alvo</th><th>Probabilidade</th><th>Classificação</th><th>Correto?</th></tr></thead><tbody id="truthTable"></tbody></table></div>
-<canvas id="chart" width="1000" height="260" style="width:100%;height:auto;margin-top:12px;border:1px solid var(--line);border-radius:10px"></canvas>
-<p class="note">O gráfico usa escala logarítmica para visualizar melhor a redução da perda. A inicialização usa pesos Glorot/Xavier e vieses zero. Os resultados podem diferir ligeiramente dos produzidos pelo Julia, pois esta página implementa a mesma ideia em JavaScript e usa um gerador de números aleatórios próprio.</p>
+<!-- 3 -->
+<section class="panel" id="s-lab">
+  <div class="panel-h"><span class="n">3</span><h2>Laboratório de treinamento — uma época por dentro</h2><small>equivale a <code>train --didatico true</code></small></div>
+  <div class="panel-b">
+    <p>O treino é <b>em lote</b>: em cada época os quatro exemplos passam juntos pela rede, a perda e os gradientes são calculados e só então os parâmetros são atualizados. Com os pesos iniciais do Julia, a <b>época 1</b> abaixo reproduz exatamente a saída de <code>xor_didatico.jl train --didatico true</code>.</p>
+    <div class="grid" style="margin-top:10px">
+      <div><label for="cfgLr">Taxa de aprendizagem (η)</label><input id="cfgLr" type="number" min="0.001" max="5" step="0.05" value="0.5"></div>
+      <div><label for="cfgH">Neurônios ocultos</label><select id="cfgH"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>8</option></select></div>
+      <div><label for="cfgInit">Pesos iniciais</label><select id="cfgInit"><option value="julia" selected>Os mesmos do Julia (seed 1234)</option><option value="random">Aleatórios Glorot (semente JS)</option></select></div>
+      <div><label for="cfgSeed">Semente (gerador JS)</label><input id="cfgSeed" type="number" value="1234"></div>
+    </div>
+    <p class="note" id="cfgNote"></p>
+    <div class="badge-model" id="labStatus"></div>
+    <div class="actions" style="margin:0 0 12px">
+      <button class="secondary" id="btnReset">↺ Voltar à época 0</button>
+      <button class="secondary" id="btnStep100">+100 épocas</button>
+      <button class="secondary" id="btnStep1000">+1000 épocas</button>
+      <span class="note">Para avançar uma época por vez, use o botão “Aplicar” no último passo.</span>
+    </div>
+    <div id="labStepper"></div>
+  </div>
 </section>
 
-<section class="panel">
-<h2>7. Entenda cada fórmula</h2>
-<div class="grid">
- <div class="card"><h3>Propagação direta</h3><div class="math">zⱼ = Σᵢ xᵢwᵢⱼ + bⱼ</div><div class="math">σ(z) = 1 / (1 + e⁻ᶻ)</div><p>A soma ponderada agrega os sinais de entrada; a sigmoide comprime o resultado para o intervalo (0, 1).</p></div>
- <div class="card"><h3>Perda</h3><div class="math">L = (1/n) Σ (y − ŷ)²</div><p>Compara a saída estimada com o alvo. Quanto menor a perda, mais próximas estão as previsões dos valores desejados.</p></div>
- <div class="card"><h3>Retropropagação</h3><div class="math">σ′(a) = a(1 − a)</div><p>Os deltas estimam como a perda varia em relação às somas ponderadas dos neurônios.</p></div>
- <div class="card"><h3>Atualização</h3><div class="math">w ← w − η · ∂L/∂w</div><div class="math">b ← b − η · ∂L/∂b</div><p>O gradiente descendente altera pesos e vieses na direção que reduz a perda, com tamanho de passo controlado por η.</p></div>
-</div>
+<!-- 4 -->
+<section class="panel" id="s-train">
+  <div class="panel-h"><span class="n">4</span><h2>Treinamento completo</h2><small>equivale a <code>julia xor_didatico.jl train</code></small></div>
+  <div class="panel-b">
+    <div class="grid">
+      <div><label for="trEpochs">Épocas</label><input id="trEpochs" type="number" min="1" max="500000" step="1000" value="20000"></div>
+      <div><label for="trTol">Tolerância de parada (perda &lt; tol)</label><input id="trTol" type="number" min="0" step="0.0001" value="0.0001"></div>
+      <div><label for="trTent">Tentativas (reinicializações)</label><input id="trTent" type="number" min="1" max="20" value="5"></div>
+    </div>
+    <p class="note">Como no Julia: cada tentativa recomeça com novos pesos (semente + t − 1); o treino para ao atingir a tolerância e a busca termina na primeira tentativa com 100% de precisão. A η, o número de neurônios e os pesos iniciais vêm da seção 3.</p>
+    <div class="actions">
+      <button id="btnTrain">▶ Treinar do zero</button>
+      <button class="secondary" id="btnContinue">Continuar o modelo atual (+ épocas)</button>
+      <button class="red" id="btnStop" disabled>■ Parar</button>
+      <button class="secondary" id="btnDownload">⬇ Baixar modelo (JSON)</button>
+    </div>
+    <div class="progress" style="margin-top:12px"><span id="prog"></span></div>
+    <p class="note" id="progTxt">Pronto. O laboratório está na época 0.</p>
+    <div class="two">
+      <div><h3>Log de treinamento</h3><pre class="log" id="log">Aguardando…</pre></div>
+      <div><h3>Resultado do modelo do laboratório</h3><div id="trTruth"></div></div>
+    </div>
+    <h3 style="margin-top:16px">Evolução da perda <span class="note">(escala logarítmica; passe o mouse sobre o gráfico)</span></h3>
+    <canvas id="chart"></canvas>
+    <div id="parity" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="panel" id="s-ref">
+  <div class="panel-h"><span class="n">5</span><h2>Fórmulas e correspondência com o Julia</h2></div>
+  <div class="panel-b">
+    <div class="grid">
+      <div class="card"><h3>Propagação direta</h3><div class="math">z₁ = X·W₁ + b₁ ;  a₁ = σ(z₁)
+z₂ = a₁·W₂ + b₂ ;  ŷ = σ(z₂)</div><p class="note">Julia: <code>forward(m, x)</code>. Cada coluna de W₁ pertence a um neurônio oculto.</p></div>
+      <div class="card"><h3>Perda registrada</h3><div class="math">L = (1/n) · Σ (yᵢ − ŷᵢ)²</div><p class="note">É o número impresso no log (<code>Loss</code>), calculado <b>antes</b> da atualização da época.</p></div>
+      <div class="card"><h3>Retropropagação</h3><div class="math">δ₂ = (ŷ − y) ⊙ ŷ(1 − ŷ)
+δ₁ = (δ₂ · W₂ᵀ) ⊙ a₁(1 − a₁)</div><p class="note">Julia: <code>d2</code> e <code>d1</code>. Usa os pesos W₂ <b>antes</b> da atualização.</p></div>
+      <div class="card"><h3>Atualização em lote</h3><div class="math">W₂ ← W₂ − η·(a₁ᵀ·δ₂)/n
+b₂ ← b₂ − η·Σδ₂/n
+W₁ ← W₁ − η·(Xᵀ·δ₁)/n
+b₁ ← b₁ − η·Σδ₁/n</div></div>
+    </div>
+    <div class="card amber" style="margin-top:12px"><h3>Observação sobre o fator 2</h3>
+      <p>A perda exibida é <code>(1/n)·Σ(y − ŷ)²</code>, mas a derivada exata dessa perda em relação a ŷ teria um fator 2: <code>2(ŷ − y)/n</code>. O script Julia usa <code>δ₂ = (ŷ − y)·ŷ(1 − ŷ)</code>, sem o 2. Na prática isso equivale a minimizar <code>L/2</code>, ou a treinar com taxa efetiva η/2 para <code>L</code>. O simulador segue o Julia, por isso os números coincidem com o terminal. O comportamento está correto, apenas não é o gradiente “puro” da perda mostrada.</p></div>
+    <h3 style="margin-top:16px">Mapa Julia ↔ JavaScript</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Julia (<code>xor_didatico.jl</code>)</th><th style="text-align:left">Simulador</th></tr></thead>
+      <tbody>
+        <tr><td><code>train --didatico true</code> (época 1)</td><td style="text-align:left;white-space:normal">Seção 3 com “Pesos iniciais: os mesmos do Julia” na época 0</td></tr>
+        <tr><td><code>train --epochs N --lr X --hidden H --seed S --tentativas T</code></td><td style="text-align:left;white-space:normal">Seções 3 e 4 (η, neurônios ocultos, semente, épocas, tolerância e tentativas)</td></tr>
+        <tr><td><code>infer 0 1</code>, <code>infer 1 1</code> …</td><td style="text-align:left;white-space:normal">Seção 2 com o modelo “Julia treinado”: 0 XOR 1 → 0,974; 1 XOR 1 → 0,033; 1 XOR 0 → 0,973; 0 XOR 0 → 0,013</td></tr>
+        <tr><td><code>xor_modelo.jls</code></td><td style="text-align:left;white-space:normal">Pesos embutidos nesta página (lidos do arquivo binário) e botão “Baixar modelo (JSON)”</td></tr>
+        <tr><td>Log <code>Época N - Loss: …</code></td><td style="text-align:left;white-space:normal">Log da seção 4 e tabela de conferência com os valores reais do seu terminal</td></tr>
+      </tbody></table></div>
+    <p class="note" style="margin-top:10px">Diferença inevitável: o Julia sorteia pesos com <code>MersenneTwister</code>; o JavaScript usa outro gerador. Por isso as sementes só coincidem com o Julia no modo “mesmos pesos do Julia” (seed 1234, 4 neurônios). Valores exibidos são arredondados; as contas usam precisão total.</p>
+  </div>
 </section>
 </main>
-<footer>Laboratório didático MLP XOR · 2 entradas → 4 neurônios ocultos → 1 saída · arquivo único, sem bibliotecas externas</footer>
+<footer>Laboratório didático MLP XOR · arquivo único, sem bibliotecas externas · modelo Julia: 17 parâmetros, 20 000 épocas, perda final 0,000660</footer>
+
 <script>
 "use strict";
-const DATA = [
-  {x:[0,0], y:0}, {x:[0,1], y:1}, {x:[1,0], y:1}, {x:[1,1], y:0}
-];
-let model, epoch=0, history=[], lastTrace=null, rngSeed=1234, teachingPhase=0;
-const $ = id => document.getElementById(id);
-const fmt = (v,n=6) => Number(v).toFixed(n);
-const sigmoid = z => 1/(1+Math.exp(-z));
-const dsigmoid = a => a*(1-a);
-function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;}}
-function initModel(seed=1234){
-  rngSeed=seed; const r=mulberry32(seed);
-  const glorot=(ni,no)=>{const lim=Math.sqrt(6/(ni+no));return Array.from({length:ni},()=>Array.from({length:no},()=>((r()*2)-1)*lim));};
-  model={W1:glorot(2,4),b1:[0,0,0,0],W2:glorot(4,1).map(row=>row[0]),b2:0};
-  epoch=0;history=[];lastTrace=null;teachingPhase=0;
-  renderParams(); renderNetwork(); renderTrainingSummary(); renderTeachingPhase(); setStatus("Pesos inicializados com Glorot/Xavier e vieses zerados. A rede ainda não foi treinada.");
-}
-function forward(x, trace=false){
-  const z1=[],a1=[];
-  for(let j=0;j<4;j++){const z=x[0]*model.W1[0][j]+x[1]*model.W1[1][j]+model.b1[j];z1.push(z);a1.push(sigmoid(z));}
-  let z2=model.b2;for(let j=0;j<4;j++)z2+=a1[j]*model.W2[j];
-  const yhat=sigmoid(z2);
-  return {x:[...x],z1,a1,z2,yhat,trace};
-}
-function mse(){
-  return DATA.reduce((s,d)=>s+(d.y-forward(d.x).yhat)**2,0)/DATA.length;
-}
-function accuracy(){
-  return DATA.filter(d=>(forward(d.x).yhat>=.5)===(d.y===1)).length/DATA.length;
-}
-function trainEpoch(){
-  const n=DATA.length, traces=DATA.map(d=>({d,f:forward(d.x)}));
-  const loss=traces.reduce((s,t)=>s+(t.d.y-t.f.yhat)**2,0)/n;
-  const d2=traces.map(t=>(t.f.yhat-t.d.y)*dsigmoid(t.f.yhat));
-  const d1=traces.map((t,i)=>model.W2.map((w,j)=>d2[i]*w*dsigmoid(t.f.a1[j])));
-  const gradW2=Array(4).fill(0),gradB2=d2.reduce((a,b)=>a+b,0)/n;
-  const gradW1=[Array(4).fill(0),Array(4).fill(0)],gradB1=Array(4).fill(0);
-  for(let i=0;i<n;i++){
-    for(let j=0;j<4;j++){
-      gradW2[j]+=traces[i].f.a1[j]*d2[i]/n;
-      gradB1[j]+=d1[i][j]/n;
-      gradW1[0][j]+=DATA[i].x[0]*d1[i][j]/n;
-      gradW1[1][j]+=DATA[i].x[1]*d1[i][j]/n;
-    }
-  }
-  const lr=Number($("lr").value)||.5;
-  const before=cloneModel(model);
-  // O gradiente acima corresponde à perda MSE média, exatamente como nas equações do script Julia.
-  for(let i=0;i<2;i++)for(let j=0;j<4;j++)model.W1[i][j]-=lr*gradW1[i][j];
-  for(let j=0;j<4;j++){model.b1[j]-=lr*gradB1[j];model.W2[j]-=lr*gradW2[j];}
-  model.b2-=lr*gradB2;
-  epoch++;
-  history.push({epoch,loss});
-  if(history.length>500)history=history.filter((_,i)=>i%2===0);
-  lastTrace={loss,traces,d2,d1,before,gradW1,gradB1,gradW2,gradB2,after:cloneModel(model)};
-  return lastTrace;
-}
-function cloneModel(m){return {W1:m.W1.map(r=>[...r]),b1:[...m.b1],W2:[...m.W2],b2:m.b2};}
-function trainMany(count){
-  const max=Math.max(1,Math.floor(count));
-  let t;
-  for(let i=0;i<max;i++){t=trainEpoch();if(!Number.isFinite(t.loss))break;}
-  renderParams();renderNetwork();renderTrainingSummary();renderTrainTrace(t);renderTeachingPhase();
-  setStatus(`Treinamento executado: ${max} época(s). Época atual ${epoch}; loss após a última atualização: ${fmt(mse())}; precisão: ${(accuracy()*100).toFixed(1)}%.`);
-}
-function setStatus(s){$("status").textContent=s;}
-function infer(){
-  const x=$("sample").value.split(",").map(Number),f=forward(x);
-  $("inputValues").textContent=`(${x[0]}, ${x[1]})`;
-  $("outValue").textContent=fmt(f.yhat,6);
-  const yes=f.yhat>=.5;
-  $("decision").textContent=`${yes?"VERDADEIRO":"FALSO"} · limiar 0,5`;
-  $("decision").style.background=yes?"var(--greenbg)":"var(--redbg)";
-  $("decision").style.color=yes?"var(--green)":"var(--red)";
-  const steps=[];
-  for(let j=0;j<4;j++){
-    const terms=`(${x[0]} × ${fmt(model.W1[0][j],4)}) + (${x[1]} × ${fmt(model.W1[1][j],4)}) + (${fmt(model.b1[j],4)})`;
-    steps.push(`<div class="step"><b>Neurônio h${j+1}</b><div class="math">z${j+1} = ${terms} = ${fmt(f.z1[j])}</div><div class="math">a${j+1} = σ(z${j+1}) = 1 / (1 + exp(−(${fmt(f.z1[j])}))) = <b>${fmt(f.a1[j])}</b></div></div>`);
-  }
-  $("forwardSteps").innerHTML=`<h3>Camada oculta: cálculo individual</h3>${steps.join("")}`;
-  $("hiddenTable").innerHTML=model.W2.map((w,j)=>`<tr><td>h${j+1}</td><td>(${fmt(model.W1[0][j],4)}, ${fmt(model.W1[1][j],4)})</td><td>${fmt(model.b1[j],4)}</td><td>${fmt(f.z1[j])}</td><td>${fmt(f.a1[j])}</td></tr>`).join("");
-  const outTerms=f.a1.map((a,j)=>`(${fmt(a,6)} × ${fmt(model.W2[j],6)})`).join(" + ");
-  $("outputFormula").innerHTML=`z₂ = ${outTerms} + viés (${fmt(model.b2,6)}) = <b>${fmt(f.z2)}</b><br>ŷ = σ(z₂) = 1 / (1 + exp(−(${fmt(f.z2)}))) = <b>${fmt(f.yhat)}</b><br>Decisão: ${fmt(f.yhat)} ${yes?"≥":"<"} 0,5 → <b class="${yes?"good":"bad"}">${yes?"VERDADEIRO":"FALSO"}</b>`;
-  renderNetwork(f);setStatus(`Inferência para (${x.join(", ")}): saída ${fmt(f.yhat)} → ${yes?"VERDADEIRO":"FALSO"}.`);
-}
-function renderTrainTrace(t){
-  if(!t)return;
-  $("loss").textContent=fmt(t.loss);$("lossBar").style.width=`${Math.min(100,t.loss*400)}%`;
-  $("deltaOut").textContent=t.d2.map((v,i)=>`ex${i+1}: ${fmt(v,5)}`).join(" · ");
-  $("deltaHidden").textContent=t.d1.map((row,i)=>`ex${i+1}: [${row.map(v=>fmt(v,4)).join(", ")}]`).join("\n");
-  $("trainSteps").innerHTML=`
-  <div class="step"><b>1. Forward para os quatro exemplos</b><br>${t.traces.map((q,i)=>`Exemplo ${i+1}: x=(${q.d.x.join(",")}), alvo=${q.d.y}, ativações ocultas=[${q.f.a1.map(v=>fmt(v,4)).join(", ")}], saída ŷ=${fmt(q.f.yhat,6)}`).join("<br>")}</div>
-  <div class="step"><b>2. Perda média antes da atualização</b><div class="math">L = [${t.traces.map(q=>`(${q.d.y} − ${fmt(q.f.yhat,6)})²`).join(" + ")}] / 4 = ${fmt(t.loss)}</div></div>
-  <div class="step"><b>3. Delta de saída por exemplo</b><div class="math">δ₂ = (ŷ − y) × ŷ × (1 − ŷ)</div>${t.d2.map((v,i)=>`Exemplo ${i+1}: (${fmt(t.traces[i].f.yhat)} − ${t.traces[i].d.y}) × ${fmt(t.traces[i].f.yhat)} × (1 − ${fmt(t.traces[i].f.yhat)}) = ${fmt(v)}`).join("<br>")}</div>
-  <div class="step"><b>4. Gradientes médios e atualização</b><div class="math">W₂ ← W₂ − η × ∂L/∂W₂; b₂ ← b₂ − η × ∂L/∂b₂</div><div class="math">W₁ ← W₁ − η × ∂L/∂W₁; b₁ ← b₁ − η × ∂L/∂b₁</div><p>Taxa η=${fmt(Number($("lr").value)||.5)}. Os gradientes são calculados com os quatro exemplos antes da atualização simultânea.</p></div>
-  <div class="step"><b>5. Alteração de parâmetros (alguns exemplos)</b><div class="math">W₂[1]: ${fmt(t.before.W2[0])} − η × ${fmt(t.gradW2[0])} = ${fmt(t.after.W2[0])}</div><div class="math">b₂: ${fmt(t.before.b2)} − η × ${fmt(t.gradB2)} = ${fmt(t.after.b2)}</div><div class="math">W₁[x₁,h₁]: ${fmt(t.before.W1[0][0])} − η × ${fmt(t.gradW1[0][0])} = ${fmt(t.after.W1[0][0])}</div><div class="math">b₁[h₁]: ${fmt(t.before.b1[0])} − η × ${fmt(t.gradB1[0])} = ${fmt(t.after.b1[0])}</div></div>`;
-}
-const PHASES = ["Propagação direta", "Perda", "Retropropagação", "Gradientes médios", "Atualização dos parâmetros"];
-function renderTeachingPhase(){
-  const dots=$("phaseDots");
-  dots.innerHTML=PHASES.map((name,i)=>`<button type="button" class="phase-dot ${i===teachingPhase?"active":""}" data-phase="${i}" aria-current="${i===teachingPhase?"step":"false"}">${i+1}. ${name}</button>`).join("");
-  dots.querySelectorAll("[data-phase]").forEach(b=>b.addEventListener("click",()=>{teachingPhase=Number(b.dataset.phase);renderTeachingPhase();}));
-  $("phaseCounter").textContent=`Etapa ${teachingPhase+1} de ${PHASES.length}`;
-  $("phaseTitle").textContent=`${teachingPhase+1}. ${PHASES[teachingPhase]}`;
-  const t=lastTrace;
-  $("phasePrev").disabled=teachingPhase===0;$("phaseNext").disabled=teachingPhase===PHASES.length-1;
-  if(!t){$("phaseIntro").textContent="Ainda não há uma época registrada. Clique em “Executar 1 época didática” para calcular forward, perda, deltas, gradientes e atualização.";$("phaseContent").innerHTML='<p class="muted">Os cálculos desta etapa aparecerão aqui depois da primeira época.</p>';return;}
-  const f=(v,n=6)=>fmt(v,n); let intro="",html="";
-  if(teachingPhase===0){intro="Antes de alterar qualquer peso, a rede calcula a saída para cada exemplo com os parâmetros que existiam no início da época.";html=`<div class="tablewrap"><table><thead><tr><th>Entrada</th><th>Alvo</th><th>Ativações ocultas (h₁…h₄)</th><th>Saída ŷ</th></tr></thead><tbody>${t.traces.map(q=>`<tr><td>(${q.d.x.join(", ")})</td><td>${q.d.y}</td><td>${q.f.a1.map(v=>f(v,4)).join(" · ")}</td><td><b>${f(q.f.yhat)}</b></td></tr>`).join("")}</tbody></table></div><p class="note">As previsões acima foram calculadas antes da atualização dos parâmetros.</p>`;}
-  if(teachingPhase===1){intro="A perda quadrática compara cada previsão ŷ com seu alvo y. O valor exibido é a média dos quatro erros quadráticos, calculada antes da atualização.";html=`<div class="math">L = [(0 − ${f(t.traces[0].f.yhat)})² + (1 − ${f(t.traces[1].f.yhat)})² + (1 − ${f(t.traces[2].f.yhat)})² + (0 − ${f(t.traces[3].f.yhat)})²] / 4</div><p class="big metric">Loss = ${f(t.loss)}</p><p>Quanto menor o valor, mais próximas estão as previsões dos alvos, embora a perda por si só não seja a classificação final.</p>`;}
-  if(teachingPhase===2){intro="A retropropagação calcula deltas usando a derivada da sigmoide σ′(a)=a(1−a). O delta da saída influencia os deltas dos quatro neurônios ocultos.";html=`<div class="math">δ₂ = (ŷ − y) × ŷ × (1 − ŷ)</div><div class="tablewrap"><table><thead><tr><th>Entrada</th><th>Alvo</th><th>Saída ŷ</th><th>Delta de saída δ₂</th><th>Deltas ocultos (h₁…h₄)</th></tr></thead><tbody>${t.traces.map((q,i)=>`<tr><td>(${q.d.x.join(", ")})</td><td>${q.d.y}</td><td>${f(q.f.yhat)}</td><td>${f(t.d2[i])}</td><td>${t.d1[i].map(v=>f(v,5)).join(" · ")}</td></tr>`).join("")}</tbody></table></div>`;}
-  if(teachingPhase===3){intro="Os gradientes são calculados para cada parâmetro e combinados entre os quatro exemplos. O treinamento é em lote: nenhum exemplo atualiza os pesos isoladamente.";html=`<div class="grid"><div class="card"><h3>Gradientes de W₁</h3><div class="math">x₁ → [${t.gradW1[0].map(v=>f(v,6)).join(", ")}]</div><div class="math">x₂ → [${t.gradW1[1].map(v=>f(v,6)).join(", ")}]</div></div><div class="card"><h3>Gradientes de b₁</h3><div class="math">[${t.gradB1.map(v=>f(v,6)).join(", ")}]</div></div><div class="card"><h3>Gradientes de W₂</h3><div class="math">[${t.gradW2.map(v=>f(v,6)).join(", ")}]</div></div><div class="card"><h3>Gradiente de b₂</h3><div class="math">${f(t.gradB2,6)}</div></div></div>`;}
-  if(teachingPhase===4){intro="Por fim, cada parâmetro é atualizado com parâmetro_novo = parâmetro_antigo − taxa_de_aprendizado × gradiente. Os valores abaixo mostram exemplos reais desta época.";const lr=Number($("lr").value)||.5;html=`<div class="math">η = ${f(lr,4)}</div><div class="math">W₂[h₁]: ${f(t.before.W2[0])} − ${f(lr,4)} × ${f(t.gradW2[0])} = ${f(t.after.W2[0])}</div><div class="math">b₂: ${f(t.before.b2)} − ${f(lr,4)} × ${f(t.gradB2)} = ${f(t.after.b2)}</div><div class="math">W₁[x₁,h₁]: ${f(t.before.W1[0][0])} − ${f(lr,4)} × ${f(t.gradW1[0][0])} = ${f(t.after.W1[0][0])}</div><div class="math">b₁[h₁]: ${f(t.before.b1[0])} − ${f(lr,4)} × ${f(t.gradB1[0])} = ${f(t.after.b1[0])}</div><p class="good"><b>Época concluída.</b> Os parâmetros atualizados serão usados na próxima época ou inferência.</p>`;}
-  $("phaseIntro").textContent=intro;$("phaseContent").innerHTML=html;
-}
+/* =====================================================================
+   DADOS E CONSTANTES
+   ===================================================================== */
+const X=[[0,0],[0,1],[1,0],[1,1]], Y=[0,1,1,0];
+// Pesos iniciais reais do Julia (seed 1234, tentativa 1), lidos da época 1 do log didático
+const JULIA_INIT={W1:[[0.076642,-0.944916,-0.768287,-0.989216],[0.994709,-0.859274,0.811087,-0.261340]],b1:[0,0,0,0],W2:[0.279172,-0.006885,-0.394897,0.130522],b2:0};
+// Modelo treinado do Julia: lido do arquivo binário xor_modelo.jls (Float64)
+const JULIA_MODEL={W1:[[1.6814560737091662,-5.411913583606491,-4.252425809330088,-5.948768885089716],[1.926922219036426,-5.489400312597228,6.380032333769705,2.489341759318851]],b1:[1.1994079632866756,1.4489043341572911,1.584539181089928,-0.15292923115257884],W2:[1.914953378379854,-6.628302027589323,-8.091861015935287,8.329250313121682],b2:2.4080086154575935};
+// Perdas impressas pelo Julia (log de treino, lr=0.5, 20000 épocas)
+const JULIA_LOG=[[1,0.250062],[1000,0.233640],[2000,0.131209],[3000,0.031048],[4000,0.011828],[5000,0.006590],[6000,0.004404],[7000,0.003252],[8000,0.002554],[9000,0.002091],[10000,0.001764],[11000,0.001521],[12000,0.001335],[13000,0.001188],[14000,0.001068],[15000,0.000970],[16000,0.000888],[17000,0.000818],[18000,0.000758],[19000,0.000706],[20000,0.000660]];
 
-function renderParams(){
-  const table=(heads,rows)=>`<table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${typeof v==="number"?fmt(v,4):v}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-  $("w1Table").innerHTML=table(["Entrada","h1","h2","h3","h4"],[["x1",...model.W1[0]],["x2",...model.W1[1]]]);
-  $("b1Table").innerHTML=table(["Neurônio","Viés"],model.b1.map((v,i)=>[`h${i+1}`,v]));
-  $("w2Table").innerHTML=table(["Neurônio","Peso"],model.W2.map((v,i)=>[`h${i+1}`,v]));
-  $("b2Table").innerHTML=`<div class="math">b₂ = ${fmt(model.b2,6)}</div>`;
-}
-function renderTrainingSummary(){
-  $("epochValue").textContent=epoch;
-  $("lossValue").textContent=epoch?fmt(mse()):"—";
-  $("accuracy").textContent=`${(accuracy()*100).toFixed(1)}%`;
-  $("truthTable").innerHTML=DATA.map(d=>{const p=forward(d.x).yhat,ok=(p>=.5)===(d.y===1);return `<tr><td>(${d.x.join(", ")})</td><td>${d.y?"VERDADEIRO":"FALSO"}</td><td>${fmt(p,6)}</td><td class="${p>=.5?"good":"bad"}">${p>=.5?"VERDADEIRO":"FALSO"}</td><td class="${ok?"good":"bad"}">${ok?"✓":"✗"}</td></tr>`;}).join("");
-  drawChart();
-}
-function drawChart(){
-  const c=$("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;
-  ctx.clearRect(0,0,w,h);ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
-  const pad={l:70,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-  ctx.strokeStyle="#dbe4ee";ctx.fillStyle="#536579";ctx.font="14px sans-serif";
-  [0,1,2,3,4].forEach(i=>{const y=pad.t+i*ph/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();});
-  ctx.fillText("Loss (escala log)",10,15);
-  if(!history.length){ctx.fillText("Treine a rede para ver a curva da perda.",pad.l+10,h/2);return;}
-  const vals=history.map(q=>Math.max(q.loss,1e-8)),lo=Math.log10(Math.min(...vals)),hi=Math.log10(Math.max(...vals));
-  const span=Math.max(hi-lo,.1);
-  ctx.strokeStyle="#1976d2";ctx.lineWidth=3;ctx.beginPath();
-  history.forEach((q,i)=>{const x=pad.l+(history.length===1?0:i/(history.length-1))*pw;const y=pad.t+(hi-Math.log10(Math.max(q.loss,1e-8)))/span*ph;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-  ctx.fillStyle="#536579";ctx.fillText(`Época ${history[0].epoch}`,pad.l,h-12);ctx.fillText(`Época ${history[history.length-1].epoch}`,w-150,h-12);
-}
-function renderNetwork(f=null){
- const svg=$("network");let s="";
- const xs=[100,100],ys=[92,207],hy=[48,116,184,252],out={x:790,y:150};
- for(let i=0;i<2;i++)for(let j=0;j<4;j++){const x1=xs[i]+24,y1=ys[i],x2=300,y2=hy[j];const val=model.W1[i][j];s+=`<line x1="${x1}" y1="${y1}" x2="${x2-25}" y2="${y2}" stroke="${val>=0?"#219653":"#cc4352"}" stroke-width="${1+Math.min(3,Math.abs(val))}" opacity=".7"/>`;}
- for(let j=0;j<4;j++){const val=model.W2[j];s+=`<line x1="325" y1="${hy[j]}" x2="750" y2="150" stroke="${val>=0?"#219653":"#cc4352"}" stroke-width="${1+Math.min(3,Math.abs(val)/2)}" opacity=".55"/>`;}
- for(let i=0;i<2;i++)s+=`<circle cx="${xs[i]}" cy="${ys[i]}" r="25" fill="#dceeff" stroke="#1976d2" stroke-width="2"/><text x="${xs[i]}" y="${ys[i]+5}" text-anchor="middle" font-size="15" fill="#173b65">x${i+1}</text>`;
- for(let j=0;j<4;j++){const val=f?f.a1[j]:null;s+=`<circle cx="300" cy="${hy[j]}" r="24" fill="#dff8e8" stroke="#18864b" stroke-width="2"/><text x="300" y="${hy[j]+5}" text-anchor="middle" font-size="15" fill="#135d36">h${j+1}</text>${f?`<text x="345" y="${hy[j]+5}" font-size="13" fill="#135d36">${fmt(val,3)}</text>`:""}`;}
- s+=`<circle cx="775" cy="150" r="29" fill="#eee6ff" stroke="#7047b8" stroke-width="2"/><text x="775" y="155" text-anchor="middle" font-size="17" fill="#492d7c">ŷ</text><text x="835" y="142" font-size="13" fill="#16263c">${f?fmt(f.yhat,3):"saída"}</text><text x="835" y="160" font-size="12" fill="#5d6b7d">σ(z₂)</text>`;
- s+=`<text x="100" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#173b65">Entrada</text><text x="300" y="20" text-anchor="middle" font-size="15" font-weight="700" fill="#135d36">Camada oculta</text><text x="775" y="95" text-anchor="middle" font-size="15" font-weight="700" fill="#492d7c">Saída</text>`;
- svg.innerHTML=s;
-}
-$("train").addEventListener("click",()=>{
- const epochs=Math.max(1,Math.min(200000,Number($("epochs").value)||20000));
- trainMany(epochs);
-});
-$("oneEpoch").addEventListener("click",()=>trainMany(1));
-$("reset").addEventListener("click",()=>initModel(Number($("seed").value)||1234));
-$("infer").addEventListener("click",infer);
-$("sample").addEventListener("change",infer);
-$("phasePrev").addEventListener("click",()=>{teachingPhase=Math.max(0,teachingPhase-1);renderTeachingPhase();});
-$("phaseNext").addEventListener("click",()=>{teachingPhase=Math.min(PHASES.length-1,teachingPhase+1);renderTeachingPhase();});
-$("phaseShow").addEventListener("click",renderTeachingPhase);
-initModel(1234);infer();renderTeachingPhase();
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const SUB="₀₁₂₃₄₅₆₇₈₉", SUP={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+const sub=n=>String(n).split("").map(c=>SUB[+c]).join("");
+const sup=n=>String(n).split("").map(c=>SUP[c]||c).join("");
+function f(v,d=6){let s=Number(v).toFixed(d);if(/^-0(\.0*)?$/.test(s))s=s.slice(1);return s}
+const pn=(v,d=3)=>v<0?`(${f(v,d)})`:f(v,d);
+const neg=z=>z<0?`-(${f(z)})`:`-${f(z)}`;
+const sig=z=>1/(1+Math.exp(-z)), dsig=a=>a*(1-a);
+const clone=m=>({W1:m.W1.map(r=>[...r]),b1:[...m.b1],W2:[...m.W2],b2:m.b2});
+const label=b=>b?"VERDADEIRO":"FALSO";
+const tick=()=>new Promise(r=>setTimeout(r,0));
+function num(id,def){const v=parseFloat($(id).value);return Number.isFinite(v)?v:def}
+function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function glorotModel(H,seed){const r=mulberry32(seed>>>0),L1=Math.sqrt(6/(2+H)),L2=Math.sqrt(6/(H+1));
+  return{W1:[0,1].map(()=>Array.from({length:H},()=>(r()*2-1)*L1)),b1:Array(H).fill(0),W2:Array.from({length:H},()=>(r()*2-1)*L2),b2:0}}
+
+/* =====================================================================
+   MOTOR DA REDE (fiel ao xor_didatico.jl)
+   ===================================================================== */
+function fwd(m,x){const H=m.b1.length,z1=new Array(H),a1=new Array(H);
+  for(let j=0;j<H;j++){z1[j]=x[0]*m.W1[0][j]+x[1]*m.W1[1][j]+m.b1[j];a1[j]=sig(z1[j])}
+  let z2=m.b2;for(let j=0;j<H;j++)z2+=a1[j]*m.W2[j];
+  return{x,z1,a1,z2,a2:sig(z2)}}
+const accuracy=m=>X.filter((x,k)=>(fwd(m,x).a2>=.5)===(Y[k]>=.5)).length/4;
+const mseOf=m=>X.reduce((s,x,k)=>s+(Y[k]-fwd(m,x).a2)**2,0)/4;
+
+// Uma época com todos os intermediários (para o passo a passo)
+function epochTrace(m,lr){
+  const H=m.b1.length,n=4,fw=X.map(x=>fwd(m,x));
+  const loss=fw.reduce((s,q,k)=>s+(Y[k]-q.a2)**2,0)/n;
+  const d2=fw.map((q,k)=>(q.a2-Y[k])*dsig(q.a2));
+  const d1=fw.map((q,k)=>m.W2.map((w,j)=>d2[k]*w*dsig(q.a1[j])));
+  const gW2=Array(H).fill(0),gb1=Array(H).fill(0),gW1=[Array(H).fill(0),Array(H).fill(0)];let gb2=0;
+  for(let k=0;k<n;k++){gb2+=d2[k];for(let j=0;j<H;j++){gW2[j]+=fw[k].a1[j]*d2[k];gb1[j]+=d1[k][j];gW1[0][j]+=X[k][0]*d1[k][j];gW1[1][j]+=X[k][1]*d1[k][j]}}
+  gb2/=n;for(let j=0;j<H;j++){gW2[j]/=n;gb1[j]/=n;gW1[0][j]/=n;gW1[1][j]/=n}
+  const after=clone(m);
+  for(let j=0;j<H;j++){after.W2[j]-=lr*gW2[j];after.b1[j]-=lr*gb1[j];after.W1[0][j]-=lr*gW1[0][j];after.W1[1][j]-=lr*gW1[1][j]}
+  after.b2-=lr*gb2;
+  return{H,n,lr,fw,loss,d2,d1,gW1,gb1,gW2,gb2,before:clone(m),after}}
+
+// Versão rápida (sem alocações grandes) para milhares de épocas; modifica m no lugar
+function runEpochs(m,lr,count,hist,tol){
+  const H=m.b1.length,n=4;
+  const a1=[0,1,2,3].map(()=>new Float64Array(H)),d1=[0,1,2,3].map(()=>new Float64Array(H)),d2=new Float64Array(4);
+  let loss=NaN,ran=0,conv=false;
+  for(let c=0;c<count;c++){
+    loss=0;
+    for(let k=0;k<4;k++){let z=m.b2;for(let j=0;j<H;j++){const a=sig(X[k][0]*m.W1[0][j]+X[k][1]*m.W1[1][j]+m.b1[j]);a1[k][j]=a;z+=a*m.W2[j]}
+      const y=sig(z);loss+=(Y[k]-y)**2;d2[k]=(y-Y[k])*y*(1-y)}
+    loss/=n;
+    for(let k=0;k<4;k++)for(let j=0;j<H;j++)d1[k][j]=d2[k]*m.W2[j]*a1[k][j]*(1-a1[k][j]);
+    let sd2=0;for(let k=0;k<4;k++)sd2+=d2[k];
+    for(let j=0;j<H;j++){let gW2=0,gb1=0,g0=0,g1=0;
+      for(let k=0;k<4;k++){gW2+=a1[k][j]*d2[k];gb1+=d1[k][j];g0+=X[k][0]*d1[k][j];g1+=X[k][1]*d1[k][j]}
+      m.W2[j]-=lr*gW2/n;m.b1[j]-=lr*gb1/n;m.W1[0][j]-=lr*g0/n;m.W1[1][j]-=lr*g1/n}
+    m.b2-=lr*sd2/n;
+    hist.push(loss);ran++;
+    if(loss<tol){conv=true;break}
+  }
+  return{loss,ran,conv}}
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const lab={model:null,hist:[],parity:true};
+const S={infSrc:"julia",x:[0,1],exSel:0};
+let busy=false,cancelFlag=false;
+const ep=()=>lab.hist.length;
+const labH=()=>parseInt($("cfgH").value,10)||4;
+function newLabModel(){const H=labH();return($("cfgInit").value==="julia"&&H===4)?clone(JULIA_INIT):glorotModel(H,num("cfgSeed",1234))}
+function juliaInitActive(){return $("cfgInit").value==="julia"&&labH()===4}
+function resetLab(){lab.model=newLabModel();lab.hist=[];lab.parity=juliaInitActive();ST.lab.idx=0;afterLabChange(true)}
+const curInferModel=()=>S.infSrc==="julia"?JULIA_MODEL:lab.model;
+
+/* =====================================================================
+   GRÁFICOS SVG
+   ===================================================================== */
+function drawNet(o){
+  const H=o.H,m=o.m||null,hl=o.hl||null;
+  const svgH=Math.max(290,H*58+84),y0=64,yb=svgH-50,mid=(y0+yb)/2;
+  const hy=Array.from({length:H},(_,j)=>y0+(yb-y0)*(H===1?.5:j/(H-1)));
+  const iy=[mid-54,mid+54],oy=mid,ix=76,hx=318,ox=568,R=21,RO=27;
+  const st=w=>!m?{c:"#9db2c8",sw:1.6}:{c:w>=0?"#1e9a57":"#cc3b4d",sw:Math.min(5.5,.8+Math.abs(w)*.55)};
+  let s=`<svg class="net" viewBox="0 0 640 ${svgH}" role="img" aria-label="Rede neural 2 → ${H} → 1">`;
+  s+=`<text class="col" x="${ix}" y="26" fill="#173b65">Entrada</text><text class="col" x="${hx}" y="26" fill="#135d36">Camada oculta</text><text class="col" x="${ox}" y="26" fill="#492d7c">Saída</text>`;
+  for(let j=0;j<H;j++)for(let i=0;i<2;i++){
+    const w=m?m.W1[i][j]:0,e=st(w),on=!hl||(hl.kind==="hid"&&hl.j===j),x1=ix+R,y1=iy[i],x2=hx-R,y2=hy[j];
+    s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${e.c}" stroke-width="${e.sw.toFixed(2)}" stroke-linecap="round" opacity="${on?(hl?.95:.7):.12}"/>`;
+    if(m&&on)s+=`<text class="lbl" x="${(x1+(x2-x1)*(i?.78:.34)).toFixed(1)}" y="${(y1+(y2-y1)*(i?.78:.34)+4).toFixed(1)}" text-anchor="middle" fill="${w>=0?"#0f6b3b":"#9d1d2e"}">${f(w,2)}</text>`}
+  for(let j=0;j<H;j++){
+    const w=m?m.W2[j]:0,e=st(w),on=!hl||hl.kind==="out",x1=hx+R,y1=hy[j],x2=ox-RO,y2=oy;
+    s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${e.c}" stroke-width="${e.sw.toFixed(2)}" stroke-linecap="round" opacity="${on?(hl?.95:.7):.12}"/>`;
+    if(m&&on)s+=`<text class="lbl" x="${(x1+(x2-x1)*.4).toFixed(1)}" y="${(y1+(y2-y1)*.4+4).toFixed(1)}" text-anchor="middle" fill="${w>=0?"#0f6b3b":"#9d1d2e"}">${f(w,2)}</text>`}
+  for(let i=0;i<2;i++){
+    s+=`<circle cx="${ix}" cy="${iy[i]}" r="${R}" fill="#dceeff" stroke="#1976d2" stroke-width="${o.hlIn?4:2}"/><text class="nd" x="${ix}" y="${iy[i]+5}" fill="#173b65">x${sub(i+1)}</text>`;
+    if(o.x)s+=`<text x="${ix-R-9}" y="${iy[i]+7}" text-anchor="end" font-size="20" font-weight="800" fill="#173b65">${o.x[i]}</text>`}
+  for(let j=0;j<H;j++){
+    const a=o.a1&&o.a1[j]!=null?o.a1[j]:null,act=hl&&hl.kind==="hid"&&hl.j===j;
+    const fill=a==null?"#e4f7ec":`rgba(30,154,87,${(.14+.6*a).toFixed(2)})`;
+    s+=`<circle cx="${hx}" cy="${hy[j]}" r="${R}" fill="${fill}" stroke="${act?"#e08a00":"#157a43"}" stroke-width="${act?4.5:2}"/><text class="nd" x="${hx}" y="${hy[j]+5}" fill="#0b3d22">h${sub(j+1)}</text>`;
+    const t=o.hSub&&o.hSub[j]!=null?o.hSub[j]:(a!=null?`a = ${f(a,3)}`:"");
+    if(t)s+=`<text class="val" x="${hx}" y="${hy[j]+R+13}" text-anchor="middle">${t}</text>`}
+  const oa=o.a2!=null,oact=hl&&hl.kind==="out";
+  s+=`<circle cx="${ox}" cy="${oy}" r="${RO}" fill="${oa?`rgba(106,64,176,${(.14+.55*o.a2).toFixed(2)})`:"#efe6ff"}" stroke="${oact?"#e08a00":"#6a40b0"}" stroke-width="${oact?4.5:2}"/><text class="nd" x="${ox}" y="${oy+6}" fill="#2f1a57" font-size="18">ŷ</text>`;
+  const ot=o.oSub!=null?o.oSub:(oa?`ŷ = ${f(o.a2,3)}`:"");
+  if(ot)s+=`<text class="val" x="${ox}" y="${oy+RO+15}" text-anchor="middle">${ot}</text>`;
+  if(o.arch){
+    s+=`<text x="${(ix+hx)/2}" y="${svgH-8}" text-anchor="middle" font-size="13" fill="#5a6a7e">W₁ (2×${H}) · b₁ (${H}) · σ</text><text x="${(hx+ox)/2}" y="${svgH-8}" text-anchor="middle" font-size="13" fill="#5a6a7e">W₂ (${H}×1) · b₂ (1) · σ</text>`}
+  return s+"</svg>"}
+
+function sigPlot(z,big){
+  const w=big?430:250,h=big?200:128,L=32,R=12,T=12,B=24,xmin=-8,xmax=8;
+  const cx=v=>L+(Math.max(xmin,Math.min(xmax,v))-xmin)/(xmax-xmin)*(w-L-R),cy=v=>T+(1-v)*(h-T-B);
+  let d="";for(let i=0;i<=80;i++){const v=xmin+(xmax-xmin)*i/80;d+=(i?"L":"M")+cx(v).toFixed(1)+" "+cy(sig(v)).toFixed(1)}
+  let s=`<svg class="sigplot" viewBox="0 0 ${w} ${h}" role="img" aria-label="Curva sigmoide"><g font-size="10" fill="#5a6a7e">`;
+  s+=`<line x1="${L}" y1="${cy(0)}" x2="${w-R}" y2="${cy(0)}" stroke="#b7c6d8"/><line x1="${L}" y1="${cy(1)}" x2="${w-R}" y2="${cy(1)}" stroke="#e1e9f2"/>`;
+  s+=`<line x1="${L}" y1="${cy(.5)}" x2="${w-R}" y2="${cy(.5)}" stroke="#c9d6e5" stroke-dasharray="3 3"/><line x1="${cx(0)}" y1="${T}" x2="${cx(0)}" y2="${cy(0)}" stroke="#c9d6e5" stroke-dasharray="3 3"/>`;
+  s+=`<text x="${L-5}" y="${cy(1)+3}" text-anchor="end">1</text><text x="${L-5}" y="${cy(.5)+3}" text-anchor="end">0,5</text><text x="${L-5}" y="${cy(0)+3}" text-anchor="end">0</text>`;
+  s+=`<text x="${cx(-8)}" y="${h-8}" text-anchor="middle">−8</text><text x="${cx(0)}" y="${h-8}" text-anchor="middle">0</text><text x="${cx(8)}" y="${h-8}" text-anchor="middle">8</text><text x="${cx(4)}" y="${h-8}" text-anchor="middle">z →</text></g>`;
+  s+=`<path d="${d}" fill="none" stroke="#1976d2" stroke-width="2.5"/>`;
+  if(z!=null){const a=sig(z),px=cx(z),py=cy(a);
+    s+=`<line x1="${px}" y1="${py}" x2="${px}" y2="${cy(0)}" stroke="#e08a00" stroke-dasharray="3 3"/><line x1="${L}" y1="${py}" x2="${px}" y2="${py}" stroke="#e08a00" stroke-dasharray="3 3"/><circle cx="${px}" cy="${py}" r="5" fill="#e08a00" stroke="#fff" stroke-width="1.5"/>`;
+    const right=px<w/2;s+=`<text x="${right?px+8:px-8}" y="${py+(a>.5?16:-8)}" text-anchor="${right?"start":"end"}" font-size="11" font-weight="700" fill="#8a4b00">σ(${f(z,2)}) = ${f(a,3)}</text>`}
+  return s+"</svg>"}
+
+function drawMap(m){
+  const c=$("map"),g=c.getContext("2d"),N=c.width,pad=24,inner=N-2*pad,res=48;
+  const off=document.createElement("canvas");off.width=res;off.height=res;const og=off.getContext("2d"),img=og.createImageData(res,res);
+  for(let yy=0;yy<res;yy++)for(let xx=0;xx<res;xx++){
+    const p=fwd(m,[xx/(res-1),1-yy/(res-1)]).a2,t=Math.abs(p-.5)*2,i=4*(yy*res+xx);
+    const base=p>=.5?[47,168,102]:[217,74,92];
+    img.data[i]=Math.round(255+(base[0]-255)*t);img.data[i+1]=Math.round(255+(base[1]-255)*t);img.data[i+2]=Math.round(255+(base[2]-255)*t);img.data[i+3]=255}
+  og.putImageData(img,0,0);
+  g.clearRect(0,0,N,N);g.fillStyle="#fff";g.fillRect(0,0,N,N);g.imageSmoothingEnabled=true;g.drawImage(off,pad,pad,inner,inner);
+  g.strokeStyle="#7f93a9";g.lineWidth=1;g.strokeRect(pad+.5,pad+.5,inner,inner);
+  g.fillStyle="#173b65";g.font="12px system-ui,sans-serif";g.textAlign="center";
+  g.fillText("x₁",N/2,N-4);g.save();g.translate(10,N/2);g.rotate(-Math.PI/2);g.fillText("x₂",0,0);g.restore();
+  X.forEach((x,k)=>{const px=pad+x[0]*inner,py=pad+(1-x[1])*inner,p=fwd(m,x).a2,ok=(p>=.5)===(Y[k]>=.5);
+    g.beginPath();g.arc(px,py,13,0,7);g.fillStyle="#fff";g.fill();g.lineWidth=3;g.strokeStyle=ok?"#157a43":"#b82234";g.stroke();
+    g.fillStyle="#15243a";g.font="bold 11px system-ui,sans-serif";g.fillText(f(p,2),px,py+4)})}
+
+/* =====================================================================
+   STEPPER (componente genérico)
+   ===================================================================== */
+const ST={inf:{idx:0,all:false,playing:false,timer:null},lab:{idx:0,all:false,playing:false,timer:null}};
+function stepCard(s,i){return`<article class="step-card"><div class="step-t"><span class="num">${i+1}</span>${s.title}</div>${s.html}</article>`}
+function stepperHTML(st,steps){
+  const dots=steps.map((s,i)=>`<button class="dot ${i===st.idx?"on":i<st.idx?"done":""}" data-act="goto" data-i="${i}" title="${s.title.replace(/<[^>]+>/g,"")}" aria-label="Passo ${i+1}">${i+1}</button>`).join("");
+  const ctl=`<div class="st-ctl"><button class="secondary" data-act="prev" ${st.idx===0?"disabled":""}>◀ Anterior</button><button data-act="next" ${st.idx>=steps.length-1?"disabled":""}>Próximo ▶</button><button class="secondary" data-act="play">${st.playing?"⏸ Pausar":"▶ Reproduzir"}</button><label class="chk"><input type="checkbox" data-act="all" ${st.all?"checked":""}> Mostrar todos os passos</label></div><div class="dots">${dots}</div>`;
+  const body=st.all?steps.map(stepCard).join(""):stepCard(steps[st.idx],st.idx);
+  const fig=steps[st.idx].fig;
+  return ctl+(fig?`<div class="st-grid"><div>${body}</div><div class="st-fig">${fig}${steps[st.idx].figNote?`<p class="note" style="margin:6px 4px 2px">${steps[st.idx].figNote}</p>`:""}</div></div>`:body)}
+function mountStepper(key,rootId,getSteps,hook){
+  const st=ST[key],root=$(rootId);
+  st.render=()=>{const steps=getSteps();st.steps=steps;st.idx=Math.max(0,Math.min(st.idx,steps.length-1));root.innerHTML=stepperHTML(st,steps)};
+  root.addEventListener("click",e=>{
+    const b=e.target.closest("[data-act]");if(!b||!root.contains(b))return;const a=b.dataset.act;
+    if(a==="prev")st.idx=Math.max(0,st.idx-1);
+    else if(a==="next")st.idx=Math.min(st.steps.length-1,st.idx+1);
+    else if(a==="goto")st.idx=+b.dataset.i;
+    else if(a==="all")st.all=b.checked;
+    else if(a==="play"){
+      if(st.playing){clearInterval(st.timer);st.playing=false}
+      else{st.playing=true;if(st.idx>=st.steps.length-1)st.idx=0;
+        st.timer=setInterval(()=>{if(st.idx>=st.steps.length-1){clearInterval(st.timer);st.playing=false}else st.idx++;st.render()},1700)}}
+    else if(hook&&hook(a,b)){return}
+    else return;
+    if(a!=="play"&&st.playing){clearInterval(st.timer);st.playing=false}
+    st.render()})}
+
+/* =====================================================================
+   SEÇÃO 2 — INFERÊNCIA
+   ===================================================================== */
+const interp=a=>a>=.9?"quase 100% ativado (saturado perto de 1)":a<=.1?"praticamente desligado (saturado perto de 0)":a>=.6?"ativado":a<=.4?"pouco ativado":"na região de transição (≈ 0,5)";
+function inferSteps(){
+  const m=curInferModel(),x=S.x,H=m.b1.length,fw=fwd(m,x),want=(x[0]^x[1])===1,yes=fw.a2>=.5,ok=yes===want;
+  const base={m,H,x};const steps=[];
+  steps.push({title:"Entrada",fig:drawNet({...base,hlIn:true}),figNote:"Pesos verdes aumentam o sinal; vermelhos o invertem. A espessura indica a magnitude.",
+    html:`<p>A rede recebe o par <b>(x₁, x₂) = (${x[0]}, ${x[1]})</b>. Cada um dos ${H} neurônios ocultos vai combinar as duas entradas com seus próprios pesos.</p><div class="math">x = [${x[0]}, ${x[1]}]      esperado pelo XOR: ${x[0]} XOR ${x[1]} = <b>${label(want)}</b></div>`});
+  for(let j=0;j<H;j++){
+    const w0=m.W1[0][j],w1=m.W1[1][j],b=m.b1[j],t0=x[0]*w0,t1=x[1]*w1,z=fw.z1[j],a=fw.a1[j];
+    steps.push({title:`Neurônio h${sub(j+1)} — soma ponderada e sigmoide`,
+      fig:drawNet({...base,hl:{kind:"hid",j},a1:fw.a1.map((v,i)=>i<=j?v:null)}),figNote:`Destaque: pesos que chegam em h${sub(j+1)} (os valores nas arestas).`,
+      html:`<div class="eqrow"><div>
+        <div class="math">z${sub(j+1)} = (x₁ × w) + (x₂ × w) + viés
+z${sub(j+1)} = (${x[0]} × ${pn(w0)}) + (${x[1]} × ${pn(w1)}) + ${pn(b)}
+z${sub(j+1)} = ${f(t0)} + ${pn(t1,6)} + ${pn(b,6)} = <b>${f(z)}</b></div>
+        <div class="math">a${sub(j+1)} = σ(z${sub(j+1)}) = 1 / (1 + e^${neg(z)})
+a${sub(j+1)} = <b>${f(a)}</b></div></div><div>${sigPlot(z)}</div></div>
+        <p class="note">Neurônio ${interp(a)}.</p>`})}
+  steps.push({title:"Saída da camada oculta",fig:drawNet({...base,hl:null,a1:fw.a1}),
+    html:`<p>Os ${H} neurônios formam o vetor de ativações que alimenta a saída:</p><div class="math">a₁ = [${fw.a1.map(v=>f(v)).join(", ")}]</div>`+
+      fw.a1.map((a,j)=>`<div style="display:grid;grid-template-columns:34px 1fr 76px;gap:8px;align-items:center;margin:3px 0"><b>h${sub(j+1)}</b><div class="bar g"><span style="width:${(a*100).toFixed(1)}%"></span></div><span class="math" style="margin:0;padding:2px 6px">${f(a,4)}</span></div>`).join("")});
+  const terms=fw.a1.map((a,j)=>a*m.W2[j]);
+  steps.push({title:"Neurônio de saída ŷ",fig:drawNet({...base,hl:{kind:"out"},a1:fw.a1,a2:fw.a2}),figNote:"Destaque: pesos W₂ que levam a camada oculta ao neurônio de saída.",
+    html:`<div class="eqrow"><div>
+      <div class="math">z = ${fw.a1.map((a,j)=>`(${f(a)} × ${pn(m.W2[j])})`).join(" + ")} + viés(${pn(m.b2,6)})
+z = <b>${f(fw.z2)}</b></div>
+      <div class="math">ŷ = σ(z) = 1 / (1 + e^${neg(fw.z2)}) = <b>${f(fw.a2)}</b></div></div><div>${sigPlot(fw.z2)}</div></div>
+      <div class="tablewrap"><table><thead><tr><th>Parcela</th><th>aⱼ</th><th>w₂ⱼ</th><th>aⱼ × w₂ⱼ</th></tr></thead><tbody>${terms.map((t,j)=>`<tr><td>h${sub(j+1)}</td><td>${f(fw.a1[j],4)}</td><td>${f(m.W2[j],4)}</td><td>${f(t,4)}</td></tr>`).join("")}<tr><td>viés b₂</td><td></td><td></td><td>${f(m.b2,4)}</td></tr><tr class="sum"><td>z</td><td></td><td></td><td>${f(fw.z2,4)}</td></tr></tbody></table></div>`});
+  steps.push({title:"Decisão",fig:drawNet({...base,hl:null,a1:fw.a1,a2:fw.a2}),
+    html:`<div class="math">Regra: se ŷ ≥ 0,5 → VERDADEIRO; senão → FALSO
+${f(fw.a2)} ${yes?"≥":"<"} 0,5  →  <b>${label(yes)}</b></div>
+      <div class="card ${ok?"green":"red"}" style="margin-top:8px"><div class="big ${ok?"good":"bad"}">${x[0]} XOR ${x[1]} = ${label(yes)}</div>
+      <p style="margin:4px 0 0">Probabilidade de ser 1: <b>${f(fw.a2,3)}</b> · esperado: ${label(want)} ${ok?'<span class="pill ok">✓ correto</span>':'<span class="pill bad">✗ errado</span>'}</p></div>
+      ${(S.infSrc==="lab"&&ep()===0)?'<p class="note bad">Atenção: o laboratório está na época 0 (sem treinamento); o resultado é apenas consequência de pesos aleatórios.</p>':""}
+      <div class="math" style="margin-top:8px">RESULTADO: ${x[0]} XOR ${x[1]} = ${label(yes)} (probabilidade: ${f(fw.a2,3)})</div>`});
+  return steps}
+
+function truthHTML(m,clickable){
+  return`<table><thead><tr><th>x₁ XOR x₂</th><th>Prob. ŷ</th><th></th><th>Saída</th><th>Esperado</th><th></th></tr></thead><tbody>${X.map((x,k)=>{
+    const p=fwd(m,x).a2,r=p>=.5,e=Y[k]>=.5,ok=r===e,sel=clickable&&x[0]===S.x[0]&&x[1]===S.x[1];
+    return`<tr class="${clickable?"click ":""}${sel?"sel":""}" ${clickable?`data-x="${x[0]},${x[1]}"`:""}><td>${x[0]} XOR ${x[1]}</td><td>${f(p,3)}</td><td style="min-width:90px"><div class="bar ${r?"g":""}"><span style="width:${(p*100).toFixed(1)}%"></span></div></td><td class="${r?"good":"bad"}"><b>${label(r)}</b></td><td>${label(e)}</td><td class="${ok?"good":"bad"}">${ok?"✓":"✗"}</td></tr>`}).join("")}</tbody></table>`}
+
+function juliaText(m,x){
+  const H=m.b1.length,fw=fwd(m,x),L=[];
+  L.push("=".repeat(72),"INFERÊNCIA — PROPAGAÇÃO DIRETA (FORWARD)","=".repeat(72),`Entradas: x₁ = ${x[0]}, x₂ = ${x[1]}`,"","Fórmula de ativação: σ(z) = 1 / (1 + exp(-z))","Cada neurônio calcula z = soma(entrada × peso) + viés; depois aplica σ(z).");
+  for(let j=0;j<H;j++)L.push("",`Camada oculta — neurônio h${j+1}:`,`  z${j+1} = (${f(x[0],3)} × ${f(m.W1[0][j],3)}) + (${f(x[1],3)} × ${f(m.W1[1][j],3)}) + viés(${f(m.b1[j],3)}) = ${f(fw.z1[j])}`,`  a${j+1} = σ(z${j+1}) = 1 / (1 + exp(${neg(fw.z1[j])})) = ${f(fw.a1[j])}`);
+  L.push("",`Saídas da camada oculta: [${fw.a1.map(v=>f(v)).join(", ")}]`,"","Camada de saída — neurônio y:",`  z = ${fw.a1.map((a,j)=>`(${f(a)} × ${f(m.W2[j])})`).join(" + ")} + viés(${f(m.b2)}) = ${f(fw.z2)}`,`  y = σ(z) = 1 / (1 + exp(${neg(fw.z2)})) = ${f(fw.a2)}`,"","Regra de decisão: se y ≥ 0.5 → VERDADEIRO; caso contrário → FALSO.",`  ${f(fw.a2)} ${fw.a2>=.5?"≥":"<"} 0.5 → ${label(fw.a2>=.5)}`,"",`RESULTADO: ${x[0]} XOR ${x[1]} = ${label(fw.a2>=.5)} (probabilidade: ${f(fw.a2,3)})`);
+  return L.join("\n")}
+
+function renderInfer(resetStep){
+  const m=curInferModel(),H=m.b1.length,fw=fwd(m,S.x);
+  if(resetStep)ST.inf.idx=0;
+  $("infSrcLabLbl").textContent=`Laboratório (época ${ep()}${ep()?`, perda ${f(mseOf(lab.model),6)}`:", sem treino"})`;
+  $("infInputs").innerHTML=X.map(x=>`<button class="chip ${x[0]===S.x[0]&&x[1]===S.x[1]?"on":""}" data-x="${x[0]},${x[1]}">${x[0]} XOR ${x[1]}</button>`).join("");
+  const acc=accuracy(m);
+  $("infStatus").innerHTML=S.infSrc==="julia"
+    ?`<span class="pill ok">Modelo Julia treinado</span><span class="note">arquivo xor_modelo.jls · 2 → 4 → 1 · 20 000 épocas · perda 0,000660 · precisão ${(acc*100).toFixed(0)}%</span>`
+    :`<span class="pill ${ep()?"warn":"bad"}">Modelo do laboratório</span><span class="note">2 → ${H} → 1 · época ${ep()} · perda ${f(mseOf(m),6)} · precisão ${(acc*100).toFixed(0)}%${ep()?"":" · rede sem treino"}</span>`;
+  ST.inf.render();
+  $("infSummary").innerHTML=`<table><thead><tr><th>Neurônio</th><th>w de x₁</th><th>w de x₂</th><th>viés</th><th>z</th><th>σ(z)</th></tr></thead><tbody>${m.b1.map((b,j)=>`<tr><td>h${sub(j+1)}</td><td>${f(m.W1[0][j],3)}</td><td>${f(m.W1[1][j],3)}</td><td>${f(b,3)}</td><td>${f(fw.z1[j],4)}</td><td>${f(fw.a1[j],4)}</td></tr>`).join("")}<tr class="sum"><td>Saída ŷ</td><td colspan="3" style="text-align:left">pesos W₂ = [${m.W2.map(w=>f(w,2)).join(", ")}] · b₂ = ${f(m.b2,2)}</td><td>${f(fw.z2,4)}</td><td>${f(fw.a2,4)}</td></tr></tbody></table>`;
+  $("infTruth").innerHTML=truthHTML(m,true);
+  drawMap(m);
+  $("infText").textContent=juliaText(m,S.x)}
+
+/* =====================================================================
+   SEÇÃO 3 — LABORATÓRIO ÉPOCA A ÉPOCA
+   ===================================================================== */
+function heat(v,max){const a=(.1+.55*Math.min(1,Math.abs(v)/(max||1))).toFixed(2);return v>=0?`rgba(224,138,0,${a})`:`rgba(25,118,210,${a})`}
+function chipsEx(){return`<div class="chips">${X.map((x,i)=>`<button class="chip ${i===S.exSel?"on":""}" data-act="ex" data-i="${i}">Ex. ${i+1}: (${x[0]}, ${x[1]}) → ${Y[i]}</button>`).join("")}</div>`}
+function neuronLines(m,x,q){
+  return m.b1.map((b,j)=>`h${sub(j+1)}: z = (${x[0]} × ${pn(m.W1[0][j])}) + (${x[1]} × ${pn(m.W1[1][j])}) + ${pn(b)} = ${f(q.z1[j])}  →  a = ${f(q.a1[j])}`).join("\n")+
+  `\nsaída: z = ${q.a1.map((a,j)=>`(${f(a,3)} × ${pn(m.W2[j])})`).join(" + ")} + ${pn(m.b2)} = ${f(q.z2)}  →  ŷ = ${f(q.a2)}`}
+
+function labSteps(){
+  const lr=num("cfgLr",.5),m=lab.model,tr=epochTrace(m,lr),H=tr.H,E=ep()+1,k=S.exSel,q=tr.fw[k],steps=[];
+  const dMax=Math.max(1e-12,...tr.d1.flat().map(Math.abs));
+  const hs=Array.from({length:H},(_,j)=>`h${sub(j+1)}`);
+  // 1
+  steps.push({title:`Propagação direta dos 4 exemplos (época ${E})`,
+    fig:drawNet({H,m,x:X[k],a1:q.a1,a2:q.a2}),figNote:`Exemplo ${k+1} selecionado: x = (${X[k][0]}, ${X[k][1]}). Os pesos são os mesmos para todos os exemplos.`,
+    html:`<p>Cada exemplo percorre a rede com os pesos atuais (época ${E}${E===1?" — pesos iniciais":""}).</p>${chipsEx()}
+      <div class="math">${neuronLines(m,X[k],q)}</div>
+      <div class="tablewrap"><table><thead><tr><th>Ex.</th><th>(x₁, x₂)</th><th>alvo y</th>${hs.map(h=>`<th>a ${h}</th>`).join("")}<th>ŷ</th><th>y − ŷ</th></tr></thead><tbody>${tr.fw.map((p,i)=>`<tr class="${i===k?"sel":""}"><td>${i+1}</td><td>(${X[i][0]}, ${X[i][1]})</td><td>${Y[i]}</td>${p.a1.map(a=>`<td>${f(a,4)}</td>`).join("")}<td><b>${f(p.a2,4)}</b></td><td>${f(Y[i]-p.a2,4)}</td></tr>`).join("")}</tbody></table></div>`});
+  // 2
+  steps.push({title:"Perda média quadrática (MSE)",
+    html:`<div class="math">L = [ ${tr.fw.map((p,i)=>`(${Y[i]} − ${f(p.a2)})²`).join(" + ")} ] / 4</div>
+      <div class="math">L = [ ${tr.fw.map((p,i)=>f((Y[i]-p.a2)**2)).join(" + ")} ] / 4 = <b>${f(tr.loss)}</b></div>
+      <div class="bar" style="margin:8px 0"><span style="width:${Math.min(100,tr.loss/.25*100).toFixed(1)}%"></span></div>
+      <p class="note">Este é o valor que o Julia registra como <code>Loss</code> da época ${E} (calculado antes da atualização). Perda 0,25 significa “chutar 0,5 sempre”.</p>`});
+  // 3
+  steps.push({title:"Retropropagação 1 — delta de saída δ₂",
+    fig:drawNet({H,m,x:X[k],a1:q.a1,a2:q.a2,oSub:`δ₂ = ${f(tr.d2[k],4)}`,hSub:Array(H).fill("")}),figNote:"O erro nasce na saída e volta pela rede (da direita para a esquerda).",
+    html:`<div class="math">δ₂ = (ŷ − y) × ŷ × (1 − ŷ)</div>${chipsEx()}
+      <div class="math">Ex. ${k+1}: (${f(q.a2)} − ${Y[k]}) × ${f(q.a2)} × (1 − ${f(q.a2)}) = <b>${f(tr.d2[k])}</b></div>
+      <div class="tablewrap"><table><thead><tr><th>Ex.</th><th>ŷ</th><th>y</th><th>ŷ − y</th><th>σ′ = ŷ(1−ŷ)</th><th>δ₂</th></tr></thead><tbody>${tr.fw.map((p,i)=>`<tr class="${i===k?"sel":""}"><td>${i+1}</td><td>${f(p.a2,6)}</td><td>${Y[i]}</td><td>${f(p.a2-Y[i],6)}</td><td>${f(dsig(p.a2),6)}</td><td><b>${f(tr.d2[i],6)}</b></td></tr>`).join("")}</tbody></table></div>
+      <p class="note">δ₂ positivo: a saída está alta demais e deve diminuir; negativo: deve aumentar.</p>`});
+  // 4
+  steps.push({title:"Retropropagação 2 — delta oculto δ₁",
+    fig:drawNet({H,m,x:X[k],a1:q.a1,a2:q.a2,hSub:tr.d1[k].map(v=>`δ=${f(v,4)}`),oSub:`δ₂ = ${f(tr.d2[k],4)}`}),figNote:`Deltas dos neurônios ocultos para o exemplo ${k+1}.`,
+    html:`<div class="math">δ₁ = (δ₂ · W₂ᵀ) ⊙ a₁ ⊙ (1 − a₁)</div>${chipsEx()}
+      <div class="math">${q.a1.map((a,j)=>`h${sub(j+1)}: ${pn(tr.d2[k],5)} × ${pn(m.W2[j],5)} × ${f(a,5)} × (1 − ${f(a,5)}) = <b>${f(tr.d1[k][j])}</b>`).join("\n")}</div>
+      <div class="tablewrap"><table><thead><tr><th>Ex.</th>${hs.map(h=>`<th>δ ${h}</th>`).join("")}</tr></thead><tbody>${tr.d1.map((r,i)=>`<tr class="${i===k?"sel":""}"><td>${i+1}</td>${r.map(v=>`<td style="background:${heat(v,dMax)}">${f(v,6)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <p class="note">Cor laranja: δ positivo; azul: negativo. O peso W₂ usado aqui é o valor <b>antes</b> da atualização.</p>`});
+  // 5
+  const w2terms=tr.fw.map((p,i)=>`${f(p.a1[0],4)}×${pn(tr.d2[i],4)}`).join(" + ");
+  steps.push({title:"Gradientes médios do lote",
+    html:`<div class="math">∂W₂ = (a₁ᵀ · δ₂) / n      ∂b₂ = Σδ₂ / n
+∂W₁ = (Xᵀ · δ₁) / n      ∂b₁ = Σδ₁ / n        (n = 4)</div>
+      <div class="math">Exemplo: ∂W₂[h₁] = (${w2terms}) / 4 = <b>${f(tr.gW2[0])}</b></div>
+      <div class="grid">
+        <div><b>∂W₁</b> (linhas x₁, x₂)<div class="tablewrap"><table><thead><tr><th></th>${hs.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody><tr><td>x₁</td>${tr.gW1[0].map(v=>`<td>${f(v,6)}</td>`).join("")}</tr><tr><td>x₂</td>${tr.gW1[1].map(v=>`<td>${f(v,6)}</td>`).join("")}</tr></tbody></table></div></div>
+        <div><b>∂b₁</b> e <b>∂W₂</b><div class="tablewrap"><table><thead><tr><th></th>${hs.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody><tr><td>∂b₁</td>${tr.gb1.map(v=>`<td>${f(v,6)}</td>`).join("")}</tr><tr><td>∂W₂</td>${tr.gW2.map(v=>`<td>${f(v,6)}</td>`).join("")}</tr></tbody></table></div></div>
+        <div><b>∂b₂</b><div class="math">${f(tr.gb2,6)}</div></div>
+      </div>`});
+  // 6
+  const rows=[];
+  for(let j=0;j<H;j++)for(let i=0;i<2;i++)rows.push([`W₁[x${sub(i+1)}→h${sub(j+1)}]`,tr.before.W1[i][j],tr.gW1[i][j],tr.after.W1[i][j]]);
+  for(let j=0;j<H;j++)rows.push([`b₁[h${sub(j+1)}]`,tr.before.b1[j],tr.gb1[j],tr.after.b1[j]]);
+  for(let j=0;j<H;j++)rows.push([`W₂[h${sub(j+1)}→ŷ]`,tr.before.W2[j],tr.gW2[j],tr.after.W2[j]]);
+  rows.push(["b₂",tr.before.b2,tr.gb2,tr.after.b2]);
+  steps.push({title:`Atualização dos parâmetros (η = ${lr})`,
+    html:`<div class="math">novo = antigo − η × gradiente</div>
+      <div class="tablewrap" style="max-height:340px"><table><thead><tr><th>Parâmetro</th><th>antes</th><th>gradiente</th><th>η × grad.</th><th>depois</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${f(r[1],6)}</td><td>${f(r[2],6)}</td><td>${f(lr*r[2],6)}</td><td><b>${f(r[3],6)}</b></td></tr>`).join("")}</tbody></table></div>
+      <div class="actions"><button class="green" data-act="apply" ${busy?"disabled":""}>✔ Aplicar e ir para a época ${E+1}</button><span class="note">A perda da época ${E} (${f(tr.loss)}) entra no gráfico.</span></div>`});
+  return steps}
+
+function labHook(a,b){
+  if(a==="ex"){S.exSel=+b.dataset.i;return true}
+  if(a==="apply"){applyEpoch();return true}
+  return false}
+function applyEpoch(){
+  if(busy)return;const lr=num("cfgLr",.5),tr=epochTrace(lab.model,lr);
+  lab.model=tr.after;lab.hist.push(tr.loss);if(lr!==.5)lab.parity=false;
+  ST.lab.idx=0;afterLabChange()}
+function stepMany(n){
+  if(busy)return;const lr=num("cfgLr",.5);runEpochs(lab.model,lr,n,lab.hist,-1);if(lr!==.5)lab.parity=false;
+  ST.lab.idx=0;afterLabChange()}
+
+function renderLabStatus(){
+  const m=lab.model,H=m.b1.length,e=ep();
+  $("labStatus").innerHTML=`<span class="pill">Época ${e}</span><span class="note">2 → ${H} → 1 · perda dos pesos atuais ${f(mseOf(m),6)} · precisão ${(accuracy(m)*100).toFixed(0)}%${e===0?" · pesos iniciais":""}</span>`;
+  $("cfgNote").textContent=($("cfgInit").value==="julia"&&H!==4)?"Os pesos do Julia só existem para 4 neurônios ocultos; com outro tamanho a página usa Glorot com a semente informada.":
+    ($("cfgInit").value==="julia"?"Pesos iniciais reais do Julia (seed 1234, tentativa 1), lidos da época 1 do log didático. Com η = 0,5 o treino reproduz o log do seu terminal.":"Pesos sorteados com a regra Glorot/Xavier usando o gerador do JavaScript (não é o MersenneTwister do Julia).");
+  $("hdrArch").textContent=`2 → ${H} → 1`}
+
+/* =====================================================================
+   SEÇÃO 4 — TREINAMENTO COMPLETO
+   ===================================================================== */
+let logLines=[];
+function logPush(s){logLines.push(s);$("log").textContent=logLines.join("\n");$("log").scrollTop=1e9}
+function setBusy(b){busy=b;["btnTrain","btnContinue","btnReset","btnStep100","btnStep1000","cfgH","cfgInit","cfgSeed"].forEach(i=>$(i).disabled=b);$("btnStop").disabled=!b}
+function tableLines(m){return X.map((x,k)=>{const p=fwd(m,x).a2,r=p>=.5,e=Y[k]>=.5;return`  ${x[0]} XOR ${x[1]} -> prob=${f(p,3)} -> ${label(r).padEnd(10)} | esperado: ${label(e).padEnd(10)} ${r===e?"✓":"✗"}`})}
+async function trainFromScratch(){
+  if(busy)return;setBusy(true);cancelFlag=false;
+  const H=labH(),lr=num("cfgLr",.5),epochs=Math.max(1,Math.min(500000,Math.floor(num("trEpochs",20000)))),tol=Math.max(0,num("trTol",1e-4)),tent=Math.max(1,Math.min(20,Math.floor(num("trTent",5)))),seed0=Math.floor(num("cfgSeed",1234));
+  const juliaFirst=juliaInitActive();
+  logLines=[];logPush(`Treinando a rede 2 → ${H} → 1 (lr=${lr}, épocas=${epochs})...`);
+  let best=null,bestAcc=-1;
+  for(let t=1;t<=tent&&!cancelFlag;t++){
+    const seed=seed0+t-1,m=(t===1)?newLabModel():glorotModel(H,seed),hist=[];
+    logPush(`Tentativa ${t}/${tent} (${t===1&&juliaFirst?"pesos iniciais do Julia, seed=1234":"seed="+seed})`);
+    let done=0,conv=false;
+    while(done<epochs&&!conv&&!cancelFlag){
+      const chunk=Math.min(1000-(done%1000),epochs-done),start=done,r=runEpochs(m,lr,chunk,hist,tol);done+=r.ran;conv=r.conv;
+      for(let e=start+1;e<=done;e++)if(e===1||e%1000===0)logPush(`  Época ${String(e).padStart(6)} - Loss: ${f(hist[e-1])}`);
+      if(conv)logPush(`  Convergiu na época ${done} (Loss: ${f(hist[done-1])})`);
+      $("prog").style.width=(((t-1)+done/epochs)/tent*100).toFixed(1)+"%";
+      $("progTxt").textContent=`Tentativa ${t}/${tent} · época ${done}/${epochs} · perda ${f(r.loss)}`;
+      await tick()}
+    const acc=accuracy(m);
+    if(acc>bestAcc){best={m,hist,t};bestAcc=acc}
+    if(acc===1)break;
+    if(!cancelFlag)logPush(`  Precisão ${(acc*100).toFixed(1)}% — tentando outra inicialização...`)}
+  if(best){lab.model=best.m;lab.hist=best.hist;lab.parity=(best.t===1&&juliaFirst&&lr===.5);
+    logPush("");logPush(cancelFlag?"Treinamento interrompido pelo usuário.":"Resultados da porta lógica XOR:");tableLines(best.m).forEach(logPush);
+    logPush("");logPush(`Precisão final: ${(bestAcc*100).toFixed(1)}%`);logPush("Modelo mantido em memória (use “Baixar modelo (JSON)” para salvar).");
+    if(bestAcc<1)logPush("Aviso: a rede não aprendeu 100% do XOR. Tente mais épocas ou mais neurônios ocultos.")}
+  $("prog").style.width="100%";$("progTxt").textContent=`Concluído · época ${ep()} · perda ${f(mseOf(lab.model))}`;
+  setBusy(false);ST.lab.idx=0;afterLabChange()}
+async function continueTraining(){
+  if(busy)return;setBusy(true);cancelFlag=false;
+  const lr=num("cfgLr",.5),epochs=Math.max(1,Math.min(500000,Math.floor(num("trEpochs",20000)))),tol=Math.max(0,num("trTol",1e-4));
+  if(lr!==.5)lab.parity=false;
+  logPush(`Continuando a partir da época ${ep()} por até ${epochs} épocas (lr=${lr})...`);
+  let done=0,conv=false;
+  while(done<epochs&&!conv&&!cancelFlag){
+    const chunk=Math.min(1000-(ep()%1000),epochs-done),start=ep(),r=runEpochs(lab.model,lr,chunk,lab.hist,tol);done+=r.ran;conv=r.conv;
+    for(let e=start+1;e<=ep();e++)if(e%1000===0)logPush(`  Época ${String(e).padStart(6)} - Loss: ${f(lab.hist[e-1])}`);
+    if(conv)logPush(`  Convergiu na época ${ep()} (Loss: ${f(lab.hist[ep()-1])})`);
+    $("prog").style.width=(done/epochs*100).toFixed(1)+"%";$("progTxt").textContent=`Época ${ep()} · perda ${f(r.loss)}`;await tick()}
+  logPush(`Parou na época ${ep()} · precisão ${(accuracy(lab.model)*100).toFixed(1)}%`);
+  setBusy(false);ST.lab.idx=0;afterLabChange()}
+
+/* gráfico de perda */
+function niceStep(range,target){const raw=range/target,p=Math.pow(10,Math.floor(Math.log10(raw))),r=raw/p;return(r<1.5?1:r<3.5?2:r<7.5?5:10)*p}
+let chartG=null;
+function drawChart(hoverE){
+  const c=$("chart"),dpr=window.devicePixelRatio||1,w=c.clientWidth||700,h=300;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)}
+  const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);g.fillStyle="#fff";g.fillRect(0,0,w,h);
+  const L=64,R=16,T=16,B=38,pw=w-L-R,ph=h-T-B,hist=lab.hist;g.font="12px system-ui,sans-serif";chartG=null;
+  if(!hist.length){g.fillStyle="#5a6a7e";g.textAlign="center";g.fillText("Treine a rede (ou avance épocas na seção 3) para ver a curva de perda.",w/2,h/2);return}
+  const ref=parityRows();let lo=Infinity,hi=-Infinity;
+  for(const v of hist)if(v>0){if(v<lo)lo=v;if(v>hi)hi=v}
+  ref.forEach(r=>{lo=Math.min(lo,r.j);hi=Math.max(hi,r.j)});
+  if(!Number.isFinite(lo)){lo=1e-6;hi=1}
+  let kLo=Math.floor(Math.log10(lo)),kHi=Math.ceil(Math.log10(hi));if(kHi<=kLo)kHi=kLo+1;
+  const yOf=v=>T+(kHi-Math.log10(Math.max(v,1e-12)))/(kHi-kLo)*ph,maxE=Math.max(2,hist.length),xOf=e=>L+(e-1)/(maxE-1)*pw;
+  g.strokeStyle="#e1e9f2";g.fillStyle="#5a6a7e";g.textAlign="right";g.lineWidth=1;
+  for(let k=kLo;k<=kHi;k++){const y=yOf(Math.pow(10,k));g.beginPath();g.moveTo(L,y);g.lineTo(w-R,y);g.stroke();g.fillText("10"+sup(k),L-6,y+4)}
+  const step=niceStep(maxE,7);g.textAlign="center";
+  for(let e=0;e<=maxE;e+=step){const x=xOf(Math.max(1,e));g.beginPath();g.moveTo(x,T);g.lineTo(x,T+ph);g.stroke();g.fillText(String(e),x,h-18)}
+  g.fillText("Época",L+pw/2,h-3);
+  g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
+  g.strokeStyle="#1976d2";g.lineWidth=2.4;g.beginPath();const s=Math.max(1,Math.floor(hist.length/(pw*2)));
+  for(let i=0;i<hist.length;i+=s){const x=xOf(i+1),y=yOf(hist[i]);i?g.lineTo(x,y):g.moveTo(x,y)}
+  g.lineTo(xOf(hist.length),yOf(hist[hist.length-1]));g.stroke();g.restore();
+  g.lineWidth=2;g.strokeStyle="#e08a00";g.fillStyle="#fff";
+  ref.forEach(r=>{g.beginPath();g.arc(xOf(r.e),yOf(r.j),4,0,7);g.fill();g.stroke()});
+  if(ref.length){g.textAlign="left";g.fillStyle="#8a4b00";g.fillText("○ perdas impressas pelo Julia",L+8,T+14)}
+  if(hoverE!=null){const e=Math.max(1,Math.min(hist.length,hoverE)),x=xOf(e),y=yOf(hist[e-1]);
+    g.strokeStyle="#173b65";g.lineWidth=1;g.setLineDash([4,3]);g.beginPath();g.moveTo(x,T);g.lineTo(x,T+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle="#173b65";g.beginPath();g.arc(x,y,4,0,7);g.fill();
+    const txt=`época ${e} · perda ${f(hist[e-1])}`,tw=g.measureText(txt).width+14,bx=Math.min(w-R-tw,Math.max(L,x+8));
+    g.fillStyle="#173b65";g.fillRect(bx,T+4,tw,22);g.fillStyle="#fff";g.textAlign="left";g.fillText(txt,bx+7,T+19)}
+  chartG={L,pw,maxE}}
+function parityRows(){
+  if(!lab.parity||!lab.hist.length)return[];
+  return JULIA_LOG.filter(([e])=>e<=lab.hist.length).map(([e,j])=>({e,j,s:lab.hist[e-1]}))}
+function renderParity(){
+  const box=$("parity"),rows=parityRows();
+  if(!rows.length){box.innerHTML=`<div class="card"><h3>Conferência com o terminal do Julia</h3><p class="note">Aparece quando o laboratório usa os pesos iniciais do Julia (seed 1234, 4 neurônios ocultos) e η = 0,5. Nessas condições a perda de cada época deve coincidir com o seu log.</p></div>`;return}
+  const dmax=Math.max(...rows.map(r=>Math.abs(r.s-r.j))),okAll=dmax<1e-6;
+  let wtxt="";
+  if(lab.hist.length===20000){const a=[...lab.model.W1[0],...lab.model.W1[1],...lab.model.b1,...lab.model.W2,lab.model.b2],b=[...JULIA_MODEL.W1[0],...JULIA_MODEL.W1[1],...JULIA_MODEL.b1,...JULIA_MODEL.W2,JULIA_MODEL.b2];
+    const dw=Math.max(...a.map((v,i)=>Math.abs(v-b[i])));wtxt=` Pesos finais vs. <code>xor_modelo.jls</code>: |Δ| máximo = ${dw.toExponential(1)}.`}
+  box.innerHTML=`<div class="card ${okAll?"green":"amber"}"><h3>Conferência com o terminal do Julia</h3>
+    <p>${okAll?'<span class="pill ok">✓ coincide</span>':'<span class="pill warn">≈ diferença</span>'} Diferença máxima de perda nos ${rows.length} pontos registrados: <b>${dmax.toExponential(1)}</b> (o Julia imprime 6 casas, então até 5e-7 é arredondamento).${wtxt}</p>
+    <details><summary>Ver tabela época a época</summary><div class="tablewrap" style="max-height:260px;margin-top:8px"><table><thead><tr><th>Época</th><th>Perda Julia</th><th>Perda JS</th><th>|Δ|</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.e}</td><td>${f(r.j,6)}</td><td>${f(r.s,6)}</td><td>${Math.abs(r.s-r.j).toExponential(1)}</td></tr>`).join("")}</tbody></table></div></details></div>`}
+function renderTrainOut(){
+  $("trTruth").innerHTML=`<div class="tablewrap">${truthHTML(lab.model,false)}</div><p class="note" style="margin-top:6px">Época ${ep()} · perda ${f(mseOf(lab.model),6)} · precisão ${(accuracy(lab.model)*100).toFixed(1)}%</p>`;
+  drawChart();renderParity()}
+
+/* =====================================================================
+   ORQUESTRAÇÃO
+   ===================================================================== */
+function afterLabChange(full){
+  renderLabStatus();ST.lab.render();renderTrainOut();
+  if(S.infSrc==="lab")renderInfer(true);else{$("infSrcLabLbl").textContent=`Laboratório (época ${ep()}${ep()?`, perda ${f(mseOf(lab.model),6)}`:", sem treino"})`}
+  if(full){$("prog").style.width="0";$("progTxt").textContent=`Pronto. O laboratório está na época ${ep()}.`}}
+
+function renderArch(){
+  const H=labH();$("archFig").innerHTML=drawNet({H,m:null,arch:true});
+  const P=4*H+1;$("archTitle").textContent=`MLP 2 → ${H} → 1 · sigmoide · ${P} parâmetros`;
+  document.querySelectorAll(".hN").forEach(e=>e.textContent=H)}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  mountStepper("inf","infStepper",inferSteps);
+  mountStepper("lab","labStepper",labSteps,labHook);
+  $("sigBig").innerHTML=sigPlot(null,true);
+  // seleção de entrada
+  const pickX=e=>{const el=e.target.closest("[data-x]");if(!el)return;S.x=el.dataset.x.split(",").map(Number);renderInfer(true)};
+  $("infInputs").addEventListener("click",pickX);$("infTruth").addEventListener("click",pickX);
+  document.querySelectorAll('input[name="infSrc"]').forEach(r=>r.addEventListener("change",()=>{S.infSrc=r.value;renderInfer(true)}));
+  // laboratório
+  $("btnReset").addEventListener("click",()=>{if(!busy){logLines=[];$("log").textContent="Aguardando…";resetLab()}});
+  $("btnStep100").addEventListener("click",()=>stepMany(100));
+  $("btnStep1000").addEventListener("click",()=>stepMany(1000));
+  ["cfgH","cfgInit","cfgSeed"].forEach(id=>$(id).addEventListener("change",()=>{renderArch();logLines=[];$("log").textContent="Aguardando…";resetLab()}));
+  $("cfgLr").addEventListener("input",()=>{ST.lab.render()});
+  // treinamento
+  $("btnTrain").addEventListener("click",trainFromScratch);
+  $("btnContinue").addEventListener("click",continueTraining);
+  $("btnStop").addEventListener("click",()=>{cancelFlag=true});
+  $("btnDownload").addEventListener("click",()=>{
+    const m=lab.model,data={descricao:"MLP XOR 2-H-1 (simulador JavaScript)",arquitetura:[2,m.b1.length,1],epocas:ep(),perda:mseOf(m),W1:m.W1,b1:m.b1,W2:m.W2,b2:m.b2};
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="xor_modelo_js.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
+  // gráfico: hover e redimensionamento
+  $("chart").addEventListener("mousemove",e=>{if(!chartG)return;const r=$("chart").getBoundingClientRect(),x=e.clientX-r.left;
+    const ratio=(x-chartG.L)/chartG.pw;drawChart(Math.round(1+ratio*(chartG.maxE-1)))});
+  $("chart").addEventListener("mouseleave",()=>drawChart());
+  let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>drawChart(),120)});
+  renderArch();
+  lab.model=newLabModel();lab.hist=[];lab.parity=juliaInitActive();
+  renderInfer(true);afterLabChange(true)});
 </script>
 </body>
 </html>
