@@ -92,6 +92,18 @@ pre.log{background:#0f1f33;color:#d7e6f7;border-radius:10px;padding:12px;max-hei
 details{margin-top:10px}summary{cursor:pointer;font-weight:700;color:var(--navy)}
 footer{text-align:center;padding:20px;color:var(--muted);font-size:.9rem}
 .badge-model{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+
+/* Complementos: relatório do xor.jl e circuito lógico interativo */
+.truth-gate{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+.gate-svg{width:100%;height:auto;display:block;background:#f8fbff;border:1px solid var(--line);border-radius:10px}
+.gate-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+.bit-btn{width:100%;padding:12px;background:#e7eff9;color:#173b65;border:2px solid #bdd0e5;font-size:1.05rem}
+.bit-btn.active{background:#d7f7e2;color:#126233;border-color:#35b86a}
+.gate-result{padding:14px;border-radius:10px;text-align:center;border:1px solid var(--line);background:#f3f7fc}
+.gate-result.on{background:var(--greenbg);border-color:#64d18a;color:#126233}.gate-result.off{background:var(--redbg);border-color:#ff9aa8;color:#9f1728}
+.truth-mini tr.current td{background:#dff4ff;font-weight:800;outline:1px solid #83cfff}
+@media(max-width:760px){.truth-gate{grid-template-columns:1fr}}
+
 @media(max-width:600px){.panel-b{padding:12px}th,td{padding:5px 6px;font-size:.82rem}}
 </style>
 </head>
@@ -101,7 +113,7 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:.9rem}
   <p>Simulador em JavaScript que reproduz, número por número, os scripts Julia (<code>xor_didatico.jl</code>): propagação direta, retropropagação em lote e inferência com o modelo treinado <code>xor_modelo.jls</code>. Todos os valores abaixo são calculados ao vivo; nada é ilustrativo.</p>
 </div></header>
 <nav><div class="wrap">
-  <a href="#s-arq">1 · Arquitetura</a><a href="#s-inf">2 · Inferência</a><a href="#s-lab">3 · Treino época a época</a><a href="#s-train">4 · Treinamento completo</a><a href="#s-ref">5 · Fórmulas e Julia</a>
+  <a href="#s-arq">1 · Arquitetura</a><a href="#s-inf">2 · Inferência</a><a href="#s-lab">3 · Treino época a época</a><a href="#s-train">4 · Treinamento completo</a><a href="#s-ref">5 · Fórmulas e Julia</a><a href="#s-julia">6 · Resultados do xor.jl</a><a href="#s-gates">7 · Portas lógicas interativas</a>
 </div></nav>
 
 <main>
@@ -239,8 +251,67 @@ b₁ ← b₁ − η·Σδ₁/n</div></div>
     <p class="note" style="margin-top:10px">Diferença inevitável: o Julia sorteia pesos com <code>MersenneTwister</code>; o JavaScript usa outro gerador. Por isso as sementes só coincidem com o Julia no modo “mesmos pesos do Julia” (seed 1234, 4 neurônios). Valores exibidos são arredondados; as contas usam precisão total.</p>
   </div>
 </section>
+
+<!-- 6: Resultados reais fornecidos pelo terminal xor.jl -->
+<section class="panel" id="s-julia">
+  <div class="panel-h"><span class="n">6</span><h2>Resultados do seu <code>xor.jl</code></h2><small>treinamento e inferência do terminal</small></div>
+  <div class="panel-b">
+    <p>Esta área registra os números da execução Julia apresentada: arquitetura <b>2 → 4 → 1</b>, sigmoide, treinamento com até 30.000 épocas, taxa de aprendizagem 0,5 e critério de parada por perda. Os valores abaixo são o retrato do terminal enviado, separados do treinamento que você pode executar no laboratório JavaScript.</p>
+    <div class="grid">
+      <div class="card blue"><h3>Treinamento</h3><div class="big">100%</div><p>Precisão final · perda <b>0,00099992</b></p><p class="note">Convergiu na tentativa 1/10, seed 1234, época 14.677.</p></div>
+      <div class="card green"><h3>Inferência selecionada</h3><div class="big">0,968206</div><p>Entrada <b>(0, 1)</b> → VERDADEIRO</p><p class="note">O terminal detalhado mostrou y = 0,968206, acima do limiar 0,5.</p></div>
+      <div class="card purple"><h3>Configuração</h3><div class="big">2 → 4 → 1</div><p>4 neurônios ocultos · ativação sigmoide</p><p class="note">Modelo serializado como <code>xor_modelo.jls</code>.</p></div>
+    </div>
+    <h3 style="margin-top:16px">Tabela-verdade aprendida no Julia</h3>
+    <div class="tablewrap"><table><thead><tr><th>A</th><th>B</th><th>Probabilidade</th><th>Predição</th><th>Esperado</th></tr></thead><tbody>
+      <tr><td>0</td><td>0</td><td>0,016098</td><td class="bad">FALSO</td><td>FALSO ✓</td></tr>
+      <tr><td>0</td><td>1</td><td>0,968206</td><td class="good">VERDADEIRO</td><td>VERDADEIRO ✓</td></tr>
+      <tr><td>1</td><td>0</td><td>0,967147</td><td class="good">VERDADEIRO</td><td>VERDADEIRO ✓</td></tr>
+      <tr><td>1</td><td>1</td><td>0,040625</td><td class="bad">FALSO</td><td>FALSO ✓</td></tr>
+    </tbody></table></div>
+    <h3 style="margin-top:16px">Propagação direta para a entrada (0, 1)</h3>
+    <div class="math">Entrada: x₁ = 0, x₂ = 1
+h₁: z =  3,061437  → a = σ(z) = 0,955274
+h₂: z = −3,985272  → a = σ(z) = 0,018248
+h₃: z =  7,773335  → a = σ(z) = 0,999579
+h₄: z =  2,258073  → a = σ(z) = 0,905345
+Saída: z = 3,416183  → y = σ(z) = 0,968206
+Regra: y ≥ 0,5 → VERDADEIRO</div>
+    <p class="note">Importante: os pesos aprendidos podem mudar entre treinamentos. Esta seção preserva os valores exatos da execução compartilhada; a seção 2 continua calculando a inferência com o modelo JavaScript embutido ou com o laboratório interativo.</p>
+  </div>
+</section>
+
+<!-- 7: gráfico/circuito lógico interativo -->
+<section class="panel" id="s-gates">
+  <div class="panel-h"><span class="n">7</span><h2>Gráfico interativo das portas lógicas</h2><small>altere A, B e a operação</small></div>
+  <div class="panel-b">
+    <p>Explore o XOR e compare-o com outras portas. Clique nos valores de entrada ou troque a operação: o circuito, o resultado e a linha correspondente da tabela-verdade são atualizados em conjunto.</p>
+    <div class="truth-gate">
+      <div class="stack">
+        <div class="gate-controls">
+          <div><label for="gateOp">Porta lógica</label><select id="gateOp"><option value="XOR" selected>XOR — OU exclusivo</option><option value="AND">AND — E</option><option value="OR">OR — OU inclusivo</option><option value="NAND">NAND — NÃO E</option><option value="NOR">NOR — NÃO OU</option><option value="XNOR">XNOR — equivalência</option></select></div>
+          <div><label>Entrada A</label><button type="button" class="bit-btn" id="gateA" aria-pressed="false">A = 0</button></div>
+          <div><label>Entrada B</label><button type="button" class="bit-btn active" id="gateB" aria-pressed="true">B = 1</button></div>
+        </div>
+        <svg id="gateDiagram" class="gate-svg" viewBox="0 0 540 250" role="img" aria-label="Diagrama interativo de uma porta lógica de duas entradas">
+          <defs><marker id="gateArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#56718e"/></marker></defs>
+          <path id="wireA" d="M105 78 H220" stroke="#1976d2" stroke-width="4" fill="none" marker-end="url(#gateArrow)"/><path id="wireB" d="M105 172 H220" stroke="#1976d2" stroke-width="4" fill="none" marker-end="url(#gateArrow)"/>
+          <circle cx="64" cy="78" r="28" fill="#e8f3ff" stroke="#1976d2" stroke-width="3"/><circle cx="64" cy="172" r="28" fill="#e8f3ff" stroke="#1976d2" stroke-width="3"/>
+          <text id="gateATxt" x="64" y="84" text-anchor="middle" font-size="19" font-weight="800" fill="#123e70">A=0</text><text id="gateBTxt" x="64" y="178" text-anchor="middle" font-size="19" font-weight="800" fill="#123e70">B=1</text>
+          <rect x="220" y="52" width="155" height="145" rx="18" fill="#e6f7ed" stroke="#157a43" stroke-width="3"/><text id="gateName" x="297" y="115" text-anchor="middle" font-size="25" font-weight="800" fill="#14532d">XOR</text><text x="297" y="143" text-anchor="middle" font-size="14" fill="#14532d">porta lógica</text>
+          <path id="wireY" d="M375 125 H440" stroke="#15803d" stroke-width="4" fill="none" marker-end="url(#gateArrow)"/><circle id="gateOutCircle" cx="475" cy="125" r="30" fill="#d7f7e2" stroke="#15803d" stroke-width="3"/><text id="gateOutTxt" x="475" y="132" text-anchor="middle" font-size="22" font-weight="900" fill="#14532d">1</text>
+        </svg>
+        <div id="gateResult" class="gate-result on"><div class="note">Resultado lógico</div><div id="gateResultText" class="big">0 XOR 1 = 1 · VERDADEIRO</div><p id="gateExplain">XOR é verdadeiro quando as entradas são diferentes.</p></div>
+      </div>
+      <div class="stack">
+        <div class="card blue"><h3>Regra da operação</h3><div id="gateFormula" class="math">A XOR B = 1 quando A ≠ B</div><p id="gateDescription" class="note">O OU exclusivo só retorna 1 quando exatamente uma das entradas é 1.</p></div>
+        <div><h3>Tabela-verdade <span class="note">(linha ativa destacada)</span></h3><div id="gateTruth" class="tablewrap"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
-<footer>Laboratório didático MLP XOR · arquivo único, sem bibliotecas externas · modelo Julia: 17 parâmetros, 20 000 épocas, perda final 0,000660</footer>
+<footer>Laboratório didático MLP XOR · treinamento JavaScript + resultados do xor.jl · circuito lógico interativo</footer>
 
 <script>
 "use strict";
@@ -686,6 +757,34 @@ function renderArch(){
   const P=4*H+1;$("archTitle").textContent=`MLP 2 → ${H} → 1 · sigmoide · ${P} parâmetros`;
   document.querySelectorAll(".hN").forEach(e=>e.textContent=H)}
 
+
+/* Porta lógica interativa: circuito SVG + tabela-verdade sincronizados */
+const GATE_INFO={
+ XOR:{label:"XOR",formula:"A XOR B = 1 quando A ≠ B",desc:"O OU exclusivo só retorna 1 quando exatamente uma das entradas é 1.",fn:(a,b)=>a!==b},
+ AND:{label:"AND",formula:"A AND B = 1 quando A = 1 e B = 1",desc:"A porta E só é verdadeira quando as duas entradas são verdadeiras.",fn:(a,b)=>a&&b},
+ OR:{label:"OR",formula:"A OR B = 1 quando A = 1 ou B = 1",desc:"O OU inclusivo é verdadeiro quando pelo menos uma entrada é 1.",fn:(a,b)=>a||b},
+ NAND:{label:"NAND",formula:"A NAND B = NOT(A AND B)",desc:"O NÃO E é falso somente quando as duas entradas são 1.",fn:(a,b)=>!(a&&b)},
+ NOR:{label:"NOR",formula:"A NOR B = NOT(A OR B)",desc:"O NÃO OU só é verdadeiro quando as duas entradas são 0.",fn:(a,b)=>!(a||b)},
+ XNOR:{label:"XNOR",formula:"A XNOR B = 1 quando A = B",desc:"A equivalência é verdadeira quando as duas entradas têm o mesmo valor.",fn:(a,b)=>a===b}
+};
+let gateA=0,gateB=1;
+function renderGate(){
+ const op=$("gateOp").value,info=GATE_INFO[op],out=Number(info.fn(gateA,gateB));
+ $("gateA").textContent=`A = ${gateA}`;$("gateB").textContent=`B = ${gateB}`;
+ $("gateA").classList.toggle("active",!!gateA);$("gateB").classList.toggle("active",!!gateB);
+ $("gateA").setAttribute("aria-pressed",String(!!gateA));$("gateB").setAttribute("aria-pressed",String(!!gateB));
+ $("gateATxt").textContent=`A=${gateA}`;$("gateBTxt").textContent=`B=${gateB}`;$("gateName").textContent=info.label;$("gateOutTxt").textContent=out;
+ const color=out?"#15803d":"#b82234",fill=out?"#d7f7e2":"#ffecef";
+ $("wireA").setAttribute("stroke",gateA?"#15803d":"#b82234");$("wireB").setAttribute("stroke",gateB?"#15803d":"#b82234");
+ $("wireY").setAttribute("stroke",color);$("gateOutCircle").setAttribute("stroke",color);$("gateOutCircle").setAttribute("fill",fill);$("gateOutTxt").setAttribute("fill",color);
+ $("gateFormula").textContent=info.formula;$("gateDescription").textContent=info.desc;
+ $("gateResult").className=`gate-result ${out?"on":"off"}`;
+ $("gateResultText").textContent=`${gateA} ${op} ${gateB} = ${out} · ${out?"VERDADEIRO":"FALSO"}`;
+ $("gateExplain").textContent=op==="XOR"?(out?"As entradas são diferentes: XOR retorna 1.":"As entradas são iguais: XOR retorna 0."):info.desc;
+ const rows=[[0,0],[0,1],[1,0],[1,1]];
+ $("gateTruth").innerHTML=`<table class="truth-mini"><thead><tr><th>A</th><th>B</th><th>${op}</th><th>Estado</th></tr></thead><tbody>${rows.map(([a,b])=>{const v=Number(info.fn(a,b)),cur=a===gateA&&b===gateB;return `<tr class="${cur?"current":""}"><td>${a}</td><td>${b}</td><td>${v}</td><td>${v?"VERDADEIRO":"FALSO"}${cur?" ← atual":""}</td></tr>`}).join("")}</tbody></table>`;
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
   mountStepper("inf","infStepper",inferSteps);
   mountStepper("lab","labStepper",labSteps,labHook);
@@ -712,6 +811,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     const ratio=(x-chartG.L)/chartG.pw;drawChart(Math.round(1+ratio*(chartG.maxE-1)))});
   $("chart").addEventListener("mouseleave",()=>drawChart());
   let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>drawChart(),120)});
+  $("gateA").addEventListener("click",()=>{gateA=1-gateA;renderGate()});
+  $("gateB").addEventListener("click",()=>{gateB=1-gateB;renderGate()});
+  $("gateOp").addEventListener("change",renderGate);renderGate();
   renderArch();
   lab.model=newLabModel();lab.hist=[];lab.parity=juliaInitActive();
   renderInfer(true);afterLabChange(true)});
