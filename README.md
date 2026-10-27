@@ -1,5 +1,11 @@
 # julia_app
 
+
+#### Página do repositório
+```
+https://juniorjrfsn.github.io/julia_app/
+```
+
 ## Create app
 
 ```
@@ -164,7 +170,7 @@ git commit -m "meu primeiro commit"
 
 Seu terminal aparece como:
 
-root@junior-17:~#
+
 
 Isso indica que você está executando o terminal como root. Se o projeto foi criado/gerenciado pelo seu usuário normal, isso pode causar problemas de permissões depois.
 
@@ -456,3 +462,8 @@ envia tudo para o GitHub.
 Não precisa colocar nome ou e-mail.
 
 Se o pull --rebase acusar conflito, pare aí e me mande o resultado — não execute push --force, porque podemos resolver o conflito sem perder seus arquivos.
+
+#### Página do repositório
+```
+https://juniorjrfsn.github.io/julia_app/
+```
